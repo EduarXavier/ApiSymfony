@@ -8,17 +8,14 @@ use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
-class UserType extends AbstractType
+class UserUpdateType extends AbstractType
 {
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $builder
-            ->add('name', TextType::class)
-            ->add('document', TextType::class)
-            ->add('address', TextType::class)
-            ->add('phone', TextType::class)
-            ->add('email', TextType::class)
-            ->add('password', TextType::class)
+            ->add('address',TextType::class)->setRequired(false)
+            ->add('phone',TextType::class)->setRequired(false)
+            ->add('password', TextType::class)->setRequired(false)
         ;
     }
 
@@ -26,7 +23,8 @@ class UserType extends AbstractType
     {
         $resolver->setDefaults([
             'csrf_protection' => false,
-            'data_class' => Users::class
+            'data_class' => Users::class,
+            'validation_groups' => ['update']
         ]);
     }
 
