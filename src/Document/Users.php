@@ -16,6 +16,7 @@ class Users
     private string $name;
 
     #[MongoDB\Field(type:"string")]
+    #[MongoDB\UniqueIndex(background: true)]
     private string $document;
 
      #[MongoDB\Field(type:"string")]
@@ -25,6 +26,8 @@ class Users
     private string $phone;
 
     #[MongoDB\Field(type:"string")]
+    #[MongoDB\UniqueIndex(background: true)]
+    #[MongoDB\Index(background: true)]
     private string $email;
 
     #[MongoDB\Field(type:"string")]

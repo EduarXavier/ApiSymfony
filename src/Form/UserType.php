@@ -25,12 +25,13 @@ class UserType extends AbstractType
     public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setDefaults([
-            'data_class' => Users::class,
+            'csrf_protection' => false,
+            'data_class' => Users::class
         ]);
     }
 
     public function getBlockPrefix(): string
     {
-        return '';
+        return 'nnnnn';
     }
 }
