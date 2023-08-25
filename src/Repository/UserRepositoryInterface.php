@@ -2,13 +2,14 @@
 
 namespace App\Repository;
 
-use App\Document\Users;
+use App\Document\User;
 use Doctrine\ODM\MongoDB\DocumentManager;
 
 interface UserRepositoryInterface
 {
     public function findByEmail(string $email, DocumentManager $documentManager);
     public function findById(string $id, DocumentManager $documentManager);
-    public function addUser(Users $user, DocumentManager $documentManager);
-    public function updateUser(object $data, Users $user, DocumentManager $documentManager);
+    public function findByDocument(string $document, DocumentManager $documentManager);
+    public function addUser(User $user, DocumentManager $documentManager);
+    public function updateUser(object $data, User $user, DocumentManager $documentManager);
 }

@@ -5,7 +5,7 @@ namespace App\Document;
 use Doctrine\ODM\MongoDB\Mapping\Annotations as MongoDB;
 
 #[MongoDB\Document]
-class Products
+class Product
 {
     #[MongoDB\Id()]
     private string $id;
@@ -13,10 +13,10 @@ class Products
     #[MongoDB\Field(type: "string")]
     private string $name;
 
-    #[MongoDB\Field(type:"string")]
+    #[MongoDB\Field(type:"int")]
     private int $price;
 
-    #[MongoDB\Field(type:"string")]
+    #[MongoDB\Field(type:"int")]
     private int $amount;
 
     public function getId(): string

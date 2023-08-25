@@ -2,7 +2,7 @@
 
 namespace App\Controller;
 
-use App\Document\Users;
+use App\Document\User;
 use App\Form\LoginType;
 use App\Repository\UserRepositoryInterface;
 use Doctrine\ODM\MongoDB\DocumentManager;
@@ -40,7 +40,7 @@ class LoginController extends AbstractController
     ): JsonResponse
     {
         $data = json_decode($request->getContent(), true,);
-        $user = new Users();
+        $user = new User();
 
         $form = $this->createForm(LoginType::class, $user);
         $form->submit($data);

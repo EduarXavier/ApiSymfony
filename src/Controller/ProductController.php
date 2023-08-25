@@ -2,12 +2,13 @@
 
 namespace App\Controller;
 
-use App\Document\Products;
+use App\Document\Product;
 use App\Repository\ProductRepository;
 use App\Repository\ProductRepositoryInterface;
 use Doctrine\ODM\MongoDB\DocumentManager;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
 
 #[Route("/product")]

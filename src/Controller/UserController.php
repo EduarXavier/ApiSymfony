@@ -2,7 +2,7 @@
 
 namespace App\Controller;
 
-use App\Document\Users;
+use App\Document\User;
 use App\Form\UserType;
 use App\Form\UserUpdateType;
 use App\Repository\UserRepository;
@@ -16,7 +16,6 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 #[Route("/user")]
 class UserController extends AbstractController
 {
-
     private UserRepositoryInterface $userRepository;
     private DocumentManager $documentManager;
 
@@ -30,10 +29,10 @@ class UserController extends AbstractController
     public function addUser(Request $request): ?JsonResponse
     {
         $data = (object) json_decode($request->getContent(), true);
-        $user = new Users();
+        $user = new User();
 
         $form = $this->createForm(UserType::class, $user);
-        $form->submit($request->request->get($form->getName()));
+        //$form->submit($request->request->get($form->getName()));
 
         if ($form->isSubmitted() && $form->isValid())
         {
@@ -49,7 +48,7 @@ class UserController extends AbstractController
             return $this->json(['message' => 'Usuario agregado correctamente']);
         }
 
-        $errors = $form->getErrors(true,);
+        $errors = $form->getErrors(true)->count();
 
         return $this->json(['error' => $errors], 400);
     }

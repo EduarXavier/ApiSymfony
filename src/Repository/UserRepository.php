@@ -2,28 +2,36 @@
 
 namespace App\Repository;
 
-use App\Document\Users;
+use App\Document\User;
 use Doctrine\ODM\MongoDB\DocumentManager;
 
 class UserRepository implements UserRepositoryInterface
 {
 
-    public function findByEmail(string $email, DocumentManager $documentManager): ?Users
+    public function findByEmail(string $email, DocumentManager $documentManager): ?User
     {
-        $repository = $documentManager->getRepository(Users::class);
+        $repository = $documentManager->getRepository(User::class);
         $user = $repository->findOneBy(["email" => $email]);
 
         return $user;
     }
 
-    public function findById(string $id, DocumentManager $documentManager): ?Users
+    public function findById(string $id, DocumentManager $documentManager): ?User
     {
-        $user = $documentManager->getRepository(Users::class)->find($id);
+        $user = $documentManager->getRepository(User::class)->find($id);
 
         return $user;
     }
 
-    public function addUser(Users $user, DocumentManager $documentManager): bool
+    public function findByDocument(string $document, DocumentManager $documentManager): ?User
+    {
+        $repository = $documentManager->getRepository(User::class);
+        $user = $repository->findOneBy(["document" => $document]);
+
+        return $user;
+    }
+
+    public function addUser(User $user, DocumentManager $documentManager): bool
     {
         $documentManager->persist($user);
         $documentManager->flush();
@@ -31,7 +39,7 @@ class UserRepository implements UserRepositoryInterface
         return true;
     }
 
-    public function updateUser(object $data, Users $user, DocumentManager $documentManager): bool
+    public function updateUser(object $data, User $user, DocumentManager $documentManager): bool
     {
 
         if($data->password)

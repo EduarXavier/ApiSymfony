@@ -2,7 +2,7 @@
 
 namespace App\Form;
 
-use App\Document\Users;
+use App\Document\User;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
@@ -26,7 +26,7 @@ class UserType extends AbstractType
     {
         $resolver->setDefaults([
             'csrf_protection' => false,
-            'data_class' => Users::class
+            'data_class' => User::class
         ]);
     }
 

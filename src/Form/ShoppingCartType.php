@@ -2,20 +2,18 @@
 
 namespace App\Form;
 
-use App\Document\User;
+use App\Document\Invoice;
 use Symfony\Component\Form\AbstractType;
-use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
-class UserUpdateType extends AbstractType
+class ShoppingCartType extends AbstractType
 {
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $builder
-            ->add('address',TextType::class)->setRequired(false)
-            ->add('phone',TextType::class)->setRequired(false)
-            ->add('password', TextType::class)->setRequired(false)
+            ->add('products')
+            ->add('userDocument')
         ;
     }
 
@@ -23,8 +21,7 @@ class UserUpdateType extends AbstractType
     {
         $resolver->setDefaults([
             'csrf_protection' => false,
-            'data_class' => User::class,
-            'validation_groups' => ['update']
+            'data_class' => Invoice::class
         ]);
     }
 

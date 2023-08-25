@@ -4,11 +4,9 @@ namespace App\Document;
 
 use Doctrine\ODM\MongoDB\Mapping\Annotations as MongoDB;
 
-
 #[MongoDB\Document]
-class Users
+class User
 {
-
     #[MongoDB\Id()]
     private string $id;
 
@@ -115,5 +113,4 @@ class Users
     {
         $this->recoveryCode = $recoveryCode;
     }
-
 }
