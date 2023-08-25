@@ -21,9 +21,10 @@ services:
             - '../src/DependencyInjection/'
             - '../src/Entity/'
             - '../src/Kernel.php'
+
     App\EventListener\TokenListener:
         arguments:
-            $jwtManager: '@lexik_jwt_authentication.jwt_manager'
+            $jwtEncoder: '@lexik_jwt_authentication.encoder'
         tags:
             - { name: kernel.event_listener, event: kernel.controller }
 

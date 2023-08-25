@@ -1,21 +1,19 @@
 <?php
 
 namespace App\EventListener;
-use Lexik\Bundle\JWTAuthenticationBundle\Event\AuthenticationSuccessEvent;
-use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
+
+use Lexik\Bundle\JWTAuthenticationBundle\Encoder\JWTEncoderInterface;
+use Lexik\Bundle\JWTAuthenticationBundle\Exception\JWTDecodeFailureException;
 use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 use Symfony\Component\HttpKernel\Event\ControllerEvent;
-use Lexik\Bundle\JWTAuthenticationBundle\TokenExtractor\AuthorizationHeaderTokenExtractor;
-use Lexik\Bundle\JWTAuthenticationBundle\Exception\JWTDecodeFailureException;
-use Lexik\Bundle\JWTAuthenticationBundle\Services\JWTTokenManagerInterface;
 
 class TokenListener
 {
-    private JWTTokenManagerInterface $jwtManager;
+    private JWTEncoderInterface $jwtEncoder;
 
-    public function __construct(JWTTokenManagerInterface $jwtManager)
+    public function __construct(JWTEncoderInterface $jwtEncoder)
     {
-        $this->jwtManager = $jwtManager;
+        $this->jwtEncoder = $jwtEncoder;
     }
 
     public function onKernelController(ControllerEvent $event): void
@@ -29,19 +27,32 @@ class TokenListener
         $request = $event->getRequest();
         $routeName = $request->get('_route');
 
-        if ($routeName !== 'product_list' && $routeName !== 'login') {
+        if
+        (
+            $routeName !== 'product_list'
+            && $routeName !== 'login'
+            && $routeName !== "addUser"
+        )
+        {
             try
             {
-                $token = $request->headers->get('Authorization');
+                $authorizationHeader = $request->headers->get('Authorization');
 
-                if (!$token) {
+                if (!$authorizationHeader)
+                {
                     throw new AccessDeniedException('Token no proporcionado');
                 }
 
-                $decodedToken = $this->jwtManager->decode($token);
+                $tokenParts = explode(' ', $authorizationHeader);
 
-                // Aquí puedes acceder a la información del token decodificado si es necesario
-                // $username = $decodedToken['username'];
+                if (count($tokenParts) !== 2 || $tokenParts[0] !== 'Bearer')
+                {
+                    throw new AccessDeniedException('Formato de token inválido');
+                }
+
+                $token = $tokenParts[1];
+                $decodedToken = $this->jwtEncoder->decode($token);
+                $email = $decodedToken['email'];
 
             }
             catch (JWTDecodeFailureException $exception)
