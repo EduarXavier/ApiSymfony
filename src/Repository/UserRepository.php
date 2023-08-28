@@ -4,6 +4,7 @@ namespace App\Repository;
 
 use App\Document\User;
 use Doctrine\ODM\MongoDB\DocumentManager;
+use Doctrine\ODM\MongoDB\MongoDBException;
 
 class UserRepository implements UserRepositoryInterface
 {
@@ -26,11 +27,13 @@ class UserRepository implements UserRepositoryInterface
     public function findByDocument(string $document, DocumentManager $documentManager): ?User
     {
         $repository = $documentManager->getRepository(User::class);
-        $user = $repository->findOneBy(["document" => $document]);
 
-        return $user;
+        return $repository->findOneBy(["document" => $document]);
     }
 
+    /**
+     * @throws MongoDBException
+     */
     public function addUser(User $user, DocumentManager $documentManager): bool
     {
         $documentManager->persist($user);

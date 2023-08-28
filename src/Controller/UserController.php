@@ -8,6 +8,7 @@ use App\Form\UserUpdateType;
 use App\Repository\UserRepository;
 use App\Repository\UserRepositoryInterface;
 use Doctrine\ODM\MongoDB\DocumentManager;
+use Doctrine\ODM\MongoDB\MongoDBException;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
@@ -25,6 +26,9 @@ class UserController extends AbstractController
         $this->userRepository = new UserRepository();
     }
 
+    /**
+     * @throws MongoDBException
+     */
     #[Route("/add", name: "addUser", methods: ["POST"])]
     public function addUser(Request $request): ?JsonResponse
     {
@@ -32,7 +36,7 @@ class UserController extends AbstractController
         $user = new User();
 
         $form = $this->createForm(UserType::class, $user);
-        //$form->submit($request->request->get($form->getName()));
+        $form->submit($request->request->get($form->getName()));
 
         if ($form->isSubmitted() && $form->isValid())
         {
@@ -48,7 +52,7 @@ class UserController extends AbstractController
             return $this->json(['message' => 'Usuario agregado correctamente']);
         }
 
-        $errors = $form->getErrors(true)->count();
+        $errors = $form->getErrors(true);
 
         return $this->json(['error' => $errors], 400);
     }
@@ -126,6 +130,4 @@ class UserController extends AbstractController
 
         return $this->json(['error' => $errors], 400);
     }
-
-
 }

@@ -4,6 +4,7 @@ namespace App\Repository;
 
 use App\Document\Invoice;
 use Doctrine\ODM\MongoDB\DocumentManager;
+use Doctrine\ODM\MongoDB\MongoDBException;
 use phpDocumentor\Reflection\DocBlock\Tags\Throws;
 
 class InvoicesRepository implements InvoicesRepositoryInterface
@@ -24,8 +25,7 @@ class InvoicesRepository implements InvoicesRepositoryInterface
         DocumentManager $documentManager
     ): ?bool
     {
-        $repository = $documentManager->getRepository(Invoice::class);
-        $shoppingCart = $repository->findOneBy(["userDocument" => $document, "status" => "shopping-cart"]);
+        $shoppingCart = $this->findByDocumentAndStatus($document, "shopping-cart", $documentManager);
 
         if($shoppingCart)
         {
@@ -117,10 +117,9 @@ class InvoicesRepository implements InvoicesRepositoryInterface
         array $products,
         string $document,
         DocumentManager $documentManager
-    )
+    ): ?bool
     {
-        $repository = $documentManager->getRepository(Invoice::class);
-        $shoppingCart = $repository->findOneBy(["userDocument" => $document, "status" => "shopping-cart"]);
+        $shoppingCart = $this->findByDocumentAndStatus($document, "shopping-cart", $documentManager);
 
         if($shoppingCart)
         {
@@ -145,6 +144,62 @@ class InvoicesRepository implements InvoicesRepositoryInterface
         return false;
     }
 
+    /**
+     * @throws MongoDBException
+     */
+    public function createInvoice
+    (
+        Invoice $invoices,
+        DocumentManager $documentManager
+    ): bool
+    {
+        $invoices->setStatus("facture");
+        $documentManager->flush();
+
+        return true;
+    }
+
+    public function findByDocumentAndStatus
+    (
+        string $document,
+        string $status,
+        DocumentManager $documentManager
+    )
+    {
+        $repository = $documentManager->getRepository(Invoice::class);
+        $invoice = $repository->findOneBy(["userDocument" => $document, "status" => "shopping-cart"]);
+
+        return $invoice;
+
+    }
+
+    public function findById
+    (
+        string $document,
+        DocumentManager $documentManager
+    )
+    {
+        $repository = $documentManager->getRepository(Invoice::class);
+        $invoice = $repository->findOneBy(["id" => $document]);
+
+        return $invoice;
+    }
+
+    /**
+     * @throws MongoDBException
+     */
+    public function payInvoice
+    (
+        Invoice $invoice,
+        DocumentManager $documentManager
+    )
+    {
+        $invoice->setStatus("pago");
+        $documentManager->flush();
+
+        return true;
+    }
+
     private function findProductByIdInArray
     (
         string $productId,
@@ -160,5 +215,4 @@ class InvoicesRepository implements InvoicesRepositoryInterface
         }
         return null;
     }
-
 }
