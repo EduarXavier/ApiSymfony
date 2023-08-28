@@ -4,6 +4,8 @@ namespace App\Form;
 
 use App\Document\User;
 use Symfony\Component\Form\AbstractType;
+use Symfony\Component\Form\Extension\Core\Type\EmailType;
+use Symfony\Component\Form\Extension\Core\Type\PasswordType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
@@ -17,8 +19,8 @@ class UserType extends AbstractType
             ->add('document', TextType::class)
             ->add('address', TextType::class)
             ->add('phone', TextType::class)
-            ->add('email', TextType::class)
-            ->add('password', TextType::class)
+            ->add('email', EmailType::class)
+            ->add('password', PasswordType::class)
         ;
     }
 

@@ -63,4 +63,38 @@ class LoginController extends AbstractController
 
         return $this->json(["Error" => "Datos de formulario inválidos"], 400);
     }
+
+    #[Route("/login-view", name: "login_template")]
+    public function loginView(Request $request)
+    {
+        $data = json_decode($request->getContent(), true,);
+        $user = new User();
+
+        $form = $this->createForm(LoginType::class, $user);
+
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid())
+        {
+            $userFind = $this->userRepository->findByEmail($user->getEmail(), $this->documentManager);
+
+            if ($userFind && password_verify($user->getPassword(), $userFind->getPassword()))
+            {
+                session_abort();
+                session_start();
+                $_SESSION['user'] = $user->getEmail();
+                $this->addFlash("message", $_SESSION["user"]);
+                $this->redirectToRoute('login_template');
+            }
+            else
+            {
+                $this->addFlash("message", "Credenciales invalidas");
+                $this->redirectToRoute('login_template');
+            }
+        }
+
+        return $this->render('UserTemplate/login.html.twig', [
+            'form' => $form->createView(),
+        ]);
+    }
 }
