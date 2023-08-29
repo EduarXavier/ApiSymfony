@@ -7,6 +7,12 @@ use Doctrine\ODM\MongoDB\DocumentManager;
 
 interface InvoicesRepositoryInterface
 {
+
+    public function findAll
+    (
+        DocumentManager $documentManager
+    );
+
     public function findByDocumentAndStatus
     (
         string $document,

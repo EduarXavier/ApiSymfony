@@ -37,6 +37,10 @@ class TokenListener
             && $routeName !== "add_product"
             && $routeName !== "update_product"
             && $routeName !== "delete_product"
+            && $routeName !== "invoices_list"
+            && $routeName !== "invoices_details"
+            && $routeName !== "create_invoice_document"
+            && $routeName !== "add_product_shopping-cart"
         )
         {
             try

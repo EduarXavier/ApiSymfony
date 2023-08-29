@@ -10,12 +10,15 @@ use App\Repository\InvoicesRepositoryInterface;
 use Doctrine\ODM\MongoDB\DocumentManager;
 use Doctrine\ODM\MongoDB\MongoDBException;
 use Exception;
+use phpDocumentor\Reflection\Types\This;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 
-#[Route("/invoices", name: "shopping_cart", methods : ["POST"])]
+#[Route("/invoices")]
 class InvoicesController extends AbstractController
 {
     private InvoicesRepositoryInterface $invoicesRepository;
@@ -125,7 +128,7 @@ class InvoicesController extends AbstractController
     /**
      * @throws MongoDBException
      */
-    #[Route("/pay-invoice", name: "pay-invoice", methods: ["POST"])]
+    #[Route("/pay-invoice", name: "pay-invoice", methods: ["GET"])]
     public  function payInvoice(Request $request, DocumentManager $documentManager): ?JsonResponse
     {
         $data = (object) json_decode($request->getContent(), true,);
@@ -155,4 +158,71 @@ class InvoicesController extends AbstractController
             return new JsonResponse(["error" => "Ha ocurrido un error con los datos enviados"], 400);
         }
     }
+
+    #[Route("/list", name : "invoices_list")]
+    public function findAllInvoices(): RedirectResponse|Response
+    {
+        session_abort();
+        session_start();
+
+        if(!empty($_SESSION["user"]) && !empty($_SESSION["rol"]) && $_SESSION["rol"] == "ADMIN")
+        {
+            $invoices = $this->invoicesRepository->findAll($this->documentManager);
+
+            return $this->render("InvoiceTemplates/invoiceList.html.twig", [
+                "invoices" => $invoices
+            ]);
+        }
+
+        return $this->redirectToRoute("login_template");
+
+    }
+
+    #[Route("/details/{id}", name : "invoices_details")]
+    public function invoiceDetails(string $id): RedirectResponse|Response
+    {
+        session_abort();
+        session_start();
+
+        if(!empty($_SESSION["user"]) && !empty($_SESSION["rol"]) && $_SESSION["rol"] == "ADMIN")
+        {
+            $invoice = $this->invoicesRepository->findById($id ,$this->documentManager);
+
+            return $this->render("InvoiceTemplates/invoiceDetails.html.twig", [
+                "invoice" => $invoice
+            ]);
+        }
+
+        return $this->redirectToRoute("login_template");
+
+    }
+
+    #[Route("/add/shopping-cart", name : "add_product_shopping-cart")]
+    public function AddShoppingCart(Request $request): RedirectResponse
+    {
+        $invoices = new Invoice();
+
+        $form = $this->createForm(ShoppingCartType::class, $invoices);
+
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid())
+        {
+            $validation = $this->invoicesRepository->AddProductsToshoppingCart
+            (
+                $invoices->getProducts(),
+                $invoices->getUserDocument(),
+                $this->documentManager
+            );
+
+            return $validation ?
+                $this->redirect("/shopping-cart/details")
+                :
+                $this->redirectToRoute("add_product_shopping-cart");
+        }
+
+        return $this->redirectToRoute("login_template");
+
+    }
+
 }

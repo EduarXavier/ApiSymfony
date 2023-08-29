@@ -18,6 +18,14 @@ class InvoicesRepository implements InvoicesRepositoryInterface
         $this->productRepository = new ProductRepository();
     }
 
+    public function findAll(DocumentManager $documentManager)
+    {
+        $repository = $documentManager->getRepository(Invoice::class);
+        $invoices = $repository->findAll();
+
+        return $invoices;
+    }
+
     public function AddProductsToshoppingCart
     (
         array $products,
@@ -153,6 +161,7 @@ class InvoicesRepository implements InvoicesRepositoryInterface
         DocumentManager $documentManager
     ): bool
     {
+        $invoices->setDate(date("Y-m-d H:i:s"));
         $invoices->setStatus("facture");
         $documentManager->flush();
 

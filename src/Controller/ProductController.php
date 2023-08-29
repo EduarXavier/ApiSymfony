@@ -49,7 +49,7 @@ class ProductController extends AbstractController
         if(!empty($_SESSION["user"]) && !empty($_SESSION["rol"]) && $_SESSION["rol"] == "ADMIN")
         {
             return $this->render("ProductTemplates/productList.html.twig", [
-                "products" => $products
+                "products" => $products,
             ]);
         }
 
@@ -66,7 +66,8 @@ class ProductController extends AbstractController
         if(!empty($_SESSION["user"]) && !empty($_SESSION["rol"]) && $_SESSION["rol"] == "ADMIN")
         {
             return $this->render("ProductTemplates/productDetails.html.twig", [
-                "product" => $product
+                "product" => $product,
+                "document" => $_SESSION["document"],
             ]);
         }
 
