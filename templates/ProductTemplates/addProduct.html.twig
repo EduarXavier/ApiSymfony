@@ -1,20 +1,22 @@
 {% extends 'base.html.twig' %}
 
+{% block title %}{{ name }} {% endblock %}
+
 {% block body %}
 
     <div class="d-flex w-100 align-items-center align-middle justify-content-center">
         <div class="w-25">
 
-            {% for flash_message in app.flashes('message') %}
+            {% for flash_message in app.flashes('error') %}
                 <div class="alert alert-danger w-100" role="alert">
                     {{ flash_message }}
                 </div>
             {% endfor %}
 
-            <h1>Contact Form</h1>
+            <h1>{{ name }}</h1>
             {{ form_start(form, {"action" : "", "method" : "POST"}) }}
             {{ form_widget(form) }}
-            <button type="submit">Iniciar sesión</button>
+            <button type="submit">{{ option }}</button>
             {{ form_end(form) }}
 
         </div>

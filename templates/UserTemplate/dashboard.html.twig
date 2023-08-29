@@ -6,16 +6,11 @@
         <div class="w-25">
 
             {% for flash_message in app.flashes('message') %}
-                <div class="alert alert-danger w-100" role="alert">
+                <div class="alert alert-success w-100" role="alert">
                     {{ flash_message }}
                 </div>
             {% endfor %}
 
-            <h1>Contact Form</h1>
-            {{ form_start(form, {"action" : "", "method" : "POST"}) }}
-            {{ form_widget(form) }}
-            <button type="submit">Iniciar sesión</button>
-            {{ form_end(form) }}
 
         </div>
     </div>

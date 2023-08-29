@@ -1,0 +1,40 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Lista de productos{% endblock %}
+
+{% block body %}
+
+    <div class="container mt-5">
+        {% if products is empty %}
+            <div class="alert alert-info" role="alert">
+                No hay productos disponibles en este momento.
+            </div>
+        {% else %}
+            <div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-4">
+                {% for product in products %}
+                    <a href="/product/details/{{ product.id }}" class="text-decoration-none">
+                        <div class="col text-dark">
+                            <div class="card shadow-lg rounded">
+                                <div class="card-header bg-secondary text-white">
+                                    {{ product.name }}
+                                </div>
+                                <div class="card-body">
+                                    <p>
+                                        <strong>ID:</strong> {{ product.id }}
+                                    </p>
+                                    <p>
+                                        <strong>Precio:</strong> {{ product.price }}
+                                    </p>
+                                    <p>
+                                        <strong>Cantidad:</strong> {{ product.amount }}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </a>
+                {% endfor %}
+            </div>
+        {% endif %}
+    </div>
+
+{% endblock %}

@@ -12,7 +12,7 @@ class ProductRepository implements ProductRepositoryInterface
     public function findAll(DocumentManager $documentManager): ?array
     {
         $repository = $documentManager->getRepository(Product::class);
-        $products = $repository->findBy(["amount" => ['$gt' => 0]]);
+        $products = $repository->findBy(["amount" => ['$gt' => 0]], limit: 20);
 
         return $products;
     }
@@ -24,29 +24,26 @@ class ProductRepository implements ProductRepositoryInterface
         return $product;
     }
 
-    public function addProduct(Product $product, DocumentManager $documentManager): ?Product
+    public function addProduct(Product $product, DocumentManager $documentManager): ?string
     {
+        $documentManager->persist($product);
+        $documentManager->flush();
 
+        return $product->getId();
     }
 
-    public function updateProduct(Product $product, DocumentManager $documentManager): ?Product
+    public function updateProduct(Product $product, DocumentManager $documentManager): ?string
     {
-        $products = $documentManager
-            ->getRepository(Product::class)
-            ->findBy(
-                [
-                    '_id' => $product->getId(),
-                    'amount' => ['$gt' => 0]
-                ]);
+        $documentManager->flush();
 
-        $product = $products[0];
-        $product->setAmount($product->getAmount());
-
-        return $product;
+        return $product->getId();
     }
 
-    public function deleteProduct(string $id, DocumentManager $documentManager): ?Product
+    public function deleteProduct(Product $product, DocumentManager $documentManager): ?bool
     {
-        // TODO: Implement deleteProduct() method.
+        $documentManager->remove($product);
+        $documentManager->flush();
+
+        return true;
     }
 }

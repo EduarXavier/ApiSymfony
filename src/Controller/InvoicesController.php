@@ -37,7 +37,7 @@ class InvoicesController extends AbstractController
         $invoices = new Invoice();
 
         $form = $this->createForm(ShoppingCartType::class, $invoices);
-        //$form->submit($request->request->get($form->getName()));
+        $form->submit($request->request->get($form->getName()));
 
         //$form->handleRequest($request);
 

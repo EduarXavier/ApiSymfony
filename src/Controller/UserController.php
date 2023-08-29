@@ -42,6 +42,7 @@ class UserController extends AbstractController
         {
             $user->setName($data->name);
             $user->setDocument($data->document);
+            $user->setRol($data->rol);
             $user->setPhone($data->phone);
             $user->setPassword(password_hash($data->password, PASSWORD_BCRYPT));
             $user->setEmail($data->email);

@@ -18,7 +18,10 @@ class User
     private string $document;
 
      #[MongoDB\Field(type:"string")]
-    private string $address;
+     private string $address;
+
+     #[MongoDB\Field(type: "string")]
+     private string $rol;
 
     #[MongoDB\Field(type:"string")]
     private string $phone;
@@ -62,6 +65,16 @@ class User
     public function setDocument(string $document): void
     {
         $this->document = $document;
+    }
+
+    public function getRol(): string
+    {
+        return $this->rol;
+    }
+
+    public function setRol(string $rol): void
+    {
+        $this->rol = $rol;
     }
 
     public function getAddress(): string

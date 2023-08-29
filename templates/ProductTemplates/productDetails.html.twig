@@ -1,0 +1,58 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ product.name ?? "Not found"}} - details{% endblock %}
+
+{% block body %}
+
+    <div class="container mt-5">
+
+        {% for flash_message in app.flashes('exito') %}
+            <div class="alert alert-success w-100" role="alert">
+                {{ flash_message }}
+            </div>
+        {% endfor %}
+
+        {% if product is empty %}
+            <div class="alert alert-info" role="alert">
+                Este producto no está disponible.
+            </div>
+        {% else %}
+            <h2 class="pt-5" style="text-align: center">Detalles del producto</h2>
+
+            <div class="container mt-5">
+                <div class="row justify-content-center">
+                    <div class="col-6 card">
+                        <div class="row col-9">
+                            <div class="card-body">
+                                <h5 class="card-title">
+                                    Nombre: {{ product.name }}
+                                </h5>
+                                <p class="card-text">
+                                    ID: {{ product.id }}
+                                </p>
+                                <p class="card-text">
+                                    Precio: {{ product.price }}
+                                </p><p class="card-text">
+                                    Cantidad: {{ product.amount }}
+                                </p>
+                                <a
+                                        class="btn btn-primary"
+                                        href="/product/update/{{ product.id }}"
+                                >
+                                    Actualizar
+                                </a>
+                                <a
+                                        class="btn btn-danger"
+                                        href="/product/delete/{{ product.id }}"
+                                >
+                                    Eliminar
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+
+{% endblock %}

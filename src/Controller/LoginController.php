@@ -11,6 +11,7 @@ use Lexik\Bundle\JWTAuthenticationBundle\Exception\JWTEncodeFailureException;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Security\Core\User\UserProviderInterface;
 
@@ -65,9 +66,8 @@ class LoginController extends AbstractController
     }
 
     #[Route("/login-view", name: "login_template")]
-    public function loginView(Request $request)
+    public function loginView(Request $request): Response
     {
-        $data = json_decode($request->getContent(), true,);
         $user = new User();
 
         $form = $this->createForm(LoginType::class, $user);
@@ -83,8 +83,10 @@ class LoginController extends AbstractController
                 session_abort();
                 session_start();
                 $_SESSION['user'] = $user->getEmail();
-                $this->addFlash("message", $_SESSION["user"]);
-                $this->redirectToRoute('login_template');
+                $_SESSION["rol"] = $userFind->getRol();
+                $_SESSION["document"] = $userFind->getDocument();
+                $this->addFlash("message", $_SESSION["user"].$_SESSION["rol"]);
+                return $this->render('UserTemplate/dashboard.html.twig', []);
             }
             else
             {
