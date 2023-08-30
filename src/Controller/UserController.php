@@ -36,7 +36,9 @@ class UserController extends AbstractController
         $user = new User();
 
         $form = $this->createForm(UserType::class, $user);
-        $form->submit($request->request->get($form->getName()));
+
+        $form->handleRequest($request);
+        //$form->submit($request->request->get($form->getName()));
 
         if ($form->isSubmitted() && $form->isValid())
         {
