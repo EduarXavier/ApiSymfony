@@ -85,6 +85,7 @@ class LoginController extends AbstractController
                 $_SESSION['user'] = $user->getEmail();
                 $_SESSION["rol"] = $userFind->getRol();
                 $_SESSION["document"] = $userFind->getDocument();
+                $_SESSION["shopping-cart"] = array();
                 $this->addFlash("message", $_SESSION["user"].$_SESSION["rol"]);
                 return $this->render('UserTemplate/dashboard.html.twig', []);
             }

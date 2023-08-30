@@ -65,9 +65,21 @@ class ProductController extends AbstractController
 
         if(!empty($_SESSION["user"]) && !empty($_SESSION["rol"]) && $_SESSION["rol"] == "ADMIN")
         {
+            $accion = "";
+            $mensaje = "";
+
+            if(!empty($_GET["mnsj"]))
+            {
+                $accion = $_GET["mnsj"] == "ok" ? "exito" : "error";
+                $mensaje = $_GET["mnsj"] == "ok" ?
+                    "Se ha agregado con éxito"
+                    :
+                    "Ha ocurrido un error";
+            }
+
             return $this->render("ProductTemplates/productDetails.html.twig", [
                 "product" => $product,
-                "document" => $_SESSION["document"],
+                $accion => $mensaje
             ]);
         }
 

@@ -1,0 +1,80 @@
+
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ invoice.id ?? "Not found"}} - details{% endblock %}
+
+{% block body %}
+
+    <div class="container mt-5">
+
+        {% if shoppingCart is empty %}
+            <div class="alert alert-info" role="alert">
+                Este pedido no está disponible.
+            </div>
+        {% else %}
+            <h2 class="pt-5" style="text-align: center">Detalles del pedido</h2>
+
+            <div class="container mt-5">
+                <div class="row justify-content-center">
+                    <div class="col-6 card">
+                        <div class="row col-9">
+                            <div class="card-body">
+                                <h5 class="card-title">
+                                    usuario: {{ invoice.userDocument }}
+                                </h5>
+                                <p class="card-text">
+                                    ID: {{ invoice.id }}
+                                </p>
+                                <p class="card-text">
+                                    fecha: {{ invoice.date }}
+                                </p>
+                                <p class="card-text">
+                                    Estado: {{ invoice.status }}
+                                </p>
+                                <p class="card-text">
+                                    Productos: {{ invoice.products|length }}
+                                </p>
+                                <table class="table">
+                                    <thead>
+                                    <tr>
+                                        <th scope="col">ID</th>
+                                        <th scope="col">Cantidad</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    {% for product in invoice.products %}
+                                        <tr>
+                                            <th scope="row">
+                                                <a href="/product/details/{{ product.id }}" class="text-decoration-none">
+                                                    {{ product.id }}
+                                                </a>
+                                            </th>
+                                            <td>{{ product.amount }}</td>
+                                        </tr>
+                                    {% endfor %}
+                                    </tbody>
+                                </table>
+                                {% if invoice.status == "shopping-cart" %}
+                                    <a
+                                            class="btn btn-primary"
+                                            href="/invoices/update/{{ invoice.id }}"
+                                    >
+                                        Actualizar
+                                    </a>
+                                {% endif %}
+                                <a
+                                        class="btn btn-danger"
+                                        href="/product/invoices/{{ invoice.id }}"
+                                >
+                                    Eliminar
+                                </a>
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+
+{% endblock %}

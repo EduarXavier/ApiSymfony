@@ -12,6 +12,18 @@
             </div>
         {% endfor %}
 
+        {% if exito is defined %}
+            <div class="alert alert-success w-100" role="alert">
+                {{ exito }}
+            </div>
+        {% endif %}
+
+        {% if error is defined %}
+            <div class="alert alert-danger w-100" role="alert">
+                {{ error }}
+            </div>
+        {% endif %}
+
         {% if product is empty %}
             <div class="alert alert-info" role="alert">
                 Este producto no está disponible.
@@ -71,22 +83,13 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <form action="/invoices/add/shopping-cart" method="post">
+                    <form action="/invoices/shopping-cart/add-product" method="post">
                         <div class="mb-3">
                             <input
                                     type="text"
                                     class="form-control d-none"
                                     id="id"
-                                    name="userDocument"
-                                    value="{{ document }}"
-                            >
-                        </div>
-                        <div class="mb-3">
-                            <input
-                                    type="text"
-                                    class="form-control d-none"
-                                    id="id"
-                                    name="products"
+                                    name="id"
                                     value="{{ product.id }}"
                             >
                         </div>
