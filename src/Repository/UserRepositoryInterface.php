@@ -11,5 +11,5 @@ interface UserRepositoryInterface
     public function findById(string $id, DocumentManager $documentManager);
     public function findByDocument(string $document, DocumentManager $documentManager);
     public function addUser(User $user, DocumentManager $documentManager);
-    public function updateUser(object $data, User $user, DocumentManager $documentManager);
+    public function updateUser(User $user, DocumentManager $documentManager, string|null $method);
 }

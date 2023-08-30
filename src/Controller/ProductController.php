@@ -92,7 +92,7 @@ class ProductController extends AbstractController
         session_abort();
         session_start();
         $product = new Product();
-        $form = $this->createForm(ProductType::class, $product);
+        $form = $this->createForm(ProductType::class, $product, ['method' => 'POST']);
         $form->handleRequest($request);
 
         if(!empty($_SESSION["user"]) && !empty($_SESSION["rol"]) && $_SESSION["rol"] == "ADMIN")

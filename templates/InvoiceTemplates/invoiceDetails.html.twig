@@ -60,7 +60,38 @@
                                         {% endfor %}
                                     </tbody>
                                 </table>
+                                {% if invoice.status == "invoice" %}
+                                    <a
+                                            class="btn btn-primary"
+                                            href="/invoices/pay/{{ invoice.id }}"
+                                    >
+                                        Pagar
+                                    </a>
+                                    <a
+                                            class="btn btn-danger"
+                                            href="/invoices/delete/{{ invoice.id }}"
+                                    >
+                                        Cancelar
+                                    </a>
+                                {% endif %}
+
                                 {% if invoice.status == "shopping-cart" %}
+                                    <form action="/invoices/create/invoice/" method="POST">
+                                        <input
+                                                value="{{ invoice.userDocument }}"
+                                                name="userDocument"
+                                                class="d-none"
+                                        >
+                                        <button
+                                                class="btn btn-primary"
+                                                type="submit"
+                                        >
+                                            Generar pedido
+                                        </button>
+                                    </form>
+
+                                    <br>
+
                                     <a
                                             class="btn btn-primary"
                                             href="/invoices/update/{{ invoice.id }}"
@@ -68,12 +99,6 @@
                                         Actualizar
                                     </a>
                                 {% endif %}
-                                <a
-                                        class="btn btn-danger"
-                                        href="/product/invoices/{{ invoice.id }}"
-                                >
-                                    Eliminar
-                                </a>
 
                             </div>
                         </div>

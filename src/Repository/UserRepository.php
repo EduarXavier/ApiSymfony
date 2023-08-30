@@ -42,18 +42,14 @@ class UserRepository implements UserRepositoryInterface
         return true;
     }
 
-    public function updateUser(object $data, User $user, DocumentManager $documentManager): bool
+    public function updateUser(User $user, DocumentManager $documentManager, string|null $method): bool
     {
 
-        if($data->password)
+        if($method == "password")
         {
-            $user->setPassword(password_hash($data->password, PASSWORD_BCRYPT));
+            $user->setPassword(password_hash($user->getPassword(), PASSWORD_BCRYPT));
         }
-        else
-        {
-            $user->setAddress($data->address ?? $user->getAddress());
-            $user->setPhone($data->phone ?? $user->getPhone());
-        }
+
         $documentManager->flush();
         return true;
     }

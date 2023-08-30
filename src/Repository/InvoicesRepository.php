@@ -162,7 +162,7 @@ class InvoicesRepository implements InvoicesRepositoryInterface
     ): bool
     {
         $invoices->setDate(date("Y-m-d H:i:s"));
-        $invoices->setStatus("facture");
+        $invoices->setStatus("invoice");
         $documentManager->flush();
 
         return true;
@@ -203,10 +203,30 @@ class InvoicesRepository implements InvoicesRepositoryInterface
         DocumentManager $documentManager
     )
     {
-        $invoice->setStatus("pago");
+        $invoice->setStatus("pay");
         $documentManager->flush();
 
         return true;
+    }
+
+    public function deleteInvoice(Invoice $invoice, DocumentManager $documentManager)
+    {
+        if($invoice->getStatus() == "invoice")
+        {
+            $products = $invoice->getProducts();
+            $invoice->setStatus("shopping-cart");
+            $documentManager->flush();
+
+            $this->updateShoppingCart(array(), $invoice->getUserDocument(), $documentManager);
+
+            $invoice->setProducts($products);
+            $invoice->setStatus("cancel");
+            $documentManager->flush();
+
+            return true;
+        }
+
+        return false;
     }
 
     private function findProductByIdInArray
@@ -224,4 +244,5 @@ class InvoicesRepository implements InvoicesRepositoryInterface
         }
         return null;
     }
+
 }

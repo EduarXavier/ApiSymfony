@@ -32,23 +32,14 @@ class UserController extends AbstractController
     #[Route("/add", name: "addUser", methods: ["POST"])]
     public function addUser(Request $request): ?JsonResponse
     {
-        $data = (object) json_decode($request->getContent(), true);
         $user = new User();
 
-        $form = $this->createForm(UserType::class, $user);
+        $form = $this->createForm(UserType::class, $user, ['method' => 'POST']);
 
         $form->handleRequest($request);
-        //$form->submit($request->request->get($form->getName()));
 
         if ($form->isSubmitted() && $form->isValid())
         {
-            $user->setName($data->name);
-            $user->setDocument($data->document);
-            $user->setRol($data->rol);
-            $user->setPhone($data->phone);
-            $user->setPassword(password_hash($data->password, PASSWORD_BCRYPT));
-            $user->setEmail($data->email);
-            $user->setAddress($data->address);
 
             $this->userRepository->addUser($user, $this->documentManager);
 
@@ -60,10 +51,9 @@ class UserController extends AbstractController
         return $this->json(['error' => $errors], 400);
     }
 
-    #[Route("/update/{id}", name: "updateUser", methods: ["PATCH"])]
+    #[Route("/update/{id}", name: "updateUser", methods: ["POST"])]
     public function updateUser($id, Request $request,): JsonResponse
     {
-        $data = (object) json_decode($request->getContent(), true);
         $user = $this->userRepository->findById($id, $this->documentManager);
 
         if (!$user)
@@ -75,14 +65,17 @@ class UserController extends AbstractController
         (
             UserUpdateType::class,
             $user,
-            ['validation_groups' => ['update']]
+            [
+                'method' => 'POST',
+                'validation_groups' => ['update']
+            ]
         );
 
-        $form->submit($request->request->get($form->getName()), false);
+        $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid())
         {
-            if($this->userRepository->updateUser($data, $user, $this->documentManager))
+            if($this->userRepository->updateUser($user, $this->documentManager, null))
             {
                 return $this->json(['message' => 'Usuario actualizado correctamente'], 200);
             }
@@ -97,7 +90,7 @@ class UserController extends AbstractController
         return $this->json(['error' => $errors], 400);
     }
 
-    #[Route("/update/password/{id}", name: "updatePassword", methods: ["PATCH"])]
+    #[Route("/update/password/{id}", name: "updatePassword", methods: ["POST"])]
     public function changePassword
     (
         $id,
@@ -105,7 +98,6 @@ class UserController extends AbstractController
         DocumentManager $documentManager
     ): JsonResponse
     {
-        $data = (object) json_decode($request->getContent(), true);
         $user = $this->userRepository->findById($id, $documentManager);
 
         if (!$user)
@@ -117,14 +109,17 @@ class UserController extends AbstractController
         (
             UserUpdateType::class,
             $user,
-            ['validation_groups' => ['update']]
+            [
+                'method' => 'POST',
+                'validation_groups' => ['update']
+            ]
         );
 
         $form->submit($request->request->get($form->getName()), false);
 
         if ($form->isSubmitted() && $form->isValid())
         {
-            $this->userRepository->updateUser($data, $user, $this->documentManager);
+            $this->userRepository->updateUser($user, $this->documentManager, "password");
 
             return $this->json(['message' => 'Contraseña actualizada correctamente'], 200);
         }

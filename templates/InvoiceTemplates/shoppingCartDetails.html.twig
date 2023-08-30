@@ -1,7 +1,7 @@
 
 {% extends 'base.html.twig' %}
 
-{% block title %}{{ invoice.id ?? "Not found"}} - details{% endblock %}
+{% block title %}{{ shoppingCart.id ?? "Not found"}} - details{% endblock %}
 
 {% block body %}
 
@@ -9,7 +9,7 @@
 
         {% if shoppingCart is empty %}
             <div class="alert alert-info" role="alert">
-                Este pedido no está disponible.
+                Este carrito está vacío.
             </div>
         {% else %}
             <h2 class="pt-5" style="text-align: center">Detalles del pedido</h2>
@@ -20,19 +20,19 @@
                         <div class="row col-9">
                             <div class="card-body">
                                 <h5 class="card-title">
-                                    usuario: {{ invoice.userDocument }}
+                                    usuario: {{ shoppingCart.userDocument }}
                                 </h5>
                                 <p class="card-text">
-                                    ID: {{ invoice.id }}
+                                    ID: {{ shoppingCart.id }}
                                 </p>
                                 <p class="card-text">
-                                    fecha: {{ invoice.date }}
+                                    fecha: {{ shoppingCart.date }}
                                 </p>
                                 <p class="card-text">
-                                    Estado: {{ invoice.status }}
+                                    Estado: {{ shoppingCart.status }}
                                 </p>
                                 <p class="card-text">
-                                    Productos: {{ invoice.products|length }}
+                                    Productos: {{ shoppingCart.products|length }}
                                 </p>
                                 <table class="table">
                                     <thead>
@@ -42,7 +42,7 @@
                                     </tr>
                                     </thead>
                                     <tbody>
-                                    {% for product in invoice.products %}
+                                    {% for product in shoppingCart.products %}
                                         <tr>
                                             <th scope="row">
                                                 <a href="/product/details/{{ product.id }}" class="text-decoration-none">
@@ -54,17 +54,27 @@
                                     {% endfor %}
                                     </tbody>
                                 </table>
-                                {% if invoice.status == "shopping-cart" %}
-                                    <a
-                                            class="btn btn-primary"
-                                            href="/invoices/update/{{ invoice.id }}"
-                                    >
-                                        Actualizar
-                                    </a>
+
+                                {% if shoppingCart.status == "shopping-cart" %}
+                                    <form action="/invoices/create/invoice/" method="POST">
+                                        <input
+                                            value="{{ shoppingCart.userDocument }}"
+                                            name="userDocument"
+                                            class="d-none"
+                                        >
+                                        <button
+                                                class="btn btn-primary"
+                                                type="submit"
+                                        >
+                                            Generar pedido
+                                        </button>
+                                    </form>
                                 {% endif %}
+
+                                <br>
                                 <a
                                         class="btn btn-danger"
-                                        href="/product/invoices/{{ invoice.id }}"
+                                        href="/invoices/{{ shoppingCart.id }}"
                                 >
                                     Eliminar
                                 </a>

@@ -51,4 +51,10 @@ interface InvoicesRepositoryInterface
         Invoice $invoice,
         DocumentManager $documentManager
     );
+
+    public function  deleteInvoice
+    (
+        Invoice $invoice,
+        DocumentManager $documentManager
+    );
 }

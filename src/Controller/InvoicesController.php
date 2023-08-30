@@ -255,12 +255,50 @@ class InvoicesController extends AbstractController
             $form->handleRequest($request);
 
             if ($form->isSubmitted() && $form->isValid()) {
+
+                $invoice = $this->invoicesRepository->findByDocumentAndStatus($invoice->getUserDocument(), "shopping-cart", $this->documentManager);
                 $this->invoicesRepository->createInvoice($invoice, $this->documentManager);
 
                 return $this->redirect("/invoices/details/". $invoice->getId());
             }
 
             return $this->redirect("/invoices/list");
+        }
+
+        return $this->redirectToRoute("login_template");
+    }
+
+    #[Route("/pay/{id}", name: "pay_invoice_view")]
+    public function payInvoiceView(string $id): RedirectResponse
+    {
+        session_abort();
+        session_start();
+
+        if (!empty($_SESSION["user"]) && !empty($_SESSION["rol"]) && $_SESSION["rol"] == "ADMIN") {
+
+            $invoice = $this->invoicesRepository->findById($id, $this->documentManager);
+            $this->invoicesRepository->payInvoice($invoice, $this->documentManager);
+
+            return $this->redirect("/invoices/details/". $invoice->getId());
+
+        }
+
+        return $this->redirectToRoute("login_template");
+    }
+
+    #[Route("/delete/{id}", name: "delete_invoice_view")]
+    public function deleteInvoiceView(string $id): RedirectResponse
+    {
+        session_abort();
+        session_start();
+
+        if (!empty($_SESSION["user"]) && !empty($_SESSION["rol"]) && $_SESSION["rol"] == "ADMIN") {
+
+            $invoice = $this->invoicesRepository->findById($id, $this->documentManager);
+            $this->invoicesRepository->deleteInvoice($invoice, $this->documentManager);
+
+            return $this->redirect("/invoices/details/". $invoice->getId());
+
         }
 
         return $this->redirectToRoute("login_template");
