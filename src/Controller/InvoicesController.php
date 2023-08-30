@@ -30,6 +30,8 @@ class InvoicesController extends AbstractController
         $this->invoicesRepository = new InvoicesRepository();
     }
 
+    //Api
+
     /**
      * @throws Exception
      */
@@ -159,6 +161,8 @@ class InvoicesController extends AbstractController
         }
     }
 
+    //View
+
     #[Route("/list", name : "invoices_list")]
     public function findAllInvoices(): RedirectResponse|Response
     {
@@ -194,35 +198,5 @@ class InvoicesController extends AbstractController
         }
 
         return $this->redirectToRoute("login_template");
-
     }
-
-    #[Route("/add/shopping-cart", name : "add_product_shopping-cart")]
-    public function AddShoppingCart(Request $request): RedirectResponse
-    {
-        $invoices = new Invoice();
-
-        $form = $this->createForm(ShoppingCartType::class, $invoices);
-
-        $form->handleRequest($request);
-
-        if ($form->isSubmitted() && $form->isValid())
-        {
-            $validation = $this->invoicesRepository->AddProductsToshoppingCart
-            (
-                $invoices->getProducts(),
-                $invoices->getUserDocument(),
-                $this->documentManager
-            );
-
-            return $validation ?
-                $this->redirect("/shopping-cart/details")
-                :
-                $this->redirectToRoute("add_product_shopping-cart");
-        }
-
-        return $this->redirectToRoute("login_template");
-
-    }
-
 }

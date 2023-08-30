@@ -41,7 +41,12 @@
                                 >
                                     Actualizar
                                 </a>
-                                <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#addProduct">
+                                <button
+                                        type="button"
+                                        class="btn btn-primary"
+                                        data-toggle="modal"
+                                        data-target="#addProduct"
+                                >
                                     Agregar al carrito
                                 </button>
                                 <a
@@ -66,15 +71,14 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <form action="procesar.php" method="post">
+                    <form action="/invoices/add/shopping-cart" method="post">
                         <div class="mb-3">
                             <input
                                     type="text"
                                     class="form-control d-none"
                                     id="id"
-                                    name="document"
+                                    name="userDocument"
                                     value="{{ document }}"
-                                    disabled
                             >
                         </div>
                         <div class="mb-3">
@@ -82,14 +86,19 @@
                                     type="text"
                                     class="form-control d-none"
                                     id="id"
-                                    name="producto"
+                                    name="products"
                                     value="{{ product.id }}"
-                                    disabled
                             >
                         </div>
                         <div class="mb-3">
                             <label for="cantidad" class="form-label">Cantidad</label>
-                            <input type="number" class="form-control" id="amount" name="cantidad" required>
+                            <input
+                                    type="number"
+                                    class="form-control"
+                                    id="amount"
+                                    name="amount"
+                                    required
+                            >
                         </div>
                         <button type="submit" class="btn btn-primary">Enviar</button>
                     </form>
