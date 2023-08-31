@@ -33,14 +33,10 @@ class UserController extends AbstractController
     public function addUser(Request $request): ?JsonResponse
     {
         $user = new User();
-
         $form = $this->createForm(UserType::class, $user, ['method' => 'POST']);
-
         $form->handleRequest($request);
 
-        if ($form->isSubmitted() && $form->isValid())
-        {
-
+        if ($form->isSubmitted() && $form->isValid()) {
             $this->userRepository->addUser($user, $this->documentManager);
 
             return $this->json(['message' => 'Usuario agregado correctamente']);
@@ -56,31 +52,21 @@ class UserController extends AbstractController
     {
         $user = $this->userRepository->findById($id, $this->documentManager);
 
-        if (!$user)
-        {
+        if (!$user) {
             return $this->json(['error' => 'Usuario no encontrado'], 404);
         }
 
-        $form = $this->createForm
-        (
-            UserUpdateType::class,
-            $user,
-            [
+        $form = $this->createForm(UserUpdateType::class, $user, [
                 'method' => 'POST',
-                'validation_groups' => ['update']
-            ]
-        );
-
+                'validation_groups' => ['update'],
+            ]);
         $form->handleRequest($request);
 
-        if ($form->isSubmitted() && $form->isValid())
-        {
-            if($this->userRepository->updateUser($user, $this->documentManager, null))
-            {
+        if ($form->isSubmitted() && $form->isValid()) {
+            if($this->userRepository->updateUser($user, $this->documentManager, null)) {
                 return $this->json(['message' => 'Usuario actualizado correctamente'], 200);
             }
-            else
-            {
+            else {
                 return $this->json(['error' => 'No se ha podido actualizar'], 200);
             }
         }
@@ -91,34 +77,21 @@ class UserController extends AbstractController
     }
 
     #[Route("/update/password/{id}", name: "updatePassword", methods: ["POST"])]
-    public function changePassword
-    (
-        $id,
-        Request $request,
-        DocumentManager $documentManager
-    ): JsonResponse
+    public function changePassword($id, Request $request, DocumentManager $documentManager): JsonResponse
     {
         $user = $this->userRepository->findById($id, $documentManager);
 
-        if (!$user)
-        {
+        if (!$user) {
             return $this->json(['error' => 'Usuario no encontrado'], 404);
         }
 
-        $form = $this->createForm
-        (
-            UserUpdateType::class,
-            $user,
-            [
-                'method' => 'POST',
-                'validation_groups' => ['update']
-            ]
-        );
+        $form = $this->createForm(UserUpdateType::class, $user, [
+            'method' => 'POST',
+            'validation_groups' => ['update'],
+        ]);
+        $form->handleRequest($request);
 
-        $form->submit($request->request->get($form->getName()), false);
-
-        if ($form->isSubmitted() && $form->isValid())
-        {
+        if ($form->isSubmitted() && $form->isValid()) {
             $this->userRepository->updateUser($user, $this->documentManager, "password");
 
             return $this->json(['message' => 'Contraseña actualizada correctamente'], 200);

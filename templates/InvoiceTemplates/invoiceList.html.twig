@@ -13,8 +13,11 @@
                 No hay pedidos disponibles en este momento.
             </div>
         {% else %}
+
             <div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-4">
+
                 {% for invoice in invoices %}
+
                     <a href="/invoices/details/{{ invoice.id }}" class="text-decoration-none">
                         <div class="col text-dark">
                             <div class="card shadow-lg rounded">

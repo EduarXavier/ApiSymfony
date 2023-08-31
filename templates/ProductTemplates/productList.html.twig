@@ -12,7 +12,9 @@
                 No hay productos disponibles en este momento.
             </div>
         {% else %}
+
             <div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-4">
+
                 {% for product in products %}
                     <a href="/product/details/{{ product.id }}" class="text-decoration-none">
                         <div class="col text-dark">
@@ -35,8 +37,10 @@
                         </div>
                     </a>
                 {% endfor %}
+
             </div>
         {% endif %}
+
     </div>
 
 {% endblock %}

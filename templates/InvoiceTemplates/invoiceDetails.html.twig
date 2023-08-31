@@ -21,7 +21,6 @@
             </div>
         {% else %}
             <h2 class="pt-5" style="text-align: center">Detalles del pedido</h2>
-
             <div class="container mt-5">
                 <div class="row justify-content-center">
                     <div class="col-6 card">
@@ -50,6 +49,7 @@
                                         </tr>
                                     </thead>
                                     <tbody>
+
                                         {% for product in invoice.products %}
                                             <tr>
                                                 <th scope="row">
@@ -62,6 +62,7 @@
                                         {% endfor %}
                                     </tbody>
                                 </table>
+
                                 {% if invoice.status == "invoice" %}
                                     <form action="/invoices/delete/invoice/{{ invoice.id }}" method="POST">
                                         <button
@@ -78,9 +79,7 @@
                                     >
                                         Pagar
                                     </a>
-                                {% endif %}
-
-                                {% if invoice.status == "shopping-cart" and invoice.products|length != 0 %}
+                                {% elseif invoice.status == "shopping-cart" and invoice.products|length != 0 %}
                                     <form action="/invoices/create/invoice/" method="POST">
                                         <input
                                                 value="{{ invoice.userDocument }}"
@@ -94,16 +93,14 @@
                                             Generar pedido
                                         </button>
                                     </form>
-
-                                    <br>
                                 {% endif %}
-
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
         {% endif %}
+
     </div>
 
 {% endblock %}

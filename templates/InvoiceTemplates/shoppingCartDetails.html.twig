@@ -15,7 +15,6 @@
             </div>
         {% else %}
             <h2 class="pt-5" style="text-align: center">Detalles del pedido</h2>
-
             <div class="container mt-5">
                 <div class="row justify-content-center">
                     <div class="col-6 card">
@@ -45,6 +44,7 @@
                                     </tr>
                                     </thead>
                                     <tbody>
+
                                     {% for product in shoppingCart.products %}
                                         <tr>
                                             <th scope="row">
@@ -63,6 +63,7 @@
                                             </td>
                                         </tr>
                                     {% endfor %}
+
                                     </tbody>
                                 </table>
 
@@ -83,9 +84,7 @@
                                             Generar pedido
                                         </button>
                                     </form>
-                                {% endif %}
-
-                                {% if shoppingCart.products|length != 0 %}
+                                {% elseif shoppingCart.products|length != 0%}
                                     <br>
                                     <a
                                             class="btn btn-danger"

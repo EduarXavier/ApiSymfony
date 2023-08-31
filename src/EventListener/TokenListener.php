@@ -16,6 +16,9 @@ class TokenListener
         $this->jwtEncoder = $jwtEncoder;
     }
 
+    /**
+     * @throws JWTDecodeFailureException
+     */
     public function onKernelController(ControllerEvent $event): void
     {
         $controller = $event->getController();
@@ -27,8 +30,7 @@ class TokenListener
         $request = $event->getRequest();
         $routeName = $request->get('_route');
 
-        if
-        (
+        if (
             $routeName !== 'product_list'
             && $routeName !== 'login'
             && $routeName !== "addUser"
@@ -48,33 +50,22 @@ class TokenListener
             && $routeName !== "delete_invoice_view"
             && $routeName !== "delete_shopping_cart_view"
             && $routeName !== "delete_product_to_shopping_cart_view"
-        )
-        {
-            try
-            {
-                $authorizationHeader = $request->headers->get('Authorization');
+        ) {
+            $authorizationHeader = $request->headers->get('Authorization');
 
-                if (!$authorizationHeader)
-                {
-                    throw new AccessDeniedException('Token no proporcionado');
-                }
-
-                $tokenParts = explode(' ', $authorizationHeader);
-
-                if (count($tokenParts) !== 2 || $tokenParts[0] !== 'Bearer')
-                {
-                    throw new AccessDeniedException('Formato de token inválido');
-                }
-
-                $token = $tokenParts[1];
-                $decodedToken = $this->jwtEncoder->decode($token);
-                $email = $decodedToken['email'];
-
+            if (!$authorizationHeader) {
+                throw new AccessDeniedException('Token no proporcionado');
             }
-            catch (JWTDecodeFailureException $exception)
-            {
-                throw new AccessDeniedException('Token inválido', $exception);
+
+            $tokenParts = explode(' ', $authorizationHeader);
+
+            if (count($tokenParts) !== 2 || $tokenParts[0] !== 'Bearer') {
+                throw new AccessDeniedException('Formato de token inválido');
             }
+
+            $token = $tokenParts[1];
+            $decodedToken = $this->jwtEncoder->decode($token);
+            $email = $decodedToken['email'];
         }
     }
 }

@@ -8,20 +8,16 @@ use Doctrine\ODM\MongoDB\MongoDBException;
 
 class UserRepository implements UserRepositoryInterface
 {
-
     public function findByEmail(string $email, DocumentManager $documentManager): ?User
     {
         $repository = $documentManager->getRepository(User::class);
-        $user = $repository->findOneBy(["email" => $email]);
 
-        return $user;
+        return $repository->findOneBy(["email" => $email]);
     }
 
     public function findById(string $id, DocumentManager $documentManager): ?User
     {
-        $user = $documentManager->getRepository(User::class)->find($id);
-
-        return $user;
+        return $documentManager->getRepository(User::class)->find($id);
     }
 
     public function findByDocument(string $document, DocumentManager $documentManager): ?User
@@ -42,15 +38,17 @@ class UserRepository implements UserRepositoryInterface
         return true;
     }
 
+    /**
+     * @throws MongoDBException
+     */
     public function updateUser(User $user, DocumentManager $documentManager, string|null $method): bool
     {
-
-        if($method == "password")
-        {
+        if($method == "password") {
             $user->setPassword(password_hash($user->getPassword(), PASSWORD_BCRYPT));
         }
 
         $documentManager->flush();
+
         return true;
     }
 }

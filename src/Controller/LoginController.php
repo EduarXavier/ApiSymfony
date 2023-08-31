@@ -14,7 +14,6 @@ use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
-use Symfony\Component\Security\Core\User\UserProviderInterface;
 
 class LoginController extends AbstractController
 {
@@ -35,21 +34,16 @@ class LoginController extends AbstractController
      * @throws JWTEncodeFailureException
      */
     #[Route("/login", name: "login", methods: ["POST"])]
-    public function login(
-        Request $request,
-        JWTEncoderInterface $encoder
-    ): JsonResponse
+    public function login(Request $request, JWTEncoderInterface $encoder): JsonResponse
     {
         $user = new User();
         $form = $this->createForm(LoginType::class, $user);
         $form->handleRequest($request);
 
-        if ($form->isSubmitted() && $form->isValid())
-        {
+        if ($form->isSubmitted() && $form->isValid()) {
             $userFind = $this->userRepository->findByEmail($user->getEmail(), $this->documentManager);
 
-            if ($userFind && password_verify($user->getPassword(), $userFind->getPassword()))
-            {
+            if ($userFind && password_verify($user->getPassword(), $userFind->getPassword())) {
                 $token = $encoder->encode(['email' => $user->getEmail()]);
 
                 return $this->json(['token' => $token]);
@@ -68,14 +62,13 @@ class LoginController extends AbstractController
         $form = $this->createForm(LoginType::class, $user);
         $form->handleRequest($request);
 
-        if ($form->isSubmitted() && $form->isValid())
-        {
+        if ($form->isSubmitted() && $form->isValid()) {
             $userFind = $this->userRepository->findByEmail($user->getEmail(), $this->documentManager);
 
-            if ($userFind && password_verify($user->getPassword(), $userFind->getPassword()))
-            {
+            if ($userFind && password_verify($user->getPassword(), $userFind->getPassword())) {
                 session_abort();
                 session_start();
+
                 $_SESSION['user'] = $user->getEmail();
                 $_SESSION["rol"] = $userFind->getRol();
                 $_SESSION["document"] = $userFind->getDocument();
@@ -83,8 +76,7 @@ class LoginController extends AbstractController
                 $this->addFlash("message", $_SESSION["user"].$_SESSION["rol"]);
                 return $this->render('UserTemplate/dashboard.html.twig', []);
             }
-            else
-            {
+            else {
                 $this->addFlash("message", "Credenciales invalidas");
                 $this->redirectToRoute('login_template');
             }

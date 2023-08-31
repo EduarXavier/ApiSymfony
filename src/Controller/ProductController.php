@@ -3,9 +3,7 @@
 namespace App\Controller;
 
 use App\Document\Product;
-use App\Document\User;
 use App\Form\DeleteProductType;
-use App\Form\LoginType;
 use App\Form\ProductType;
 use App\Form\UpdateProductType;
 use App\Repository\ProductRepository;
@@ -21,7 +19,6 @@ use Symfony\Component\Routing\Annotation\Route;
 #[Route("/product")]
 class ProductController extends AbstractController
 {
-
     private ProductRepositoryInterface $productRepository;
     private DocumentManager $documentManager;
 
@@ -46,8 +43,7 @@ class ProductController extends AbstractController
         session_start();
         $products = $this->productRepository->findAll($this->documentManager);
 
-        if(!empty($_SESSION["user"]) && !empty($_SESSION["rol"]) && $_SESSION["rol"] == "ADMIN")
-        {
+        if(!empty($_SESSION["user"]) && !empty($_SESSION["rol"]) && $_SESSION["rol"] == "ADMIN") {
             return $this->render("ProductTemplates/productList.html.twig", [
                 "products" => $products,
             ]);
@@ -63,23 +59,24 @@ class ProductController extends AbstractController
         session_start();
         $product = $this->productRepository->findById($id, $this->documentManager);
 
-        if(!empty($_SESSION["user"]) && !empty($_SESSION["rol"]) && $_SESSION["rol"] == "ADMIN")
-        {
+        if(!empty($_SESSION["user"]) && !empty($_SESSION["rol"]) && $_SESSION["rol"] == "ADMIN") {
             $accion = "";
             $mensaje = "";
 
-            if(!empty($_GET["mnsj"]))
-            {
-                $accion = $_GET["mnsj"] == "ok" ? "exito" : "error";
-                $mensaje = $_GET["mnsj"] == "ok" ?
-                    "Se ha agregado con éxito"
-                    :
-                    "Ha ocurrido un error";
+            if(!empty($_GET["mnsj"])) {
+                if($_GET["mnsj"] == "ok"){
+                    $accion = "exito";
+                    $mensaje = "Se ha agregado con éxito";
+                }
+                else{
+                    $accion = "error";
+                    $mensaje = "Ha ocurrido un error";
+                }
             }
 
             return $this->render("ProductTemplates/productDetails.html.twig", [
                 "product" => $product,
-                $accion => $mensaje
+                $accion => $mensaje,
             ]);
         }
 
@@ -95,32 +92,27 @@ class ProductController extends AbstractController
         $form = $this->createForm(ProductType::class, $product, ['method' => 'POST']);
         $form->handleRequest($request);
 
-        if(!empty($_SESSION["user"]) && !empty($_SESSION["rol"]) && $_SESSION["rol"] == "ADMIN")
-        {
-            if($form->isSubmitted() && $form->isValid())
-            {
+        if(!empty($_SESSION["user"]) && !empty($_SESSION["rol"]) && $_SESSION["rol"] == "ADMIN") {
+            if($form->isSubmitted() && $form->isValid()) {
                 $id = $this->productRepository->addProduct($product, $this->documentManager);
 
-                if($id)
-                {
+                if($id) {
                     return $this->redirect("/product/details/$id");
                 }
-                else
-                {
+                else {
                     $this->addFlash("error", "No se ha agregado el producto: $id");
                     $this->redirectToRoute("add_product");
                 }
             }
         }
-        else if ($_SESSION["rol"] != "ADMIN")
-        {
+        else if ($_SESSION["rol"] != "ADMIN") {
             return $this->redirectToRoute("login_template");
         }
 
         return $this->render("ProductTemplates/productForms.html.twig", [
             "form" => $form,
             "name" => "Crear producto",
-            "option" => "Crear"
+            "option" => "Crear",
         ]);
     }
 
@@ -133,32 +125,27 @@ class ProductController extends AbstractController
         $form = $this->createForm(UpdateProductType::class, $product);
         $form->handleRequest($request);
 
-        if(!empty($_SESSION["user"]) && !empty($_SESSION["rol"]) && $_SESSION["rol"] == "ADMIN")
-        {
-            if($form->isSubmitted() && $form->isValid())
-            {
+        if(!empty($_SESSION["user"]) && !empty($_SESSION["rol"]) && $_SESSION["rol"] == "ADMIN") {
+            if($form->isSubmitted() && $form->isValid()) {
                 $id = $this->productRepository->updateProduct($product, $this->documentManager);
 
-                if($id)
-                {
+                if($id) {
                     return $this->redirect("/product/details/$id");
                 }
-                else
-                {
+                else {
                     $this->addFlash("error", "No se ha actualizado el producto: $id");
                     $this->redirectToRoute("update_product");
                 }
             }
         }
-        else if ($_SESSION["rol"] != "ADMIN")
-        {
+        else if ($_SESSION["rol"] != "ADMIN") {
             return $this->redirectToRoute("login_template");
         }
 
         return $this->render("ProductTemplates/productForms.html.twig", [
             "form" => $form,
             "name" => "Actualizar producto",
-            "option" => "Actualizar"
+            "option" => "Actualizar",
         ]);
     }
 
@@ -171,18 +158,14 @@ class ProductController extends AbstractController
         $form= $this->createForm(DeleteProductType::class, $product);
         $form->handleRequest($request);
 
-        if(!empty($_SESSION["user"]) && !empty($_SESSION["rol"]) && $_SESSION["rol"] == "ADMIN")
-        {
-            if($form->isSubmitted() && $form->isValid())
-            {
+        if(!empty($_SESSION["user"]) && !empty($_SESSION["rol"]) && $_SESSION["rol"] == "ADMIN") {
+            if($form->isSubmitted() && $form->isValid()) {
                 $response = $this->productRepository->deleteProduct($product, $this->documentManager);
 
-                if($response)
-                {
+                if($response) {
                     return $this->redirect("/product/list-view");
                 }
-                else
-                {
+                else {
                     $this->addFlash("error", "No se ha actualizado el producto: $id");
                     $this->redirectToRoute("delete_product");
                 }
@@ -191,7 +174,7 @@ class ProductController extends AbstractController
             return $this->render("ProductTemplates/productForms.html.twig", [
                 "form" => $form,
                 "name" => "Eliminar producto",
-                "option" => "Eliminar"
+                "option" => "Eliminar",
             ]);
         }
 
