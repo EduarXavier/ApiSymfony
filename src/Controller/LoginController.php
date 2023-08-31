@@ -66,14 +66,14 @@ class LoginController extends AbstractController
             $userFind = $this->userRepository->findByEmail($user->getEmail(), $this->documentManager);
 
             if ($userFind && password_verify($user->getPassword(), $userFind->getPassword())) {
-                session_abort();
-                session_start();
 
-                $_SESSION['user'] = $user->getEmail();
-                $_SESSION["rol"] = $userFind->getRol();
-                $_SESSION["document"] = $userFind->getDocument();
-                $_SESSION["shopping-cart"] = array();
-                $this->addFlash("message", $_SESSION["user"].$_SESSION["rol"]);
+                $session = $request->getSession();
+                $session->set("user", $user->getEmail());
+                $session->set("rol", $userFind->getRol());
+                $session->set("document", $userFind->getDocument());
+                $session->set("shopping-cart", array());
+
+                $this->addFlash("message", "Bienvenido " . $session->get("user"));
                 return $this->render('UserTemplate/dashboard.html.twig', []);
             }
             else {
@@ -88,10 +88,10 @@ class LoginController extends AbstractController
     }
 
     #[Route("/logout", name: "logout")]
-    public function logout(): RedirectResponse
+    public function logout(Request $request): RedirectResponse
     {
-        session_start();
-        session_destroy();
+        $session = $request->getSession();
+        $session->clear();
 
         return $this->redirectToRoute('login_template');
     }

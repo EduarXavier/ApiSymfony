@@ -159,12 +159,11 @@ class InvoicesController extends AbstractController
     //Endpoints View
 
     #[Route("/list", name: "invoices_list")]
-    public function findAllInvoices(): RedirectResponse|Response
+    public function findAllInvoices(Request $request): RedirectResponse|Response
     {
-        session_abort();
-        session_start();
+        $session = $request->getSession();
 
-        if (!empty($_SESSION["user"]) && !empty($_SESSION["rol"]) && $_SESSION["rol"] == "ADMIN") {
+        if (!empty($session->get("user")) && !empty($session->get("rol")) && $session->get("rol") == "ADMIN") {
             $invoices = $this->invoicesRepository->findAll($this->documentManager);
 
             return $this->render("InvoiceTemplates/invoiceList.html.twig", [
@@ -176,14 +175,13 @@ class InvoicesController extends AbstractController
     }
 
     #[Route("/shopping-cart/list", name: "shopping_cart_list")]
-    public function shoppingCartList(): RedirectResponse|Response
+    public function shoppingCartList(Request $request): RedirectResponse|Response
     {
-        session_abort();
-        session_start();
+        $session = $request->getSession();
 
-        if (!empty($_SESSION["user"]) && !empty($_SESSION["rol"]) && $_SESSION["rol"] == "ADMIN") {
+        if (!empty($session->get("user")) && !empty($session->get("rol")) && $session->get("rol") == "ADMIN") {
             $shoppingCart = $this->invoicesRepository->findByDocumentAndStatus(
-                $_SESSION["document"],
+                $session->get("document"),
                 "shopping-cart" ,
                 $this->documentManager
             );
@@ -197,12 +195,11 @@ class InvoicesController extends AbstractController
     }
 
     #[Route("/details/{id}", name: "invoices_details")]
-    public function invoiceDetails(string $id): RedirectResponse|Response
+    public function invoiceDetails(Request $request, string $id): RedirectResponse|Response
     {
-        session_abort();
-        session_start();
+        $session = $request->getSession();
 
-        if (!empty($_SESSION["user"]) && !empty($_SESSION["rol"]) && $_SESSION["rol"] == "ADMIN") {
+        if (!empty($session->get("user")) && !empty($session->get("rol")) && $session->get("rol") == "ADMIN") {
             $invoice = $this->invoicesRepository->findById($id, $this->documentManager);
 
             return $this->render("InvoiceTemplates/invoiceDetails.html.twig", [
@@ -219,27 +216,25 @@ class InvoicesController extends AbstractController
     #[Route("/shopping-cart/add-product", name: "add_product_shopping_cart", methods: ["POST"])]
     public function addProductShoppingCart(Request $request): RedirectResponse
     {
-        session_abort();
-        session_start();
-
+        $session = $request->getSession();
         $product = new Product();
         $form = $this->createForm(ProductShoppingCartType::class, $product);
 
-        if (!empty($_SESSION["user"]) && !empty($_SESSION["rol"]) && $_SESSION["rol"] == "ADMIN") {
+        if (!empty($session->get("user")) && !empty($session->get("rol")) && $session->get("rol") == "ADMIN") {
             $form->handleRequest($request);
 
             if ($form->isSubmitted() && $form->isValid()) {
-                $products = $_SESSION["shopping-cart"];
+                $products = $session->get("shopping-cart");
                 $products[] = [
                     "id" => $product->getId(),
                     "amount" => $product->getAmount(),
                 ];
-                $_SESSION["shopping-cart"] = array();
+                $session->set("shopping-cart", array());
 
                 $this->invoicesRepository->AddProductsToShoppingCart
                 (
                     $products,
-                    $_SESSION["document"],
+                    $session->get("document"),
                     $this->documentManager
                 );
 
@@ -258,13 +253,11 @@ class InvoicesController extends AbstractController
     #[Route("/create/invoice/", name: "create_invoice_view")]
     public function createInvoice(Request $request): RedirectResponse
     {
-        session_abort();
-        session_start();
-
+        $session = $request->getSession();
         $invoice = new Invoice();
         $form = $this->createForm(FactureType::class, $invoice);
 
-        if (!empty($_SESSION["user"]) && !empty($_SESSION["rol"]) && $_SESSION["rol"] == "ADMIN") {
+        if (!empty($session->get("user")) && !empty($session->get("rol")) && $session->get("rol") == "ADMIN") {
             $form->handleRequest($request);
 
             if ($form->isSubmitted() && $form->isValid()) {
@@ -285,12 +278,11 @@ class InvoicesController extends AbstractController
      * @throws TransportExceptionInterface
      */
     #[Route("/pay/{id}", name: "pay_invoice_view")]
-    public function payInvoiceView(string $id): RedirectResponse
+    public function payInvoiceView(Request $request, string $id): RedirectResponse
     {
-        session_abort();
-        session_start();
+        $session = $request->getSession();
 
-        if (!empty($_SESSION["user"]) && !empty($_SESSION["rol"]) && $_SESSION["rol"] == "ADMIN") {
+        if (!empty($session->get("user")) && !empty($session->get("rol")) && $session->get("rol") == "ADMIN") {
             $invoice = $this->invoicesRepository->findById($id, $this->documentManager);
 
             if($invoice){
@@ -310,13 +302,15 @@ class InvoicesController extends AbstractController
         return $this->redirectToRoute("login_template");
     }
 
+    /**
+     * @throws MongoDBException
+     */
     #[Route("/delete/invoice/{id}", name: "delete_invoice_view")]
-    public function deleteInvoiceView(string $id): RedirectResponse
+    public function deleteInvoiceView(Request $request, string $id): RedirectResponse
     {
-        session_abort();
-        session_start();
+        $session = $request->getSession();
 
-        if (!empty($_SESSION["user"]) && !empty($_SESSION["rol"]) && $_SESSION["rol"] == "ADMIN") {
+        if (!empty($session->get("user")) && !empty($session->get("rol")) && $session->get("rol") == "ADMIN") {
             $invoice = $this->invoicesRepository->findById($id, $this->documentManager);
             $this->invoicesRepository->deleteInvoice($invoice, $this->documentManager);
 
@@ -326,13 +320,15 @@ class InvoicesController extends AbstractController
         return $this->redirectToRoute("login_template");
     }
 
+    /**
+     * @throws MongoDBException
+     */
     #[Route("/shopping-cart/delete/{document}", name: "delete_shopping_cart_view")]
-    public function deleteShoppingCartView(string $document): RedirectResponse
+    public function deleteShoppingCartView(Request $request, string $document): RedirectResponse
     {
-        session_abort();
-        session_start();
+        $session = $request->getSession();
 
-        if (!empty($_SESSION["user"]) && !empty($_SESSION["rol"]) && $_SESSION["rol"] == "ADMIN") {
+        if (!empty($session->get("user")) && !empty($session->get("rol")) && $session->get("rol") == "ADMIN") {
             $shoppingCart = $this->invoicesRepository->findByDocumentAndStatus($document, "shopping-cart" ,$this->documentManager);
             $this->invoicesRepository->deleteShoppingCart($shoppingCart, $this->documentManager);
 
@@ -342,13 +338,15 @@ class InvoicesController extends AbstractController
         return $this->redirectToRoute("login_template");
     }
 
+    /**
+     * @throws MongoDBException
+     */
     #[Route("/shopping-cart/delete-product/{id}", name: "delete_product_to_shopping_cart_view")]
-    public function deleteProductToShoppingCartView(string $id): RedirectResponse
+    public function deleteProductToShoppingCartView(Request $request, string $id): RedirectResponse
     {
-        session_abort();
-        session_start();
+        $session = $request->getSession();
 
-        if (!empty($_SESSION["user"]) && !empty($_SESSION["rol"]) && $_SESSION["rol"] == "ADMIN") {
+        if (!empty($session->get("user")) && !empty($session->get("rol")) && $session->get("rol") == "ADMIN") {
             $this->invoicesRepository->deleteProductToShoppingCart($_SESSION["document"], $id ,$this->documentManager);
 
             return $this->redirect("/invoices/shopping-cart/list");

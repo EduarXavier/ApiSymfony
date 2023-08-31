@@ -9,6 +9,9 @@ use App\Form\UpdateProductType;
 use App\Repository\ProductRepository;
 use App\Repository\ProductRepositoryInterface;
 use Doctrine\ODM\MongoDB\DocumentManager;
+use Doctrine\ODM\MongoDB\LockException;
+use Doctrine\ODM\MongoDB\Mapping\MappingException;
+use Doctrine\ODM\MongoDB\MongoDBException;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\RedirectResponse;
@@ -37,13 +40,12 @@ class ProductController extends AbstractController
     }
 
     #[Route("/list-view", name: "product_list", methods : ["GET"])]
-    public function productListTemplate(): Response
+    public function productListTemplate(Request $request): Response
     {
-        session_abort();
-        session_start();
+        $session = $request->getSession();
         $products = $this->productRepository->findAll($this->documentManager);
 
-        if(!empty($_SESSION["user"]) && !empty($_SESSION["rol"]) && $_SESSION["rol"] == "ADMIN") {
+        if (!empty($session->get("user")) && !empty($session->get("rol")) && $session->get("rol") == "ADMIN") {
             return $this->render("ProductTemplates/productList.html.twig", [
                 "products" => $products,
             ]);
@@ -52,19 +54,22 @@ class ProductController extends AbstractController
         return $this->redirectToRoute('login_template');
     }
 
+    /**
+     * @throws MappingException
+     * @throws LockException
+     */
     #[Route("/details/{id}", name: "product_details", methods : ["GET"])]
-    public function productDetails(string $id): RedirectResponse|Response
+    public function productDetails(Request $request, string $id): RedirectResponse|Response
     {
-        session_abort();
-        session_start();
+        $session = $request->getSession();
         $product = $this->productRepository->findById($id, $this->documentManager);
 
-        if(!empty($_SESSION["user"]) && !empty($_SESSION["rol"]) && $_SESSION["rol"] == "ADMIN") {
+        if (!empty($session->get("user")) && !empty($session->get("rol")) && $session->get("rol") == "ADMIN") {
             $accion = "";
             $mensaje = "";
 
-            if(!empty($_GET["mnsj"])) {
-                if($_GET["mnsj"] == "ok"){
+            if (!empty($_GET["mnsj"])) {
+                if ($_GET["mnsj"] == "ok"){
                     $accion = "exito";
                     $mensaje = "Se ha agregado con éxito";
                 }
@@ -83,20 +88,22 @@ class ProductController extends AbstractController
         return $this->redirectToRoute('login_template');
     }
 
+    /**
+     * @throws MongoDBException
+     */
     #[Route("/add", name: "add_product")]
     public function addProduct(Request $request): Response
     {
-        session_abort();
-        session_start();
+        $session = $request->getSession();
         $product = new Product();
         $form = $this->createForm(ProductType::class, $product, ['method' => 'POST']);
         $form->handleRequest($request);
 
-        if(!empty($_SESSION["user"]) && !empty($_SESSION["rol"]) && $_SESSION["rol"] == "ADMIN") {
-            if($form->isSubmitted() && $form->isValid()) {
+        if(!empty($session->get("user")) && !empty($session->get("rol")) && $session->get("rol") == "ADMIN") {
+            if ($form->isSubmitted() && $form->isValid()) {
                 $id = $this->productRepository->addProduct($product, $this->documentManager);
 
-                if($id) {
+                if ($id) {
                     return $this->redirect("/product/details/$id");
                 }
                 else {
@@ -105,7 +112,7 @@ class ProductController extends AbstractController
                 }
             }
         }
-        else if ($_SESSION["rol"] != "ADMIN") {
+        else if ($session->get("rol") != "ADMIN") {
             return $this->redirectToRoute("login_template");
         }
 
@@ -116,17 +123,21 @@ class ProductController extends AbstractController
         ]);
     }
 
+    /**
+     * @throws MongoDBException
+     * @throws MappingException
+     * @throws LockException
+     */
     #[Route("/update/{id}", name: "update_product")]
     public function updateProduct(string $id, Request $request): Response
     {
-        session_abort();
-        session_start();
+        $session = $request->getSession();
         $product = $this->productRepository->findById($id, $this->documentManager);
         $form = $this->createForm(UpdateProductType::class, $product);
         $form->handleRequest($request);
 
-        if(!empty($_SESSION["user"]) && !empty($_SESSION["rol"]) && $_SESSION["rol"] == "ADMIN") {
-            if($form->isSubmitted() && $form->isValid()) {
+        if (!empty($session->get("user")) && !empty($session->get("rol")) && $session->get("rol") == "ADMIN") {
+            if ($form->isSubmitted() && $form->isValid()) {
                 $id = $this->productRepository->updateProduct($product, $this->documentManager);
 
                 if($id) {
@@ -138,7 +149,7 @@ class ProductController extends AbstractController
                 }
             }
         }
-        else if ($_SESSION["rol"] != "ADMIN") {
+        else if ($session->get("rol") != "ADMIN") {
             return $this->redirectToRoute("login_template");
         }
 
@@ -149,20 +160,24 @@ class ProductController extends AbstractController
         ]);
     }
 
+    /**
+     * @throws MongoDBException
+     * @throws MappingException
+     * @throws LockException
+     */
     #[Route("/delete/{id}", name: "delete_product")]
     public function deleteProduct(string $id, Request $request): RedirectResponse|Response
     {
-        session_abort();
-        session_start();
+        $session = $request->getSession();
         $product = $this->productRepository->findById($id, $this->documentManager);
         $form= $this->createForm(DeleteProductType::class, $product);
         $form->handleRequest($request);
 
-        if(!empty($_SESSION["user"]) && !empty($_SESSION["rol"]) && $_SESSION["rol"] == "ADMIN") {
+        if (!empty($session->get("user")) && !empty($session->get("rol")) && $session->get("rol") == "ADMIN") {
             if($form->isSubmitted() && $form->isValid()) {
                 $response = $this->productRepository->deleteProduct($product, $this->documentManager);
 
-                if($response) {
+                if ($response) {
                     return $this->redirect("/product/list-view");
                 }
                 else {

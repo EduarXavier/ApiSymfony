@@ -14,8 +14,8 @@ class UpdateProductType extends AbstractType
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $builder
-            ->add('name', TextType::class)->setRequired(false)
-            ->add('price', NumberType::class)->setRequired(false)
+            ->add('name', TextType::class, ['label' => 'Nombre'])->setRequired(false)
+            ->add('price', NumberType::class, ['label' => 'Precio'])->setRequired(false)
         ;
     }
     public function configureOptions(OptionsResolver $resolver): void

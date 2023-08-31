@@ -52,6 +52,9 @@ class UserController extends AbstractController
         return $this->json(['error' => $errors], 400);
     }
 
+    /**
+     * @throws MongoDBException
+     */
     #[Route("/update/{id}", name: "updateUser", methods: ["POST"])]
     public function updateUser($id, Request $request,): JsonResponse
     {
@@ -81,6 +84,9 @@ class UserController extends AbstractController
         return $this->json(['error' => $errors], 400);
     }
 
+    /**
+     * @throws MongoDBException
+     */
     #[Route("/update/password/{id}", name: "updatePassword", methods: ["POST"])]
     public function changePassword($id, Request $request, DocumentManager $documentManager): JsonResponse
     {
