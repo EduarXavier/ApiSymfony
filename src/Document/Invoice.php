@@ -72,6 +72,4 @@ class Invoice
     {
         $this->status = $status;
     }
-
-
 }

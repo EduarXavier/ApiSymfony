@@ -10,6 +10,7 @@ use Lexik\Bundle\JWTAuthenticationBundle\Encoder\JWTEncoderInterface;
 use Lexik\Bundle\JWTAuthenticationBundle\Exception\JWTEncodeFailureException;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
@@ -35,21 +36,16 @@ class LoginController extends AbstractController
      */
     #[Route("/login", name: "login", methods: ["POST"])]
     public function login(
-        Request               $request,
-        UserProviderInterface $userProvider,
-        JWTEncoderInterface   $encoder
+        Request $request,
+        JWTEncoderInterface $encoder
     ): JsonResponse
     {
-        $data = json_decode($request->getContent(), true,);
         $user = new User();
-
         $form = $this->createForm(LoginType::class, $user);
-        $form->submit($data);
+        $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid())
         {
-            $user->setEmail($data["email"]);
-            $user->setPassword($data["password"]);
             $userFind = $this->userRepository->findByEmail($user->getEmail(), $this->documentManager);
 
             if ($userFind && password_verify($user->getPassword(), $userFind->getPassword()))
@@ -69,9 +65,7 @@ class LoginController extends AbstractController
     public function loginView(Request $request): Response
     {
         $user = new User();
-
         $form = $this->createForm(LoginType::class, $user);
-
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid())
@@ -99,5 +93,14 @@ class LoginController extends AbstractController
         return $this->render('UserTemplate/login.html.twig', [
             'form' => $form->createView(),
         ]);
+    }
+
+    #[Route("/logout", name: "logout")]
+    public function logout(): RedirectResponse
+    {
+        session_start();
+        session_destroy();
+
+        return $this->redirectToRoute('login_template');
     }
 }

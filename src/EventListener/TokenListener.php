@@ -32,6 +32,7 @@ class TokenListener
             $routeName !== 'product_list'
             && $routeName !== 'login'
             && $routeName !== "addUser"
+            && $routeName !== "logout"
             && $routeName !== "login_template"
             && $routeName !== "product_details"
             && $routeName !== "add_product"

@@ -40,19 +40,15 @@ class InvoicesController extends AbstractController
     #[Route("/shopping-cart", name: "shopping_cart", methods: ["POST"])]
     public function shoppingCart(Request $request, DocumentManager $documentManager): ?JsonResponse
     {
-        $data = json_decode($request->getContent(), true,);
         $invoices = new Invoice();
-
         $form = $this->createForm(ShoppingCartType::class, $invoices);
-        $form->submit($request->request->get($form->getName()));
-
-        //$form->handleRequest($request);
+        $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
             $validation = $this->invoicesRepository->AddProductsToshoppingCart
             (
-                $data["products"],
-                $data["userDocument"],
+                $invoices->getProducts(),
+                $invoices->getUserDocument(),
                 $this->documentManager
             );
 
@@ -69,17 +65,15 @@ class InvoicesController extends AbstractController
     #[Route("/shopping-cart", name: "update_shopping_cart", methods: ["PATCH"])]
     public function updateShoppingCart(Request $request, DocumentManager $documentManager): ?JsonResponse
     {
-        $data = json_decode($request->getContent(), true,);
         $invoices = new Invoice();
-
         $form = $this->createForm(ShoppingCartType::class, $invoices);
-        $form->submit($request->request->get($form->getName()));
+        $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
             $validation = $this->invoicesRepository->updateShoppingCart
             (
-                $data["products"],
-                $data["userDocument"],
+                $invoices->getProducts(),
+                $invoices->getUserDocument(),
                 $this->documentManager
             );
 
@@ -99,21 +93,23 @@ class InvoicesController extends AbstractController
     #[Route("/create-invoice", name: "create-invoice", methods: ["POST"])]
     public function createInvoices(Request $request, DocumentManager $documentManager): ?JsonResponse
     {
-        $data = (object)json_decode($request->getContent(), true,);
         $invoice = new Invoice();
-
         $form = $this->createForm(FactureType::class, $invoice);
         $form->submit($request->request->get($form->getName()));
 
-        if ($form->isSubmitted() && $form->isValid()) {
-            $document = $data->document;
+        if ($form->isSubmitted() && $form->isValid())
+        {
+            $document = $invoice->getUserDocument();
             $invoice = $this->invoicesRepository->findByDocumentAndStatus($document, "shopping-cart", $documentManager);
 
-            if ($invoice) {
+            if ($invoice)
+            {
                 $this->invoicesRepository->createInvoice($invoice, $documentManager);
 
                 return new JsonResponse(["mensaje" => "Se ha creado la factura"], 200);
-            } else {
+            }
+            else
+            {
                 return new JsonResponse(["error" => "No se ha encontrado la lista de productos"], 400);
             }
         } else {
@@ -127,29 +123,32 @@ class InvoicesController extends AbstractController
     #[Route("/pay-invoice", name: "pay-invoice", methods: ["GET"])]
     public function payInvoice(Request $request, DocumentManager $documentManager): ?JsonResponse
     {
-        $data = (object)json_decode($request->getContent(), true,);
         $invoice = new Invoice();
 
         $form = $this->createForm(ShoppingCartType::class, $invoice);
-        $form->submit($request->request->get($form->getName()));
+        $form->handleRequest($request);
 
-        if ($form->isSubmitted() && $form->isValid()) {
-            $id = $data->id;
+        if ($form->isSubmitted() && $form->isValid())
+        {
+            $id = $invoice->getId();
             $invoice = $this->invoicesRepository->findById($id, $documentManager);
 
-            if ($invoice) {
+            if ($invoice)
+            {
                 $this->invoicesRepository->payInvoice($invoice, $documentManager);
 
                 return new JsonResponse(["mensaje" => "Se ha pagado"], 200);
             } else {
                 return new JsonResponse(["error" => "No se ha encontrado la factura"], 400);
             }
-        } else {
+        }
+        else
+        {
             return new JsonResponse(["error" => "Ha ocurrido un error con los datos enviados"], 400);
         }
     }
 
-    //Enpoints View
+    //Endpoints View
 
     #[Route("/list", name: "invoices_list")]
     public function findAllInvoices(): RedirectResponse|Response
@@ -157,7 +156,8 @@ class InvoicesController extends AbstractController
         session_abort();
         session_start();
 
-        if (!empty($_SESSION["user"]) && !empty($_SESSION["rol"]) && $_SESSION["rol"] == "ADMIN") {
+        if (!empty($_SESSION["user"]) && !empty($_SESSION["rol"]) && $_SESSION["rol"] == "ADMIN")
+        {
             $invoices = $this->invoicesRepository->findAll($this->documentManager);
 
             return $this->render("InvoiceTemplates/invoiceList.html.twig", [

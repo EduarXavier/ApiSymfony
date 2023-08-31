@@ -58,5 +58,4 @@ class Product
     {
         $this->amount = $amount;
     }
-
 }

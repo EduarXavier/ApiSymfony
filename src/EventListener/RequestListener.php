@@ -19,8 +19,8 @@ class RequestListener implements EventSubscriberInterface
     {
         $request = $event->getRequest();
 
-        if ($request->isMethod('POST')) {
-
+        if ($request->isMethod('POST'))
+        {
             if(!$request->request)
             {
                 $content = $request->getContent() ?? null;
