@@ -46,6 +46,9 @@
                                         <tr>
                                             <th scope="col">ID</th>
                                             <th scope="col">Cantidad</th>
+                                            {% if invoice.status == "shopping-cart" %}
+                                                <th scope="col">Acción</th>
+                                            {% endif %}
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -58,6 +61,18 @@
                                                     </a>
                                                 </th>
                                                 <td>{{ product.amount }}</td>
+
+                                                {% if invoice.status == "shopping-cart" %}
+                                                    <td>
+                                                        <a
+                                                                href="/invoices/shopping-cart/delete-product/{{ product.id }}"
+                                                                class="btn btn-primary text-decoration-none"
+                                                        >
+                                                            Eliminar
+                                                        </a>
+                                                    </td>
+                                                {% endif %}
+
                                             </tr>
                                         {% endfor %}
                                     </tbody>

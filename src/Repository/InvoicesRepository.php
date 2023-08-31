@@ -134,8 +134,7 @@ class InvoicesRepository implements InvoicesRepositoryInterface
         return true;
     }
 
-    public function findByDocumentAndStatus
-    (string $document, string $status, DocumentManager $documentManager)
+    public function findByDocumentAndStatus(string $document, string $status, DocumentManager $documentManager)
     {
         $repository = $documentManager->getRepository(Invoice::class);
 
@@ -154,6 +153,7 @@ class InvoicesRepository implements InvoicesRepositoryInterface
      */
     public function payInvoice(Invoice $invoice, DocumentManager $documentManager): bool
     {
+        $invoice->setDate(date("Y-m-d H:i:s"));
         $invoice->setStatus("pay");
         $documentManager->flush();
 
@@ -171,6 +171,7 @@ class InvoicesRepository implements InvoicesRepositoryInterface
             $documentManager->flush();
             $this->updateShoppingCart(array(), $invoice->getUserDocument(), $documentManager);
             $invoice->setProducts($products);
+            $invoice->setDate(date("Y-m-d H:i:s"));
             $invoice->setStatus("cancel");
             $documentManager->flush();
 
@@ -186,6 +187,7 @@ class InvoicesRepository implements InvoicesRepositoryInterface
     public function deleteShoppingCart(Invoice $shoppingCart, DocumentManager $documentManager): bool
     {
         if($shoppingCart->getStatus() == "shopping-cart") {
+            $shoppingCart->setDate(date("Y-m-d H:i:s"));
             $documentManager->flush();
             $this->updateShoppingCart(array(), $shoppingCart->getUserDocument(), $documentManager);
 
