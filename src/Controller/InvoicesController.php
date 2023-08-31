@@ -296,11 +296,12 @@ class InvoicesController extends AbstractController
             if($invoice){
                 $invoiceEmail = $this->invoicesRepository->findByDocumentAndStatus($invoice->getUserDocument(), "pay", $this->documentManager);
 
-                if($invoiceEmail == null){
+                if($invoiceEmail?->getUserDocument()){
                     $user = $this->userRepository->findByDocument($invoice->getUserDocument(), $this->documentManager);
                     $this->emailController->sendEmail($user->getEmail(), "registry");
-                    $this->invoicesRepository->payInvoice($invoice, $this->documentManager);
                 }
+
+                $this->invoicesRepository->payInvoice($invoice, $this->documentManager);
             }
 
             return $this->redirect("/invoices/details/". $invoice->getId());
