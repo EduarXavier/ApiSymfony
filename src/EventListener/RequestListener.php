@@ -20,7 +20,7 @@ class RequestListener implements EventSubscriberInterface
         $request = $event->getRequest();
 
         if ($request->isMethod('POST')) {
-            if(!$request->request) {
+            if(count($request->request) == 0) {
                 $content = $request->getContent() ?? null;
                 $request->request->replace(json_decode($content, true));
             }

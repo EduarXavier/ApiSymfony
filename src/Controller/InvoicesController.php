@@ -9,6 +9,8 @@ use App\Form\ProductShoppingCartType;
 use App\Form\ShoppingCartType;
 use App\Repository\InvoicesRepository;
 use App\Repository\InvoicesRepositoryInterface;
+use App\Repository\UserRepository;
+use App\Repository\UserRepositoryInterface;
 use Doctrine\ODM\MongoDB\DocumentManager;
 use Doctrine\ODM\MongoDB\MongoDBException;
 use Exception;
@@ -17,17 +19,23 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
 use Symfony\Component\Routing\Annotation\Route;
 
 #[Route("/invoices")]
 class InvoicesController extends AbstractController
 {
     private InvoicesRepositoryInterface $invoicesRepository;
+    private UserRepositoryInterface $userRepository;
     private DocumentManager $documentManager;
+    private EmailController $emailController;
 
-    public function __construct(DocumentManager $documentManager)
+
+    public function __construct(DocumentManager $documentManager, EmailController $emailController)
     {
         $this->documentManager = $documentManager;
+        $this->emailController = $emailController;
+        $this->userRepository = new UserRepository();
         $this->invoicesRepository = new InvoicesRepository();
     }
 
@@ -114,6 +122,7 @@ class InvoicesController extends AbstractController
 
     /**
      * @throws MongoDBException
+     * @throws TransportExceptionInterface
      */
     #[Route("/pay-invoice", name: "pay-invoice", methods: ["GET"])]
     public function payInvoice(Request $request, DocumentManager $documentManager): ?JsonResponse
@@ -127,6 +136,13 @@ class InvoicesController extends AbstractController
             $invoice = $this->invoicesRepository->findById($id, $documentManager);
 
             if ($invoice) {
+                $invoiceEmail = $this->invoicesRepository->findByDocumentAndStatus($invoice->getUserDocument(), "pay", $documentManager);
+
+                if($invoiceEmail == null){
+                    $user = $this->userRepository->findByDocument($invoiceEmail->getUserDocument(), $documentManager);
+                    $this->emailController->sendEmail($user->getEmail(), "registry");
+                }
+
                 $this->invoicesRepository->payInvoice($invoice, $documentManager);
 
                 return new JsonResponse(["mensaje" => "Se ha pagado"], 200);
@@ -266,6 +282,7 @@ class InvoicesController extends AbstractController
 
     /**
      * @throws MongoDBException
+     * @throws TransportExceptionInterface
      */
     #[Route("/pay/{id}", name: "pay_invoice_view")]
     public function payInvoiceView(string $id): RedirectResponse
@@ -275,7 +292,16 @@ class InvoicesController extends AbstractController
 
         if (!empty($_SESSION["user"]) && !empty($_SESSION["rol"]) && $_SESSION["rol"] == "ADMIN") {
             $invoice = $this->invoicesRepository->findById($id, $this->documentManager);
-            $this->invoicesRepository->payInvoice($invoice, $this->documentManager);
+
+            if($invoice){
+                $invoiceEmail = $this->invoicesRepository->findByDocumentAndStatus($invoice->getUserDocument(), "pay", $this->documentManager);
+
+                if($invoiceEmail == null){
+                    $user = $this->userRepository->findByDocument($invoice->getUserDocument(), $this->documentManager);
+                    $this->emailController->sendEmail($user->getEmail(), "registry");
+                    $this->invoicesRepository->payInvoice($invoice, $this->documentManager);
+                }
+            }
 
             return $this->redirect("/invoices/details/". $invoice->getId());
         }

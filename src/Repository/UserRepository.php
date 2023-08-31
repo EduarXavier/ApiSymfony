@@ -32,6 +32,7 @@ class UserRepository implements UserRepositoryInterface
      */
     public function addUser(User $user, DocumentManager $documentManager): bool
     {
+        $user->setPassword(password_hash($user->getPassword(), PASSWORD_BCRYPT));
         $documentManager->persist($user);
         $documentManager->flush();
 

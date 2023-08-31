@@ -11,6 +11,7 @@ use Doctrine\ODM\MongoDB\DocumentManager;
 use Doctrine\ODM\MongoDB\MongoDBException;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 
@@ -19,15 +20,18 @@ class UserController extends AbstractController
 {
     private UserRepositoryInterface $userRepository;
     private DocumentManager $documentManager;
+    private EmailController $emailController;
 
-    public function __construct(DocumentManager $documentManager)
+    public function __construct(DocumentManager $documentManager, EmailController $emailController)
     {
         $this->documentManager = $documentManager;
+        $this->emailController = $emailController;
         $this->userRepository = new UserRepository();
     }
 
     /**
      * @throws MongoDBException
+     * @throws TransportExceptionInterface
      */
     #[Route("/add", name: "addUser", methods: ["POST"])]
     public function addUser(Request $request): ?JsonResponse
@@ -38,6 +42,7 @@ class UserController extends AbstractController
 
         if ($form->isSubmitted() && $form->isValid()) {
             $this->userRepository->addUser($user, $this->documentManager);
+            $this->emailController->sendEmail($user->getEmail(), "registro");
 
             return $this->json(['message' => 'Usuario agregado correctamente']);
         }
