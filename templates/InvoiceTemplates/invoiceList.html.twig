@@ -4,7 +4,10 @@
 
 {% block body %}
 
+    {% include '/layouts/navbar.html.twig' %}
+
     <div class="container mt-5">
+
         {% if invoices is empty %}
             <div class="alert alert-info" role="alert">
                 No hay pedidos disponibles en este momento.
@@ -15,9 +18,25 @@
                     <a href="/invoices/details/{{ invoice.id }}" class="text-decoration-none">
                         <div class="col text-dark">
                             <div class="card shadow-lg rounded">
-                                <div class="card-header bg-secondary text-white">
-                                    {{ invoice.userDocument }}
-                                </div>
+
+                                {% if invoice.status == "shopping-cart" %}
+                                    <div class="card-header bg-secondary text-white">
+                                        {{ invoice.userDocument }}
+                                    </div>
+                                {% elseif invoice.status == "invoice" %}
+                                    <div class="card-header bg-primary text-white">
+                                        {{ invoice.userDocument }}
+                                    </div>
+                                {% elseif invoice.status == "pay" %}
+                                    <div class="card-header bg-success text-white">
+                                        {{ invoice.userDocument }}
+                                    </div>
+                                {% else %}
+                                    <div class="card-header bg-danger text-white">
+                                        {{ invoice.userDocument }}
+                                    </div>
+                                {% endif %}
+
                                 <div class="card-body">
                                     <p>
                                         <strong>ID:</strong> {{ invoice.id }}
@@ -27,6 +46,9 @@
                                     </p>
                                     <p>
                                         <strong>Productos:</strong> {{ invoice.products|length }}
+                                    </p>
+                                    <p>
+                                        <strong>Fecha:</strong> {{ invoice.date }}
                                     </p>
                                 </div>
                             </div>

@@ -32,7 +32,7 @@ class InvoicesController extends AbstractController
         $this->invoicesRepository = new InvoicesRepository();
     }
 
-    //Api
+    //Enpoints API
 
     /**
      * @throws Exception
@@ -149,7 +149,7 @@ class InvoicesController extends AbstractController
         }
     }
 
-    //View
+    //Enpoints View
 
     #[Route("/list", name: "invoices_list")]
     public function findAllInvoices(): RedirectResponse|Response
@@ -204,7 +204,7 @@ class InvoicesController extends AbstractController
     }
 
     #[Route("/shopping-cart/add-product", name: "add_product_shopping_cart", methods: ["POST"])]
-    public function addProductShoppingCart(Request $request)
+    public function addProductShoppingCart(Request $request): RedirectResponse
     {
         session_abort();
         session_start();
@@ -241,13 +241,12 @@ class InvoicesController extends AbstractController
     }
 
     #[Route("/create/invoice/", name: "create_invoice_view")]
-    public function createInvoice(Request $request)
+    public function createInvoice(Request $request): RedirectResponse
     {
         session_abort();
         session_start();
 
         $invoice = new Invoice();
-
         $form = $this->createForm(FactureType::class, $invoice);
 
         if (!empty($_SESSION["user"]) && !empty($_SESSION["rol"]) && $_SESSION["rol"] == "ADMIN") {
@@ -286,7 +285,7 @@ class InvoicesController extends AbstractController
         return $this->redirectToRoute("login_template");
     }
 
-    #[Route("/delete/{id}", name: "delete_invoice_view")]
+    #[Route("/delete/invoice/{id}", name: "delete_invoice_view")]
     public function deleteInvoiceView(string $id): RedirectResponse
     {
         session_abort();
@@ -298,6 +297,41 @@ class InvoicesController extends AbstractController
             $this->invoicesRepository->deleteInvoice($invoice, $this->documentManager);
 
             return $this->redirect("/invoices/details/". $invoice->getId());
+
+        }
+
+        return $this->redirectToRoute("login_template");
+    }
+
+    #[Route("/shopping-cart/delete/{document}", name: "delete_shopping_cart_view")]
+    public function deleteShoppingCartView(string $document): RedirectResponse
+    {
+        session_abort();
+        session_start();
+
+        if (!empty($_SESSION["user"]) && !empty($_SESSION["rol"]) && $_SESSION["rol"] == "ADMIN") {
+
+            $shoppingCart = $this->invoicesRepository->findByDocumentAndStatus($document, "shopping-cart" ,$this->documentManager);
+            $this->invoicesRepository->deleteShoppingCart($shoppingCart, $this->documentManager);
+
+            return $this->redirect("/invoices/details/". $shoppingCart->getId());
+
+        }
+
+        return $this->redirectToRoute("login_template");
+    }
+
+    #[Route("/shopping-cart/delete-product/{id}", name: "delete_product_to_shopping_cart_view")]
+    public function deleteProductToShoppingCartView(string $id): RedirectResponse
+    {
+        session_abort();
+        session_start();
+
+        if (!empty($_SESSION["user"]) && !empty($_SESSION["rol"]) && $_SESSION["rol"] == "ADMIN") {
+
+            $this->invoicesRepository->deleteProductToShoppingCart($_SESSION["document"], $id ,$this->documentManager);
+
+            return $this->redirect("/invoices/shopping-cart/list");
 
         }
 

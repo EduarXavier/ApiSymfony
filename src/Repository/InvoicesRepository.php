@@ -18,10 +18,10 @@ class InvoicesRepository implements InvoicesRepositoryInterface
         $this->productRepository = new ProductRepository();
     }
 
-    public function findAll(DocumentManager $documentManager)
+    public function findAll(DocumentManager $documentManager): array
     {
         $repository = $documentManager->getRepository(Invoice::class);
-        $invoices = $repository->findAll();
+        $invoices = $repository->findBy([], ['date' => 'DESC'], limit: 20);
 
         return $invoices;
     }
@@ -229,6 +229,37 @@ class InvoicesRepository implements InvoicesRepositoryInterface
         return false;
     }
 
+    public function deleteShoppingCart(Invoice $shoppingCart, DocumentManager $documentManager)
+    {
+        if($shoppingCart->getStatus() == "shopping-cart")
+        {
+            $documentManager->flush();
+            $this->updateShoppingCart(array(), $shoppingCart->getUserDocument(), $documentManager);
+
+            return true;
+        }
+
+        return false;
+    }
+
+    public function deleteProductToShoppingCart(string $document, string $idProduct, DocumentManager $documentManager): bool
+    {
+        $shoppingCart = $this->findByDocumentAndStatus($document, "shopping-cart", $documentManager);
+        $products = array();
+
+        foreach ($shoppingCart?->getProducts() as $product)
+        {
+            if($product["id"] != $idProduct)
+            {
+                $products[] = $product;
+            }
+        }
+
+        $this->updateShoppingCart($products, $document, $documentManager);
+
+        return true;
+    }
+
     private function findProductByIdInArray
     (
         string $productId,
@@ -244,5 +275,4 @@ class InvoicesRepository implements InvoicesRepositoryInterface
         }
         return null;
     }
-
 }

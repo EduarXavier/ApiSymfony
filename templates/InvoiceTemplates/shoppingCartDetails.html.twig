@@ -5,9 +5,11 @@
 
 {% block body %}
 
+    {% include '/layouts/navbar.html.twig' %}
+
     <div class="container mt-5">
 
-        {% if shoppingCart is empty %}
+        {% if shoppingCart is empty or shoppingCart.products|length == 0 %}
             <div class="alert alert-info" role="alert">
                 Este carrito está vacío.
             </div>
@@ -39,6 +41,7 @@
                                     <tr>
                                         <th scope="col">ID</th>
                                         <th scope="col">Cantidad</th>
+                                        <th scope="col">Acción</th>
                                     </tr>
                                     </thead>
                                     <tbody>
@@ -50,12 +53,23 @@
                                                 </a>
                                             </th>
                                             <td>{{ product.amount }}</td>
+                                            <td>
+                                                <a
+                                                        href="/invoices/shopping-cart/delete-product/{{ product.id }}"
+                                                        class="btn btn-primary text-decoration-none"
+                                                >
+                                                    Eliminar
+                                                </a>
+                                            </td>
                                         </tr>
                                     {% endfor %}
                                     </tbody>
                                 </table>
 
-                                {% if shoppingCart.status == "shopping-cart" %}
+                                {% if
+                                    shoppingCart.status == "shopping-cart" and
+                                    shoppingCart.products|length != 0
+                                %}
                                     <form action="/invoices/create/invoice/" method="POST">
                                         <input
                                             value="{{ shoppingCart.userDocument }}"
@@ -71,14 +85,15 @@
                                     </form>
                                 {% endif %}
 
-                                <br>
-                                <a
-                                        class="btn btn-danger"
-                                        href="/invoices/{{ shoppingCart.id }}"
-                                >
-                                    Eliminar
-                                </a>
-
+                                {% if shoppingCart.products|length != 0 %}
+                                    <br>
+                                    <a
+                                            class="btn btn-danger"
+                                            href="/invoices/shopping-cart/delete/{{ shoppingCart.userDocument }}"
+                                    >
+                                        Eliminar
+                                    </a>
+                                {% endif %}
                             </div>
                         </div>
                     </div>

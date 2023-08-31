@@ -45,6 +45,8 @@ class TokenListener
             && $routeName !== "shopping_cart_list"
             && $routeName !== "pay_invoice_view"
             && $routeName !== "delete_invoice_view"
+            && $routeName !== "delete_shopping_cart_view"
+            && $routeName !== "delete_product_to_shopping_cart_view"
         )
         {
             try

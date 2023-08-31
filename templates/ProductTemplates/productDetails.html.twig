@@ -4,6 +4,8 @@
 
 {% block body %}
 
+    {% include '/layouts/navbar.html.twig' %}
+
     <div class="container mt-5">
 
         {% for flash_message in app.flashes('exito') %}

@@ -5,6 +5,8 @@
 
 {% block body %}
 
+    {% include '/layouts/navbar.html.twig' %}
+
     <div class="container mt-5">
 
         {% for flash_message in app.flashes('exito') %}
@@ -61,21 +63,24 @@
                                     </tbody>
                                 </table>
                                 {% if invoice.status == "invoice" %}
+                                    <form action="/invoices/delete/invoice/{{ invoice.id }}" method="POST">
+                                        <button
+                                                class="btn btn-danger"
+                                                type="submit"
+                                        >
+                                            Cancelar
+                                        </button>
+                                    </form>
+                                    <br>
                                     <a
                                             class="btn btn-primary"
                                             href="/invoices/pay/{{ invoice.id }}"
                                     >
                                         Pagar
                                     </a>
-                                    <a
-                                            class="btn btn-danger"
-                                            href="/invoices/delete/{{ invoice.id }}"
-                                    >
-                                        Cancelar
-                                    </a>
                                 {% endif %}
 
-                                {% if invoice.status == "shopping-cart" %}
+                                {% if invoice.status == "shopping-cart" and invoice.products|length != 0 %}
                                     <form action="/invoices/create/invoice/" method="POST">
                                         <input
                                                 value="{{ invoice.userDocument }}"
@@ -91,13 +96,6 @@
                                     </form>
 
                                     <br>
-
-                                    <a
-                                            class="btn btn-primary"
-                                            href="/invoices/update/{{ invoice.id }}"
-                                    >
-                                        Actualizar
-                                    </a>
                                 {% endif %}
 
                             </div>

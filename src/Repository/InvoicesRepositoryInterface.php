@@ -57,4 +57,17 @@ interface InvoicesRepositoryInterface
         Invoice $invoice,
         DocumentManager $documentManager
     );
+
+    public function deleteShoppingCart
+    (
+        Invoice $shoppingCart,
+        DocumentManager $documentManager
+    );
+
+    public function deleteProductToShoppingCart
+    (
+        string $document,
+        string $idProduct,
+        DocumentManager $documentManager
+    );
 }

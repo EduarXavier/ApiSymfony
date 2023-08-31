@@ -2,7 +2,9 @@
 
 {% block body %}
 
-    <div class="d-flex w-100 align-items-center align-middle justify-content-center">
+    {% include '/layouts/navbar.html.twig' %}
+
+    <div class="d-flex w-100 align-items-center align-middle justify-content-center mt-4">
         <div class="w-25">
 
             {% for flash_message in app.flashes('message') %}
@@ -10,7 +12,6 @@
                     {{ flash_message }}
                 </div>
             {% endfor %}
-
 
         </div>
     </div>

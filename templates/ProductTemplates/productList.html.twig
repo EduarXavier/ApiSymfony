@@ -4,6 +4,8 @@
 
 {% block body %}
 
+    {% include '/layouts/navbar.html.twig' %}
+
     <div class="container mt-5">
         {% if products is empty %}
             <div class="alert alert-info" role="alert">
