@@ -39,7 +39,7 @@ class ProductController extends AbstractController
         return $this->json($products, 200);
     }
 
-    #[Route("/list-view", name: "product_list", methods : ["GET"])]
+    #[Route("/list-view", name: "product_list_view", methods : ["GET"])]
     public function productListTemplate(Request $request): Response
     {
         $session = $request->getSession();
@@ -65,23 +65,23 @@ class ProductController extends AbstractController
         $product = $this->productRepository->findById($id, $this->documentManager);
 
         if (!empty($session->get("user")) && !empty($session->get("rol")) && $session->get("rol") == "ADMIN") {
-            $accion = "";
-            $mensaje = "";
+            $action = "";
+            $message = "";
 
             if (!empty($_GET["mnsj"])) {
                 if ($_GET["mnsj"] == "ok"){
-                    $accion = "exito";
-                    $mensaje = "Se ha agregado con éxito";
+                    $action = "exito";
+                    $message = "Se ha agregado con éxito";
                 }
                 else{
-                    $accion = "error";
-                    $mensaje = "Ha ocurrido un error";
+                    $action = "error";
+                    $message = "Ha ocurrido un error";
                 }
             }
 
             return $this->render("ProductTemplates/productDetails.html.twig", [
                 "product" => $product,
-                $accion => $mensaje,
+                $action => $message,
             ]);
         }
 

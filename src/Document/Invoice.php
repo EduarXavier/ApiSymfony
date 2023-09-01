@@ -11,7 +11,7 @@ class Invoice
     private string $id;
 
     #[MongoDB\Field(type:"collection")]
-    private array $products = [];
+    private array $products;
 
     #[MongoDB\Field(type:"string")]
     private string $date;

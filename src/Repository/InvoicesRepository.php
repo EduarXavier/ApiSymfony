@@ -3,7 +3,9 @@
 namespace App\Repository;
 
 use App\Document\Invoice;
+use App\Document\Product;
 use Doctrine\ODM\MongoDB\DocumentManager;
+use Doctrine\ODM\MongoDB\Mapping\MappingException;
 use Doctrine\ODM\MongoDB\MongoDBException;
 use Exception;
 
@@ -32,26 +34,42 @@ class InvoicesRepository implements InvoicesRepositoryInterface
     {
         $shoppingCart = $this->findByDocumentAndStatus($document, "shopping-cart", $documentManager);
 
-        if($shoppingCart) {
+        if ($shoppingCart) {
             $productsUser = $shoppingCart->getProducts();
 
             foreach ($products as $product) {
-                $productShop = $this->productRepository->findById($product["id"], $documentManager);
+                $productShop = $this->productRepository->findById($product->getId(), $documentManager);
 
-                if($productShop) {
-                    $existingProduct = $this->findProductByIdInArray($product["id"], $productsUser);
+                if ($productShop) {
+
+                    $existingProduct = null;
+                    $contador = 0;
+
+                    foreach ($productsUser as $productArray) {
+                        if ($productArray["id"] === $product->getId()) {
+                            $existingProduct = $productArray;
+                            break;
+                        }
+                        $contador += 1;
+                    }
 
                     if ($existingProduct) {
-                        $existingProduct["amount"] += intval($product["amount"]);
-                        $productsUser[array_search($existingProduct["id"], $productsUser)] = $existingProduct;
+                        $existingProduct["amount"] += intval($product->getAmount());
+                        $productsUser[$contador] = [
+                            "id" => $product->getId(),
+                            "amount" => $existingProduct["amount"]
+                        ];
                     }
                     else {
-                        $productsUser[] = $product;
+                        $productsUser[$contador] = [
+                            "id" => $product->getId(),
+                            "amount" => $product->getAmount()
+                        ];
                     }
 
-                    $newAmountProduct = $productShop->getAmount() - $product['amount'];
+                    $newAmountProduct = $productShop->getAmount() - $product->getAmount();
 
-                    if($newAmountProduct >= 0) {
+                    if ($newAmountProduct >= 0) {
                         $productShop->setAmount($newAmountProduct);
                         $this->productRepository->updateProduct($productShop, $documentManager);
                     }
@@ -62,8 +80,7 @@ class InvoicesRepository implements InvoicesRepositoryInterface
             }
 
             $shoppingCart->setProducts($productsUser);
-        }
-        else {
+        } else {
             $invoices = new Invoice();
             $invoices->setUserDocument($document);
             $invoices->setDate(date("Y-m-d H:i:s"));
@@ -71,20 +88,22 @@ class InvoicesRepository implements InvoicesRepositoryInterface
             $productsAdd = array();
 
             foreach ($products as $product) {
-                $productShop = $this->productRepository->findById($product["id"], $documentManager);
+                $productShop = $this->productRepository->findById($product->getId(), $documentManager);
 
-                if($productShop) {
-                    $newAmountProduct = $productShop->getAmount() - $product['amount'];
+                if ($productShop) {
+                    $newAmountProduct = $productShop->getAmount() - $product->getAmount();
 
-                    if($newAmountProduct >= 0) {
+                    if ($newAmountProduct >= 0) {
                         $productShop->setAmount($newAmountProduct);
                         $this->productRepository->updateProduct($productShop, $documentManager);
-                    }
-                    else {
+                    } else {
                         throw new \Exception("No hay tantos productos", 400);
                     }
 
-                    $productsAdd[] = $product;
+                    $productsAdd[] = [
+                        "id" => $product->getId(),
+                        "amount" => $product->getAmount()
+                    ];
                 }
             }
 
@@ -99,6 +118,7 @@ class InvoicesRepository implements InvoicesRepositoryInterface
 
     /**
      * @throws MongoDBException
+     * @throws MappingException
      */
     public function updateShoppingCart(array $products, string $document, DocumentManager $documentManager): ?bool
     {
@@ -108,7 +128,7 @@ class InvoicesRepository implements InvoicesRepositoryInterface
 
             foreach ($shoppingCart->getProducts() as $product) {
                 $productShop = $this->productRepository->findById($product["id"], $documentManager);
-                $newAmount = $productShop->getAmount() + $product['amount'];
+                $newAmount = $productShop->getAmount() + $product["amount"];
                 $productShop->setAmount($newAmount);
                 $this->productRepository->updateProduct($productShop, $documentManager);
             }
@@ -162,10 +182,11 @@ class InvoicesRepository implements InvoicesRepositoryInterface
 
     /**
      * @throws MongoDBException
+     * @throws MappingException
      */
     public function deleteInvoice(Invoice $invoice, DocumentManager $documentManager): bool
     {
-        if($invoice->getStatus() == "invoice") {
+        if ($invoice->getStatus() == "invoice") {
             $products = $invoice->getProducts();
             $invoice->setStatus("shopping-cart");
             $documentManager->flush();
@@ -183,10 +204,11 @@ class InvoicesRepository implements InvoicesRepositoryInterface
 
     /**
      * @throws MongoDBException
+     * @throws MappingException
      */
     public function deleteShoppingCart(Invoice $shoppingCart, DocumentManager $documentManager): bool
     {
-        if($shoppingCart->getStatus() == "shopping-cart") {
+        if ($shoppingCart->getStatus() == "shopping-cart") {
             $shoppingCart->setDate(date("Y-m-d H:i:s"));
             $documentManager->flush();
             $this->updateShoppingCart(array(), $shoppingCart->getUserDocument(), $documentManager);
@@ -199,6 +221,7 @@ class InvoicesRepository implements InvoicesRepositoryInterface
 
     /**
      * @throws MongoDBException
+     * @throws MappingException
      */
     public function deleteProductToShoppingCart(string $document, string $idProduct, DocumentManager $documentManager): bool
     {
@@ -206,24 +229,16 @@ class InvoicesRepository implements InvoicesRepositoryInterface
         $products = array();
 
         foreach ($shoppingCart?->getProducts() as $product) {
-            if($product["id"] != $idProduct) {
-                $products[] = $product;
+            if ($product["id"] != $idProduct) {
+                $productArray = new Product();
+                $productArray->setId($product["id"]);
+                $productArray->setAmount($product["amount"]);
+                $products[] = $productArray;
             }
         }
 
         $this->updateShoppingCart($products, $document, $documentManager);
 
         return true;
-    }
-
-    private function findProductByIdInArray(string $productId, array $productArray): ?array
-    {
-        foreach ($productArray as $product) {
-            if ($product["id"] === $productId) {
-                return $product;
-            }
-        }
-
-        return null;
     }
 }

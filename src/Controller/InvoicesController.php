@@ -5,13 +5,16 @@ namespace App\Controller;
 use App\Document\Invoice;
 use App\Document\Product;
 use App\Form\FactureType;
+use App\Form\PayInvoiceType;
 use App\Form\ProductShoppingCartType;
 use App\Form\ShoppingCartType;
+use App\Form\UpdateShoppingCartType;
 use App\Repository\InvoicesRepository;
 use App\Repository\InvoicesRepositoryInterface;
 use App\Repository\UserRepository;
 use App\Repository\UserRepositoryInterface;
 use Doctrine\ODM\MongoDB\DocumentManager;
+use Doctrine\ODM\MongoDB\Mapping\MappingException;
 use Doctrine\ODM\MongoDB\MongoDBException;
 use Exception;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -52,23 +55,25 @@ class InvoicesController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            $validation = $this->invoicesRepository->AddProductsToShoppingCart
-            (
+            $validation = $this->invoicesRepository->AddProductsToShoppingCart(
                 $invoices->getProducts(),
                 $invoices->getUserDocument(),
                 $this->documentManager
             );
 
             return $validation ?
-                new JsonResponse(["mensaje" => "Agregado con éxito"], 200)
-                :
+                new JsonResponse(["mensaje" => "Agregado con éxito"], 200) :
                 new JsonResponse(["error" => "No se han podido agregar los productos"], 400);
         }
 
         return new JsonResponse(["error" => "Ha ocurrido un error"], 400);
     }
 
-    #[Route("/shopping-cart", name: "update_shopping_cart", methods: ["PATCH"])]
+    /**
+     * @throws MongoDBException
+     * @throws MappingException
+     */
+    #[Route("/update/shopping-cart/", name: "update_shopping_cart", methods: ["POST"])]
     public function updateShoppingCart(Request $request, DocumentManager $documentManager): ?JsonResponse
     {
         $invoices = new Invoice();
@@ -76,16 +81,14 @@ class InvoicesController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            $validation = $this->invoicesRepository->updateShoppingCart
-            (
+            $validation = $this->invoicesRepository->updateShoppingCart(
                 $invoices->getProducts(),
                 $invoices->getUserDocument(),
                 $this->documentManager
             );
 
             return $validation ?
-                new JsonResponse(["mensaje" => "Actualizado con éxito"], 200)
-                :
+                new JsonResponse(["mensaje" => "Agregado con éxito"], 200) :
                 new JsonResponse(["error" => "No se han podido agregar los productos"], 400);
         }
 
@@ -100,7 +103,7 @@ class InvoicesController extends AbstractController
     {
         $invoice = new Invoice();
         $form = $this->createForm(FactureType::class, $invoice);
-        $form->submit($request->request->get($form->getName()));
+        $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
             $document = $invoice->getUserDocument();
@@ -124,11 +127,11 @@ class InvoicesController extends AbstractController
      * @throws MongoDBException
      * @throws TransportExceptionInterface
      */
-    #[Route("/pay-invoice", name: "pay-invoice", methods: ["GET"])]
+    #[Route("/pay-invoice", name: "pay-invoice", methods: ["POST"])]
     public function payInvoice(Request $request, DocumentManager $documentManager): ?JsonResponse
     {
         $invoice = new Invoice();
-        $form = $this->createForm(ShoppingCartType::class, $invoice);
+        $form = $this->createForm(PayInvoiceType::class, $invoice);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
@@ -139,8 +142,8 @@ class InvoicesController extends AbstractController
                 $invoiceEmail = $this->invoicesRepository->findByDocumentAndStatus($invoice->getUserDocument(), "pay", $documentManager);
 
                 if($invoiceEmail == null){
-                    $user = $this->userRepository->findByDocument($invoiceEmail->getUserDocument(), $documentManager);
-                    $this->emailController->sendEmail($user->getEmail(), "registry");
+                    $user = $this->userRepository->findByDocument($invoice->getUserDocument(), $documentManager);
+                    $this->emailController->sendEmail($user->getEmail(), "first-shop");
                 }
 
                 $this->invoicesRepository->payInvoice($invoice, $documentManager);
@@ -225,10 +228,7 @@ class InvoicesController extends AbstractController
 
             if ($form->isSubmitted() && $form->isValid()) {
                 $products = $session->get("shopping-cart");
-                $products[] = [
-                    "id" => $product->getId(),
-                    "amount" => $product->getAmount(),
-                ];
+                $products[] = $product;
                 $session->set("shopping-cart", array());
 
                 $this->invoicesRepository->AddProductsToShoppingCart
@@ -304,6 +304,7 @@ class InvoicesController extends AbstractController
 
     /**
      * @throws MongoDBException
+     * @throws MappingException
      */
     #[Route("/delete/invoice/{id}", name: "delete_invoice_view")]
     public function deleteInvoiceView(Request $request, string $id): RedirectResponse
@@ -322,6 +323,7 @@ class InvoicesController extends AbstractController
 
     /**
      * @throws MongoDBException
+     * @throws MappingException
      */
     #[Route("/shopping-cart/delete/{document}", name: "delete_shopping_cart_view")]
     public function deleteShoppingCartView(Request $request, string $document): RedirectResponse
@@ -340,6 +342,7 @@ class InvoicesController extends AbstractController
 
     /**
      * @throws MongoDBException
+     * @throws MappingException
      */
     #[Route("/shopping-cart/delete-product/{id}", name: "delete_product_to_shopping_cart_view")]
     public function deleteProductToShoppingCartView(Request $request, string $id): RedirectResponse
@@ -347,7 +350,7 @@ class InvoicesController extends AbstractController
         $session = $request->getSession();
 
         if (!empty($session->get("user")) && !empty($session->get("rol")) && $session->get("rol") == "ADMIN") {
-            $this->invoicesRepository->deleteProductToShoppingCart($_SESSION["document"], $id ,$this->documentManager);
+            $this->invoicesRepository->deleteProductToShoppingCart($session->get("document"), $id ,$this->documentManager);
 
             return $this->redirect("/invoices/shopping-cart/list");
         }

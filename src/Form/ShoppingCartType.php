@@ -4,6 +4,7 @@ namespace App\Form;
 
 use App\Document\Invoice;
 use Symfony\Component\Form\AbstractType;
+use Symfony\Component\Form\Extension\Core\Type\CollectionType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
@@ -12,7 +13,12 @@ class ShoppingCartType extends AbstractType
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $builder
-            ->add('products')
+            ->add('products', CollectionType::class, [
+                'entry_type' => ProductShoppingCartType::class,
+                'allow_add' => true,
+                'allow_delete' => true,
+                'by_reference' => false,
+            ])
             ->add('userDocument')
         ;
     }
