@@ -19,7 +19,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 
-#[Route("/product")]
+#[Route('/product')]
 class ProductController extends AbstractController
 {
     private ProductRepositoryInterface $productRepository;
@@ -31,7 +31,7 @@ class ProductController extends AbstractController
         $this->productRepository = new ProductRepository();
     }
 
-    #[Route("/list", name: "product_list", methods : ["GET"])]
+    #[Route('/list', name: 'product_list', methods: ['GET'])]
     public function productList(): ?JsonResponse
     {
         $products = $this->productRepository->findAll($this->documentManager);
@@ -39,15 +39,15 @@ class ProductController extends AbstractController
         return $this->json($products, 200);
     }
 
-    #[Route("/list-view", name: "product_list_view", methods : ["GET"])]
+    #[Route('/list-view', name: 'product_list_view', methods: ['GET'])]
     public function productListTemplate(Request $request): Response
     {
         $session = $request->getSession();
         $products = $this->productRepository->findAll($this->documentManager);
 
-        if (!empty($session->get("user")) && !empty($session->get("rol")) && $session->get("rol") == "ADMIN") {
-            return $this->render("ProductTemplates/productList.html.twig", [
-                "products" => $products,
+        if (!empty($session->get('user')) && !empty($session->get('rol')) && $session->get('rol') == 'ADMIN') {
+            return $this->render('ProductTemplates/productList.html.twig', [
+                'products' => $products,
             ]);
         }
 
@@ -58,29 +58,28 @@ class ProductController extends AbstractController
      * @throws MappingException
      * @throws LockException
      */
-    #[Route("/details/{id}", name: "product_details", methods : ["GET"])]
+    #[Route('/details/{id}', name: 'product_details', methods: ['GET'])]
     public function productDetails(Request $request, string $id): RedirectResponse|Response
     {
         $session = $request->getSession();
         $product = $this->productRepository->findById($id, $this->documentManager);
 
-        if (!empty($session->get("user")) && !empty($session->get("rol")) && $session->get("rol") == "ADMIN") {
-            $action = "";
-            $message = "";
+        if (!empty($session->get('user')) && !empty($session->get('rol')) && $session->get('rol') == 'ADMIN') {
+            $action = '';
+            $message = '';
 
-            if (!empty($_GET["mnsj"])) {
-                if ($_GET["mnsj"] == "ok"){
-                    $action = "exito";
-                    $message = "Se ha agregado con éxito";
-                }
-                else{
-                    $action = "error";
-                    $message = "Ha ocurrido un error";
+            if (!empty($_GET['mnsj'])) {
+                if ($_GET['mnsj'] == 'ok') {
+                    $action = 'exito';
+                    $message = 'Se ha agregado con éxito';
+                } else {
+                    $action = 'error';
+                    $message = 'Ha ocurrido un error';
                 }
             }
 
-            return $this->render("ProductTemplates/productDetails.html.twig", [
-                "product" => $product,
+            return $this->render('ProductTemplates/productDetails.html.twig', [
+                'product' => $product,
                 $action => $message,
             ]);
         }
@@ -91,7 +90,7 @@ class ProductController extends AbstractController
     /**
      * @throws MongoDBException
      */
-    #[Route("/add", name: "add_product")]
+    #[Route('/add', name: 'add_product')]
     public function addProduct(Request $request): Response
     {
         $session = $request->getSession();
@@ -99,27 +98,25 @@ class ProductController extends AbstractController
         $form = $this->createForm(ProductType::class, $product, ['method' => 'POST']);
         $form->handleRequest($request);
 
-        if(!empty($session->get("user")) && !empty($session->get("rol")) && $session->get("rol") == "ADMIN") {
+        if (!empty($session->get('user')) && !empty($session->get('rol')) && $session->get('rol') == 'ADMIN') {
             if ($form->isSubmitted() && $form->isValid()) {
                 $id = $this->productRepository->addProduct($product, $this->documentManager);
 
                 if ($id) {
                     return $this->redirect("/product/details/$id");
-                }
-                else {
-                    $this->addFlash("error", "No se ha agregado el producto: $id");
-                    $this->redirectToRoute("add_product");
+                } else {
+                    $this->addFlash('error', "No se ha agregado el producto: $id");
+                    $this->redirectToRoute('add_product');
                 }
             }
-        }
-        else if ($session->get("rol") != "ADMIN") {
-            return $this->redirectToRoute("login_template");
+        } else if ($session->get('rol') != 'ADMIN') {
+            return $this->redirectToRoute('login_template');
         }
 
-        return $this->render("ProductTemplates/productForms.html.twig", [
-            "form" => $form,
-            "name" => "Crear producto",
-            "option" => "Crear",
+        return $this->render('ProductTemplates/productForms.html.twig', [
+            'form' => $form,
+            'name' => 'Crear producto',
+            'option' => 'Crear',
         ]);
     }
 
@@ -128,7 +125,7 @@ class ProductController extends AbstractController
      * @throws MappingException
      * @throws LockException
      */
-    #[Route("/update/{id}", name: "update_product")]
+    #[Route('/update/{id}', name: 'update_product')]
     public function updateProduct(string $id, Request $request): Response
     {
         $session = $request->getSession();
@@ -136,27 +133,25 @@ class ProductController extends AbstractController
         $form = $this->createForm(UpdateProductType::class, $product);
         $form->handleRequest($request);
 
-        if (!empty($session->get("user")) && !empty($session->get("rol")) && $session->get("rol") == "ADMIN") {
+        if (!empty($session->get('user')) && !empty($session->get('rol')) && $session->get('rol') == 'ADMIN') {
             if ($form->isSubmitted() && $form->isValid()) {
                 $id = $this->productRepository->updateProduct($product, $this->documentManager);
 
-                if($id) {
+                if ($id) {
                     return $this->redirect("/product/details/$id");
-                }
-                else {
-                    $this->addFlash("error", "No se ha actualizado el producto: $id");
-                    $this->redirectToRoute("update_product");
+                } else {
+                    $this->addFlash('error', "No se ha actualizado el producto: $id");
+                    $this->redirectToRoute('update_product');
                 }
             }
-        }
-        else if ($session->get("rol") != "ADMIN") {
-            return $this->redirectToRoute("login_template");
+        } else if ($session->get('rol') != 'ADMIN') {
+            return $this->redirectToRoute('login_template');
         }
 
-        return $this->render("ProductTemplates/productForms.html.twig", [
-            "form" => $form,
-            "name" => "Actualizar producto",
-            "option" => "Actualizar",
+        return $this->render('ProductTemplates/productForms.html.twig', [
+            'form' => $form,
+            'name' => 'Actualizar producto',
+            'option' => 'Actualizar',
         ]);
     }
 
@@ -165,31 +160,30 @@ class ProductController extends AbstractController
      * @throws MappingException
      * @throws LockException
      */
-    #[Route("/delete/{id}", name: "delete_product")]
+    #[Route('/delete/{id}', name: 'delete_product')]
     public function deleteProduct(string $id, Request $request): RedirectResponse|Response
     {
         $session = $request->getSession();
         $product = $this->productRepository->findById($id, $this->documentManager);
-        $form= $this->createForm(DeleteProductType::class, $product);
+        $form = $this->createForm(DeleteProductType::class, $product);
         $form->handleRequest($request);
 
-        if (!empty($session->get("user")) && !empty($session->get("rol")) && $session->get("rol") == "ADMIN") {
-            if($form->isSubmitted() && $form->isValid()) {
+        if (!empty($session->get('user')) && !empty($session->get('rol')) && $session->get('rol') == 'ADMIN') {
+            if ($form->isSubmitted() && $form->isValid()) {
                 $response = $this->productRepository->deleteProduct($product, $this->documentManager);
 
                 if ($response) {
-                    return $this->redirect("/product/list-view");
-                }
-                else {
-                    $this->addFlash("error", "No se ha actualizado el producto: $id");
-                    $this->redirectToRoute("delete_product");
+                    return $this->redirect('/product/list-view');
+                } else {
+                    $this->addFlash('error', "No se ha actualizado el producto: $id");
+                    $this->redirectToRoute('delete_product');
                 }
             }
 
-            return $this->render("ProductTemplates/productForms.html.twig", [
-                "form" => $form,
-                "name" => "Eliminar producto",
-                "option" => "Eliminar",
+            return $this->render('ProductTemplates/productForms.html.twig', [
+                'form' => $form,
+                'name' => 'Eliminar producto',
+                'option' => 'Eliminar',
             ]);
         }
 

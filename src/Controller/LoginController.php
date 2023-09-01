@@ -33,7 +33,7 @@ class LoginController extends AbstractController
     /**
      * @throws JWTEncodeFailureException
      */
-    #[Route("/login", name: "login", methods: ["POST"])]
+    #[Route('/login', name: 'login', methods: ['POST'])]
     public function login(Request $request, JWTEncoderInterface $encoder): JsonResponse
     {
         $user = new User();
@@ -49,13 +49,13 @@ class LoginController extends AbstractController
                 return $this->json(['token' => $token]);
             }
 
-            return $this->json(["Error" => "Credenciales Inválidas"], 400);
+            return $this->json(['Error' => 'Credenciales Inválidas'], 400);
         }
 
-        return $this->json(["Error" => "Datos de formulario inválidos"], 400);
+        return $this->json(['Error' => 'Datos de formulario inválidos'], 400);
     }
 
-    #[Route("/login-view", name: "login_template")]
+    #[Route('/login-view', name: 'login_template')]
     public function loginView(Request $request): Response
     {
         $user = new User();
@@ -68,16 +68,16 @@ class LoginController extends AbstractController
             if ($userFind && password_verify($user->getPassword(), $userFind->getPassword())) {
 
                 $session = $request->getSession();
-                $session->set("user", $user->getEmail());
-                $session->set("rol", $userFind->getRol());
-                $session->set("document", $userFind->getDocument());
-                $session->set("shopping-cart", array());
+                $session->set('user', $user->getEmail());
+                $session->set('rol', $userFind->getRol());
+                $session->set('document', $userFind->getDocument());
+                $session->set('shopping-cart', array());
 
-                $this->addFlash("message", "Bienvenido " . $session->get("user"));
+                $this->addFlash('message', 'Bienvenido ' . $session->get('user'));
                 return $this->render('UserTemplate/dashboard.html.twig', []);
             }
             else {
-                $this->addFlash("message", "Credenciales invalidas");
+                $this->addFlash('message', 'Credenciales invalidas');
                 $this->redirectToRoute('login_template');
             }
         }
@@ -87,7 +87,7 @@ class LoginController extends AbstractController
         ]);
     }
 
-    #[Route("/logout", name: "logout")]
+    #[Route('/logout', name: 'logout')]
     public function logout(Request $request): RedirectResponse
     {
         $session = $request->getSession();

@@ -10,31 +10,31 @@ class User
     #[MongoDB\Id()]
     private string $id;
 
-    #[MongoDB\Field(type: "string")]
+    #[MongoDB\Field(type: 'string')]
     private string $name;
 
-    #[MongoDB\Field(type:"string")]
+    #[MongoDB\Field(type:'string')]
     #[MongoDB\UniqueIndex(background: true)]
     private string $document;
 
-     #[MongoDB\Field(type:"string")]
+     #[MongoDB\Field(type:'string')]
      private string $address;
 
-     #[MongoDB\Field(type: "string")]
+     #[MongoDB\Field(type: 'string')]
      private string $rol;
 
-    #[MongoDB\Field(type:"string")]
+    #[MongoDB\Field(type:'string')]
     private string $phone;
 
-    #[MongoDB\Field(type:"string")]
+    #[MongoDB\Field(type:'string')]
     #[MongoDB\UniqueIndex(background: true)]
     #[MongoDB\Index(background: true)]
     private string $email;
 
-    #[MongoDB\Field(type:"string")]
+    #[MongoDB\Field(type:'string')]
     private string $password;
 
-    #[MongoDB\Field(type:"string")]
+    #[MongoDB\Field(type:'string')]
     private string $recoveryCode;
 
     public function getId(): string

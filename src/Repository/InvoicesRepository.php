@@ -30,7 +30,7 @@ class InvoicesRepository implements InvoicesRepositoryInterface
      * @throws MongoDBException
      * @throws Exception
      */
-    public function AddProductsToShoppingCart(array $products, string $document, DocumentManager $documentManager): ?bool
+    public function addProductsToShoppingCart(array $products, string $document, DocumentManager $documentManager): ?bool
     {
         $shoppingCart = $this->findByDocumentAndStatus($document, "shopping-cart", $documentManager);
 
@@ -136,7 +136,7 @@ class InvoicesRepository implements InvoicesRepositoryInterface
             $shoppingCart->setProducts(array());
             $documentManager->flush();
 
-            return $this->AddProductsToshoppingCart($products, $document, $documentManager);
+            return $this->addProductsToShoppingCart($products, $document, $documentManager);
         }
 
         return false;
@@ -145,10 +145,10 @@ class InvoicesRepository implements InvoicesRepositoryInterface
     /**
      * @throws MongoDBException
      */
-    public function createInvoice(Invoice $invoices, DocumentManager $documentManager): bool
+    public function createInvoice(Invoice $invoice, DocumentManager $documentManager): bool
     {
-        $invoices->setDate(date("Y-m-d H:i:s"));
-        $invoices->setStatus("invoice");
+        $invoice->setDate(date("Y-m-d H:i:s"));
+        $invoice->setStatus("invoice");
         $documentManager->flush();
 
         return true;

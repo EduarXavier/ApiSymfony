@@ -10,16 +10,16 @@ class Invoice
     #[MongoDB\Id()]
     private string $id;
 
-    #[MongoDB\Field(type:"collection")]
+    #[MongoDB\Field(type:'collection')]
     private array $products;
 
-    #[MongoDB\Field(type:"string")]
+    #[MongoDB\Field(type:'string')]
     private string $date;
 
-    #[MongoDB\Field(type:"string")]
+    #[MongoDB\Field(type:'string')]
     private string $userDocument;
 
-    #[MongoDB\Field(type:"string")]
+    #[MongoDB\Field(type:'string')]
     private string $status;
 
     public function getId(): string

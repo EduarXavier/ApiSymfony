@@ -8,14 +8,13 @@ use App\Form\FactureType;
 use App\Form\PayInvoiceType;
 use App\Form\ProductShoppingCartType;
 use App\Form\ShoppingCartType;
-use App\Form\UpdateShoppingCartType;
 use App\Repository\InvoicesRepository;
 use App\Repository\InvoicesRepositoryInterface;
 use App\Repository\UserRepository;
 use App\Repository\UserRepositoryInterface;
 use Doctrine\ODM\MongoDB\DocumentManager;
-use Doctrine\ODM\MongoDB\Mapping\MappingException;
 use Doctrine\ODM\MongoDB\MongoDBException;
+use Doctrine\Persistence\Mapping\MappingException;
 use Exception;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -33,7 +32,6 @@ class InvoicesController extends AbstractController
     private DocumentManager $documentManager;
     private EmailController $emailController;
 
-
     public function __construct(DocumentManager $documentManager, EmailController $emailController)
     {
         $this->documentManager = $documentManager;
@@ -42,7 +40,7 @@ class InvoicesController extends AbstractController
         $this->invoicesRepository = new InvoicesRepository();
     }
 
-    //Enpoints API
+    // Endpoints API
 
     /**
      * @throws Exception
@@ -55,7 +53,7 @@ class InvoicesController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            $validation = $this->invoicesRepository->AddProductsToShoppingCart(
+            $validation = $this->invoicesRepository->addProductsToShoppingCart(
                 $invoices->getProducts(),
                 $invoices->getUserDocument(),
                 $this->documentManager
@@ -69,10 +67,6 @@ class InvoicesController extends AbstractController
         return new JsonResponse(["error" => "Ha ocurrido un error"], 400);
     }
 
-    /**
-     * @throws MongoDBException
-     * @throws MappingException
-     */
     #[Route("/update/shopping-cart/", name: "update_shopping_cart", methods: ["POST"])]
     public function updateShoppingCart(Request $request, DocumentManager $documentManager): ?JsonResponse
     {
@@ -95,9 +89,6 @@ class InvoicesController extends AbstractController
         return new JsonResponse(["error" => "Ha ocurrido un error"], 400);
     }
 
-    /**
-     * @throws MongoDBException
-     */
     #[Route("/create-invoice", name: "create-invoice", methods: ["POST"])]
     public function createInvoices(Request $request, DocumentManager $documentManager): ?JsonResponse
     {
@@ -113,12 +104,10 @@ class InvoicesController extends AbstractController
                 $this->invoicesRepository->createInvoice($invoice, $documentManager);
 
                 return new JsonResponse(["mensaje" => "Se ha creado la factura"], 200);
-            }
-            else {
+            } else {
                 return new JsonResponse(["error" => "No se ha encontrado la lista de productos"], 400);
             }
-        }
-        else {
+        } else {
             return new JsonResponse(["error" => "Ha ocurrido un error con los datos enviados"], 400);
         }
     }
@@ -139,27 +128,32 @@ class InvoicesController extends AbstractController
             $invoice = $this->invoicesRepository->findById($id, $documentManager);
 
             if ($invoice) {
-                $invoiceEmail = $this->invoicesRepository->findByDocumentAndStatus($invoice->getUserDocument(), "pay", $documentManager);
+                $invoiceEmail = $this->invoicesRepository->findByDocumentAndStatus(
+                    $invoice->getUserDocument(),
+                    "pay",
+                    $documentManager
+                );
 
-                if($invoiceEmail == null){
-                    $user = $this->userRepository->findByDocument($invoice->getUserDocument(), $documentManager);
+                if ($invoiceEmail == null) {
+                    $user = $this->userRepository->findByDocument(
+                        $invoice->getUserDocument(),
+                        $documentManager
+                    );
                     $this->emailController->sendEmail($user->getEmail(), "first-shop");
                 }
 
                 $this->invoicesRepository->payInvoice($invoice, $documentManager);
 
                 return new JsonResponse(["mensaje" => "Se ha pagado"], 200);
-            }
-            else {
+            } else {
                 return new JsonResponse(["error" => "No se ha encontrado la factura"], 400);
             }
-        }
-        else {
+        } else {
             return new JsonResponse(["error" => "Ha ocurrido un error con los datos enviados"], 400);
         }
     }
 
-    //Endpoints View
+    // Endpoints View
 
     #[Route("/list", name: "invoices_list")]
     public function findAllInvoices(Request $request): RedirectResponse|Response
@@ -185,7 +179,7 @@ class InvoicesController extends AbstractController
         if (!empty($session->get("user")) && !empty($session->get("rol")) && $session->get("rol") == "ADMIN") {
             $shoppingCart = $this->invoicesRepository->findByDocumentAndStatus(
                 $session->get("document"),
-                "shopping-cart" ,
+                "shopping-cart",
                 $this->documentManager
             );
 
@@ -231,8 +225,7 @@ class InvoicesController extends AbstractController
                 $products[] = $product;
                 $session->set("shopping-cart", array());
 
-                $this->invoicesRepository->AddProductsToShoppingCart
-                (
+                $this->invoicesRepository->addProductsToShoppingCart(
                     $products,
                     $session->get("document"),
                     $this->documentManager
@@ -261,10 +254,14 @@ class InvoicesController extends AbstractController
             $form->handleRequest($request);
 
             if ($form->isSubmitted() && $form->isValid()) {
-                $invoice = $this->invoicesRepository->findByDocumentAndStatus($invoice->getUserDocument(), "shopping-cart", $this->documentManager);
+                $invoice = $this->invoicesRepository->findByDocumentAndStatus(
+                    $invoice->getUserDocument(),
+                    "shopping-cart",
+                    $this->documentManager
+                );
                 $this->invoicesRepository->createInvoice($invoice, $this->documentManager);
 
-                return $this->redirect("/invoices/details/". $invoice->getId());
+                return $this->redirect("/invoices/details/" . $invoice->getId());
             }
 
             return $this->redirect("/invoices/list");
@@ -285,18 +282,25 @@ class InvoicesController extends AbstractController
         if (!empty($session->get("user")) && !empty($session->get("rol")) && $session->get("rol") == "ADMIN") {
             $invoice = $this->invoicesRepository->findById($id, $this->documentManager);
 
-            if($invoice){
-                $invoiceEmail = $this->invoicesRepository->findByDocumentAndStatus($invoice->getUserDocument(), "pay", $this->documentManager);
+            if ($invoice) {
+                $invoiceEmail = $this->invoicesRepository->findByDocumentAndStatus(
+                    $invoice->getUserDocument(),
+                    "pay",
+                    $this->documentManager
+                );
 
-                if($invoiceEmail?->getUserDocument()){
-                    $user = $this->userRepository->findByDocument($invoice->getUserDocument(), $this->documentManager);
+                if ($invoiceEmail?->getUserDocument()) {
+                    $user = $this->userRepository->findByDocument(
+                        $invoice->getUserDocument(),
+                        $this->documentManager
+                    );
                     $this->emailController->sendEmail($user->getEmail(), "registry");
                 }
 
                 $this->invoicesRepository->payInvoice($invoice, $this->documentManager);
             }
 
-            return $this->redirect("/invoices/details/". $invoice->getId());
+            return $this->redirect("/invoices/details/" . $invoice->getId());
         }
 
         return $this->redirectToRoute("login_template");
@@ -315,7 +319,7 @@ class InvoicesController extends AbstractController
             $invoice = $this->invoicesRepository->findById($id, $this->documentManager);
             $this->invoicesRepository->deleteInvoice($invoice, $this->documentManager);
 
-            return $this->redirect("/invoices/details/". $invoice->getId());
+            return $this->redirect("/invoices/details/" . $invoice->getId());
         }
 
         return $this->redirectToRoute("login_template");
@@ -331,26 +335,30 @@ class InvoicesController extends AbstractController
         $session = $request->getSession();
 
         if (!empty($session->get("user")) && !empty($session->get("rol")) && $session->get("rol") == "ADMIN") {
-            $shoppingCart = $this->invoicesRepository->findByDocumentAndStatus($document, "shopping-cart" ,$this->documentManager);
+            $shoppingCart = $this->invoicesRepository->findByDocumentAndStatus(
+                $document,
+                "shopping-cart",
+                $this->documentManager
+            );
             $this->invoicesRepository->deleteShoppingCart($shoppingCart, $this->documentManager);
 
-            return $this->redirect("/invoices/details/". $shoppingCart->getId());
+            return $this->redirect("/invoices/details/" . $shoppingCart->getId());
         }
 
         return $this->redirectToRoute("login_template");
     }
 
-    /**
-     * @throws MongoDBException
-     * @throws MappingException
-     */
     #[Route("/shopping-cart/delete-product/{id}", name: "delete_product_to_shopping_cart_view")]
     public function deleteProductToShoppingCartView(Request $request, string $id): RedirectResponse
     {
         $session = $request->getSession();
 
         if (!empty($session->get("user")) && !empty($session->get("rol")) && $session->get("rol") == "ADMIN") {
-            $this->invoicesRepository->deleteProductToShoppingCart($session->get("document"), $id ,$this->documentManager);
+            $this->invoicesRepository->deleteProductToShoppingCart(
+                $session->get("document"),
+                $id,
+                $this->documentManager
+            );
 
             return $this->redirect("/invoices/shopping-cart/list");
         }

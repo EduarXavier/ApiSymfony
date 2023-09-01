@@ -4,6 +4,8 @@ namespace App\Repository;
 
 use App\Document\User;
 use Doctrine\ODM\MongoDB\DocumentManager;
+use Doctrine\ODM\MongoDB\LockException;
+use Doctrine\ODM\MongoDB\Mapping\MappingException;
 use Doctrine\ODM\MongoDB\MongoDBException;
 
 class UserRepository implements UserRepositoryInterface
@@ -12,9 +14,13 @@ class UserRepository implements UserRepositoryInterface
     {
         $repository = $documentManager->getRepository(User::class);
 
-        return $repository->findOneBy(["email" => $email]);
+        return $repository->findOneBy(['email' => $email]);
     }
 
+    /**
+     * @throws MappingException
+     * @throws LockException
+     */
     public function findById(string $id, DocumentManager $documentManager): ?User
     {
         return $documentManager->getRepository(User::class)->find($id);
@@ -24,7 +30,7 @@ class UserRepository implements UserRepositoryInterface
     {
         $repository = $documentManager->getRepository(User::class);
 
-        return $repository->findOneBy(["document" => $document]);
+        return $repository->findOneBy(['document' => $document]);
     }
 
     /**
@@ -42,9 +48,9 @@ class UserRepository implements UserRepositoryInterface
     /**
      * @throws MongoDBException
      */
-    public function updateUser(User $user, DocumentManager $documentManager, string|null $method): bool
+    public function updateUser(User $user, DocumentManager $documentManager, string | null $method): bool
     {
-        if($method == "password") {
+        if ($method == 'password') {
             $user->setPassword(password_hash($user->getPassword(), PASSWORD_BCRYPT));
         }
 

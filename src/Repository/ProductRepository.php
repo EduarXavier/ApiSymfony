@@ -2,7 +2,6 @@
 
 namespace App\Repository;
 
-use App\Document\Invoice;
 use App\Document\Product;
 use Doctrine\ODM\MongoDB\DocumentManager;
 use Doctrine\ODM\MongoDB\LockException;

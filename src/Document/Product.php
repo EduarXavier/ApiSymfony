@@ -10,13 +10,13 @@ class Product
     #[MongoDB\Id()]
     private string $id;
 
-    #[MongoDB\Field(type: "string")]
+    #[MongoDB\Field(type: 'string')]
     private string $name;
 
-    #[MongoDB\Field(type:"int")]
+    #[MongoDB\Field(type:'int')]
     private int $price;
 
-    #[MongoDB\Field(type:"int")]
+    #[MongoDB\Field(type:'int')]
     private int $amount;
 
     public function getId(): string
