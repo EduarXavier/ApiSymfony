@@ -19,11 +19,11 @@ class InvoicesRepository implements InvoicesRepositoryInterface
         $this->productRepository = new ProductRepository();
     }
 
-    public function findAll(DocumentManager $documentManager): array
+    public function findAll(string $document, DocumentManager $documentManager): array
     {
         $repository = $documentManager->getRepository(Invoice::class);
 
-        return $repository->findBy([], ['date' => 'DESC'], limit: 20);
+        return $repository->findBy(["userDocument" => $document], ['date' => 'DESC'], limit: 20);
     }
 
     /**
@@ -158,7 +158,7 @@ class InvoicesRepository implements InvoicesRepositoryInterface
     {
         $repository = $documentManager->getRepository(Invoice::class);
 
-        return $repository->findOneBy(["userDocument" => $document, "status" => "shopping-cart"]);
+        return $repository->findOneBy(["userDocument" => $document, "status" => $status]);
     }
 
     public function findById(string $document, DocumentManager $documentManager)

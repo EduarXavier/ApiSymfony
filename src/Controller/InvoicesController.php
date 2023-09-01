@@ -161,7 +161,7 @@ class InvoicesController extends AbstractController
         $session = $request->getSession();
 
         if (!empty($session->get("user")) && !empty($session->get("rol")) && $session->get("rol") == "ADMIN") {
-            $invoices = $this->invoicesRepository->findAll($this->documentManager);
+            $invoices = $this->invoicesRepository->findAll($session->get("document"), $this->documentManager);
 
             return $this->render("InvoiceTemplates/invoiceList.html.twig", [
                 "invoices" => $invoices
@@ -289,12 +289,12 @@ class InvoicesController extends AbstractController
                     $this->documentManager
                 );
 
-                if ($invoiceEmail?->getUserDocument()) {
+                if ($invoiceEmail == null) {
                     $user = $this->userRepository->findByDocument(
                         $invoice->getUserDocument(),
                         $this->documentManager
                     );
-                    $this->emailController->sendEmail($user->getEmail(), "registry");
+                    $this->emailController->sendEmail($user->getEmail(), "first-shop");
                 }
 
                 $this->invoicesRepository->payInvoice($invoice, $this->documentManager);
