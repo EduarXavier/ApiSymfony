@@ -27,19 +27,16 @@ class Invoice
         return $this->id;
     }
 
-    public function setId(string $id): void
-    {
-        $this->id = $id;
-    }
-
     public function getProducts(): array
     {
         return $this->products;
     }
 
-    public function setProducts(array $products): void
+    public function setProducts(array $products): static
     {
         $this->products = $products;
+
+        return $this;
     }
 
     public function getDate(): string
@@ -47,9 +44,11 @@ class Invoice
         return $this->date;
     }
 
-    public function setDate(string $date): void
+    public function setDate(string $date): static
     {
         $this->date = $date;
+
+        return $this;
     }
 
     public function getUserDocument(): string
@@ -57,9 +56,11 @@ class Invoice
         return $this->userDocument;
     }
 
-    public function setUserDocument(string $userDocument): void
+    public function setUserDocument(string $userDocument): static
     {
         $this->userDocument = $userDocument;
+
+        return $this;
     }
 
     public function getStatus(): string
@@ -67,8 +68,10 @@ class Invoice
         return $this->status;
     }
 
-    public function setStatus(string $status): void
+    public function setStatus(string $status): static
     {
         $this->status = $status;
+
+        return $this;
     }
 }

@@ -24,19 +24,16 @@ class Product
         return $this->id;
     }
 
-    public function setId(string $id): void
-    {
-        $this->id = $id;
-    }
-
     public function getName(): string
     {
         return $this->name;
     }
 
-    public function setName(string $name): void
+    public function setName(string $name): static
     {
         $this->name = $name;
+
+        return $this;
     }
 
     public function getPrice(): int
@@ -44,9 +41,11 @@ class Product
         return $this->price;
     }
 
-    public function setPrice(int $price): void
+    public function setPrice(int $price): static
     {
         $this->price = $price;
+
+        return $this;
     }
 
     public function getAmount(): int
@@ -54,8 +53,10 @@ class Product
         return $this->amount;
     }
 
-    public function setAmount(int $amount): void
+    public function setAmount(int $amount): static
     {
         $this->amount = $amount;
+
+        return $this;
     }
 }

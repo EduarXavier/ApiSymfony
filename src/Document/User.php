@@ -42,19 +42,16 @@ class User
         return $this->id;
     }
 
-    public function setId(string $id): void
-    {
-        $this->id = $id;
-    }
-
     public function getName(): string
     {
         return $this->name;
     }
 
-    public function setName(string $name): void
+    public function setName(string $name): static
     {
         $this->name = $name;
+
+        return $this;
     }
 
     public function getDocument(): string
@@ -62,9 +59,11 @@ class User
         return $this->document;
     }
 
-    public function setDocument(string $document): void
+    public function setDocument(string $document): static
     {
         $this->document = $document;
+
+        return $this;
     }
 
     public function getRol(): string
@@ -72,9 +71,11 @@ class User
         return $this->rol;
     }
 
-    public function setRol(string $rol): void
+    public function setRol(string $rol): static
     {
         $this->rol = $rol;
+
+        return $this;
     }
 
     public function getAddress(): string
@@ -82,9 +83,11 @@ class User
         return $this->address;
     }
 
-    public function setAddress(string $address): void
+    public function setAddress(string $address): static
     {
         $this->address = $address;
+
+        return $this;
     }
 
     public function getPhone(): string
@@ -92,9 +95,11 @@ class User
         return $this->phone;
     }
 
-    public function setPhone(string $phone): void
+    public function setPhone(string $phone): static
     {
         $this->phone = $phone;
+
+        return $this;
     }
 
     public function getEmail(): string
@@ -102,9 +107,11 @@ class User
         return $this->email;
     }
 
-    public function setEmail(string $email): void
+    public function setEmail(string $email): static
     {
         $this->email = $email;
+
+        return $this;
     }
 
     public function getPassword(): string
@@ -112,9 +119,11 @@ class User
         return $this->password;
     }
 
-    public function setPassword(string $password): void
+    public function setPassword(string $password): static
     {
         $this->password = $password;
+
+        return $this;
     }
 
     public function getRecoveryCode(): string
@@ -122,8 +131,10 @@ class User
         return $this->recoveryCode;
     }
 
-    public function setRecoveryCode(string $recoveryCode): void
+    public function setRecoveryCode(string $recoveryCode): static
     {
         $this->recoveryCode = $recoveryCode;
+
+        return $this;
     }
 }

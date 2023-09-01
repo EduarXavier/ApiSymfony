@@ -108,12 +108,12 @@ class InvoicesController extends AbstractController
                 $this->invoicesRepository->createInvoice($invoice, $documentManager);
 
                 return new JsonResponse(["mensaje" => "Se ha creado la factura"], Response::HTTP_OK);
-            } else {
-                return new JsonResponse(["error" => "No se ha encontrado la lista de productos"], Response::HTTP_BAD_REQUEST);
             }
-        } else {
-            return new JsonResponse(["error" => "Ha ocurrido un error con los datos enviados"], Response::HTTP_BAD_REQUEST);
+
+            return new JsonResponse(["error" => "No se ha encontrado la lista de productos"], Response::HTTP_BAD_REQUEST);
         }
+
+        return new JsonResponse(["error" => "Ha ocurrido un error con los datos enviados"], Response::HTTP_BAD_REQUEST);
     }
 
     /**
@@ -368,6 +368,10 @@ class InvoicesController extends AbstractController
         return $this->redirectToRoute("login_template");
     }
 
+    /**
+     * @throws \Doctrine\ODM\MongoDB\Mapping\MappingException
+     * @throws MongoDBException
+     */
     #[Route("/shopping-cart/delete-product/{id}", name: "delete_product_to_shopping_cart_view")]
     public function deleteProductToShoppingCartView(Request $request, string $id): RedirectResponse
     {
