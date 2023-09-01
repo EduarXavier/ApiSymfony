@@ -14,7 +14,20 @@
             </div>
         {% else %}
 
-            <h2 class="text-center">Mis facturas</h2>
+            <h2 class="text-center mb-4">Mis facturas</h2>
+            <div class="d-flex justify-content-center w-100">
+                <div class="col-md-6">
+                    <h4 class="text-center">Seleccionar Opción</h4>
+                    <div class="d-flex justify-content-center mb-4">
+                        <div class="btn-group" role="group">
+                            <a href="/invoices/list/invoice" class="btn btn-primary">Facturas</a>
+                            <a href="/invoices/list/pay" class="btn btn-success">Pago</a>
+                            <a href="/invoices/list/cancel" class="btn btn-danger">Cancelado</a>
+                            <a href="/invoices/list/" class="btn btn-secondary">Todo</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
             <div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-4">
 
                 {% for invoice in invoices %}

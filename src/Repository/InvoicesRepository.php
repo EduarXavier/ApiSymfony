@@ -5,9 +5,11 @@ namespace App\Repository;
 use App\Document\Invoice;
 use App\Document\Product;
 use Doctrine\ODM\MongoDB\DocumentManager;
+use Doctrine\ODM\MongoDB\LockException;
 use Doctrine\ODM\MongoDB\Mapping\MappingException;
 use Doctrine\ODM\MongoDB\MongoDBException;
 use Exception;
+use Symfony\Component\HttpFoundation\Response;
 
 class InvoicesRepository implements InvoicesRepositoryInterface
 {
@@ -26,6 +28,13 @@ class InvoicesRepository implements InvoicesRepositoryInterface
         return $repository->findBy(["userDocument" => $document], ['date' => 'DESC'], limit: 20);
     }
 
+    public function findAllForStatus(string $document, string $status, DocumentManager $documentManager): array
+    {
+        $repository = $documentManager->getRepository(Invoice::class);
+
+        return $repository->findBy(["userDocument" => $document, "status" => $status], ['date' => 'DESC'], limit: 20);
+    }
+
     /**
      * @throws MongoDBException
      * @throws Exception
@@ -35,85 +44,103 @@ class InvoicesRepository implements InvoicesRepositoryInterface
         $shoppingCart = $this->findByDocumentAndStatus($document, "shopping-cart", $documentManager);
 
         if ($shoppingCart) {
-            $productsUser = $shoppingCart->getProducts();
-
-            foreach ($products as $product) {
-                $productShop = $this->productRepository->findById($product->getId(), $documentManager);
-
-                if ($productShop) {
-
-                    $existingProduct = null;
-                    $contador = 0;
-
-                    foreach ($productsUser as $productArray) {
-                        if ($productArray["id"] === $product->getId()) {
-                            $existingProduct = $productArray;
-                            break;
-                        }
-                        $contador += 1;
-                    }
-
-                    if ($existingProduct) {
-                        $existingProduct["amount"] += intval($product->getAmount());
-                        $productsUser[$contador] = [
-                            "id" => $product->getId(),
-                            "amount" => $existingProduct["amount"]
-                        ];
-                    }
-                    else {
-                        $productsUser[$contador] = [
-                            "id" => $product->getId(),
-                            "amount" => $product->getAmount()
-                        ];
-                    }
-
-                    $newAmountProduct = $productShop->getAmount() - $product->getAmount();
-
-                    if ($newAmountProduct >= 0) {
-                        $productShop->setAmount($newAmountProduct);
-                        $this->productRepository->updateProduct($productShop, $documentManager);
-                    }
-                    else {
-                        throw new Exception("No hay tantos productos", 400);
-                    }
-                }
-            }
-
-            $shoppingCart->setProducts($productsUser);
+            $this->addToExistingCart($products, $shoppingCart, $documentManager);
         } else {
-            $invoices = new Invoice();
-            $invoices->setUserDocument($document);
-            $invoices->setDate(date("Y-m-d H:i:s"));
-            $invoices->setStatus("shopping-cart");
-            $productsAdd = array();
+            $this->createNewCart($products, $document, $documentManager);
+        }
 
-            foreach ($products as $product) {
-                $productShop = $this->productRepository->findById($product->getId(), $documentManager);
+        $documentManager->flush();
+        return true;
+    }
 
-                if ($productShop) {
-                    $newAmountProduct = $productShop->getAmount() - $product->getAmount();
+    /**
+     * @throws MappingException
+     * @throws LockException
+     * @throws Exception
+     */
+    private function addToExistingCart(array $products, Invoice $shoppingCart, DocumentManager $documentManager): void
+    {
+        $productsUser = $shoppingCart->getProducts();
 
-                    if ($newAmountProduct >= 0) {
-                        $productShop->setAmount($newAmountProduct);
-                        $this->productRepository->updateProduct($productShop, $documentManager);
-                    } else {
-                        throw new \Exception("No hay tantos productos", 400);
+        foreach ($products as $product) {
+            $productShop = $this->productRepository->findById($product->getId(), $documentManager);
+
+            if ($productShop) {
+
+                $existingProduct = null;
+                $count = 0;
+
+                foreach ($productsUser as $productArray) {
+                    if ($productArray["id"] === $product->getId()) {
+                        $existingProduct = $productArray;
+                        $productArray["amount"] += intval($product->getAmount());
+                        $productsUser[$count] = [
+                            "id" => $product->getId(),
+                            "amount" => $productArray["amount"]
+                        ];
+                        break;
                     }
+                    $count += 1;
+                }
 
-                    $productsAdd[] = [
+                if ($existingProduct == null) {
+                    $productsUser[] = [
                         "id" => $product->getId(),
                         "amount" => $product->getAmount()
                     ];
                 }
-            }
 
-            $invoices->setProducts($productsAdd);
-            $documentManager->persist($invoices);
+                $this->updateProductAndCheckAvailability($productShop, $product->getAmount(), $documentManager);
+            }
         }
 
-        $documentManager->flush();
+        $shoppingCart->setProducts($productsUser);
+    }
 
-        return true;
+    /**
+     * @throws MappingException
+     * @throws LockException
+     * @throws Exception
+     */
+    private function createNewCart(array $products, string $document, DocumentManager $documentManager): void
+    {
+        $invoices = new Invoice();
+        $invoices->setUserDocument($document);
+        $invoices->setDate(date("Y-m-d H:i:s"));
+        $invoices->setStatus("shopping-cart");
+        $productsAdd = array();
+
+        foreach ($products as $product) {
+            $productShop = $this->productRepository->findById($product->getId(), $documentManager);
+
+            if ($productShop) {
+                $this->updateProductAndCheckAvailability($productShop, $product->getAmount(), $documentManager);
+
+                $productsAdd[] = [
+                    "id" => $product->getId(),
+                    "amount" => $product->getAmount()
+                ];
+            }
+        }
+
+        $invoices->setProducts($productsAdd);
+        $documentManager->persist($invoices);
+    }
+
+    /**
+     * @throws MongoDBException
+     * @throws Exception
+     */
+    private function updateProductAndCheckAvailability(Product $productShop, int $amount, DocumentManager $documentManager): void
+    {
+        $newAmountProduct = $productShop->getAmount() - $amount;
+
+        if ($newAmountProduct >= 0) {
+            $productShop->setAmount($newAmountProduct);
+            $this->productRepository->updateProduct($productShop, $documentManager);
+        } else {
+            throw new \Exception("No hay tantos productos", Response::HTTP_BAD_REQUEST);
+        }
     }
 
     /**

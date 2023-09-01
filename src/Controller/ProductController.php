@@ -36,7 +36,7 @@ class ProductController extends AbstractController
     {
         $products = $this->productRepository->findAll($this->documentManager);
 
-        return $this->json($products, 200);
+        return $this->json($products, Response::HTTP_OK);
     }
 
     #[Route('/list-view', name: 'product_list_view', methods: ['GET'])]

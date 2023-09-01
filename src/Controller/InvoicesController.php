@@ -60,13 +60,17 @@ class InvoicesController extends AbstractController
             );
 
             return $validation ?
-                new JsonResponse(["mensaje" => "Agregado con éxito"], 200) :
-                new JsonResponse(["error" => "No se han podido agregar los productos"], 400);
+                new JsonResponse(["mensaje" => "Agregado con éxito"], Response::HTTP_OK) :
+                new JsonResponse(["error" => "No se han podido agregar los productos"], Response::HTTP_BAD_REQUEST);
         }
 
-        return new JsonResponse(["error" => "Ha ocurrido un error"], 400);
+        return new JsonResponse(["error" => "Ha ocurrido un error"], Response::HTTP_BAD_REQUEST);
     }
 
+    /**
+     * @throws MongoDBException
+     * @throws \Doctrine\ODM\MongoDB\Mapping\MappingException
+     */
     #[Route("/update/shopping-cart/", name: "update_shopping_cart", methods: ["POST"])]
     public function updateShoppingCart(Request $request, DocumentManager $documentManager): ?JsonResponse
     {
@@ -82,11 +86,11 @@ class InvoicesController extends AbstractController
             );
 
             return $validation ?
-                new JsonResponse(["mensaje" => "Agregado con éxito"], 200) :
-                new JsonResponse(["error" => "No se han podido agregar los productos"], 400);
+                new JsonResponse(["mensaje" => "Agregado con éxito"], Response::HTTP_OK) :
+                new JsonResponse(["error" => "No se han podido agregar los productos"], Response::HTTP_BAD_REQUEST);
         }
 
-        return new JsonResponse(["error" => "Ha ocurrido un error"], 400);
+        return new JsonResponse(["error" => "Ha ocurrido un error"], Response::HTTP_BAD_REQUEST);
     }
 
     #[Route("/create-invoice", name: "create-invoice", methods: ["POST"])]
@@ -103,12 +107,12 @@ class InvoicesController extends AbstractController
             if ($invoice) {
                 $this->invoicesRepository->createInvoice($invoice, $documentManager);
 
-                return new JsonResponse(["mensaje" => "Se ha creado la factura"], 200);
+                return new JsonResponse(["mensaje" => "Se ha creado la factura"], Response::HTTP_OK);
             } else {
-                return new JsonResponse(["error" => "No se ha encontrado la lista de productos"], 400);
+                return new JsonResponse(["error" => "No se ha encontrado la lista de productos"], Response::HTTP_BAD_REQUEST);
             }
         } else {
-            return new JsonResponse(["error" => "Ha ocurrido un error con los datos enviados"], 400);
+            return new JsonResponse(["error" => "Ha ocurrido un error con los datos enviados"], Response::HTTP_BAD_REQUEST);
         }
     }
 
@@ -144,12 +148,12 @@ class InvoicesController extends AbstractController
 
                 $this->invoicesRepository->payInvoice($invoice, $documentManager);
 
-                return new JsonResponse(["mensaje" => "Se ha pagado"], 200);
+                return new JsonResponse(["mensaje" => "Se ha pagado"], Response::HTTP_OK);
             } else {
-                return new JsonResponse(["error" => "No se ha encontrado la factura"], 400);
+                return new JsonResponse(["error" => "No se ha encontrado la factura"], Response::HTTP_BAD_REQUEST);
             }
         } else {
-            return new JsonResponse(["error" => "Ha ocurrido un error con los datos enviados"], 400);
+            return new JsonResponse(["error" => "Ha ocurrido un error con los datos enviados"], Response::HTTP_BAD_REQUEST);
         }
     }
 
@@ -162,6 +166,22 @@ class InvoicesController extends AbstractController
 
         if (!empty($session->get("user")) && !empty($session->get("rol")) && $session->get("rol") == "ADMIN") {
             $invoices = $this->invoicesRepository->findAll($session->get("document"), $this->documentManager);
+
+            return $this->render("InvoiceTemplates/invoiceList.html.twig", [
+                "invoices" => $invoices
+            ]);
+        }
+
+        return $this->redirectToRoute("login_template");
+    }
+
+    #[Route("/list/{status}", name: "invoices_list_status")]
+    public function findAllInvoicesForStatus(Request $request, string $status): RedirectResponse|Response
+    {
+        $session = $request->getSession();
+
+        if (!empty($session->get("user")) && !empty($session->get("rol")) && $session->get("rol") == "ADMIN") {
+            $invoices = $this->invoicesRepository->findAllForStatus($session->get("document"), $status, $this->documentManager);
 
             return $this->render("InvoiceTemplates/invoiceList.html.twig", [
                 "invoices" => $invoices
