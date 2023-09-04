@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Controller;
 
 use App\Document\Invoice;
@@ -10,8 +12,11 @@ use App\Form\ProductShoppingCartType;
 use App\Form\ShoppingCartType;
 use App\Repository\InvoicesRepository;
 use App\Repository\InvoicesRepositoryInterface;
+use App\Repository\ProductRepository;
 use App\Repository\UserRepository;
 use App\Repository\UserRepositoryInterface;
+use App\Services\EmailService;
+use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ODM\MongoDB\DocumentManager;
 use Doctrine\ODM\MongoDB\MongoDBException;
 use Doctrine\Persistence\Mapping\MappingException;
@@ -27,17 +32,21 @@ use Symfony\Component\Routing\Annotation\Route;
 #[Route("/invoices")]
 class InvoicesController extends AbstractController
 {
-    private InvoicesRepositoryInterface $invoicesRepository;
-    private UserRepositoryInterface $userRepository;
-    private DocumentManager $documentManager;
-    private EmailController $emailController;
+    private InvoicesRepository $invoicesRepository;
+    private UserRepository $userRepository;
+    private ProductRepository $productRepository;
+    private EmailService $emailService;
 
-    public function __construct(DocumentManager $documentManager, EmailController $emailController)
-    {
-        $this->documentManager = $documentManager;
-        $this->emailController = $emailController;
-        $this->userRepository = new UserRepository();
-        $this->invoicesRepository = new InvoicesRepository();
+    public function __construct(
+        EmailService $emailService,
+        UserRepository $userRepository,
+        InvoicesRepository $invoicesRepository,
+        ProductRepository $productRepository
+    ) {
+        $this->emailService = $emailService;
+        $this->userRepository = $userRepository;
+        $this->invoicesRepository = $invoicesRepository;
+        $this->productRepository = $productRepository;
     }
 
     // Endpoints API
@@ -53,18 +62,17 @@ class InvoicesController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            $validation = $this->invoicesRepository->addProductsToShoppingCart(
-                $invoices->getProducts(),
-                $invoices->getUserDocument(),
-                $this->documentManager
-            );
-
-            return $validation ?
-                new JsonResponse(["mensaje" => "Agregado con éxito"], Response::HTTP_OK) :
-                new JsonResponse(["error" => "No se han podido agregar los productos"], Response::HTTP_BAD_REQUEST);
+            return new JsonResponse(["error" => "Ha ocurrido un error"], Response::HTTP_BAD_REQUEST);
         }
 
-        return new JsonResponse(["error" => "Ha ocurrido un error"], Response::HTTP_BAD_REQUEST);
+        $validation = $this->invoicesRepository->addProductsToShoppingCart(
+            $invoices->getProducts(),
+            $invoices->getUser()
+        );
+
+        return $validation ?
+            new JsonResponse(["mensaje" => "Agregado con éxito"], Response::HTTP_OK) :
+            new JsonResponse(["error" => "No se han podido agregar los productos"], Response::HTTP_BAD_REQUEST);
     }
 
     /**
@@ -78,21 +86,23 @@ class InvoicesController extends AbstractController
         $form = $this->createForm(ShoppingCartType::class, $invoices);
         $form->handleRequest($request);
 
-        if ($form->isSubmitted() && $form->isValid()) {
-            $validation = $this->invoicesRepository->updateShoppingCart(
-                $invoices->getProducts(),
-                $invoices->getUserDocument(),
-                $this->documentManager
-            );
-
-            return $validation ?
-                new JsonResponse(["mensaje" => "Agregado con éxito"], Response::HTTP_OK) :
-                new JsonResponse(["error" => "No se han podido agregar los productos"], Response::HTTP_BAD_REQUEST);
+        if (!$form->isSubmitted() || !$form->isValid()) {
+            return new JsonResponse(["error" => "Ha ocurrido un error"], Response::HTTP_BAD_REQUEST);
         }
 
-        return new JsonResponse(["error" => "Ha ocurrido un error"], Response::HTTP_BAD_REQUEST);
+        $validation = $this->invoicesRepository->updateShoppingCart(
+            $invoices->getProducts(),
+            $invoices->getUser()
+        );
+
+        return $validation ?
+            new JsonResponse(["mensaje" => "Agregado con éxito"], Response::HTTP_OK) :
+            new JsonResponse(["error" => "No se han podido agregar los productos"], Response::HTTP_BAD_REQUEST);
     }
 
+    /**
+     * @throws MongoDBException
+     */
     #[Route("/create-invoice", name: "create-invoice", methods: ["POST"])]
     public function createInvoices(Request $request, DocumentManager $documentManager): ?JsonResponse
     {
@@ -100,20 +110,19 @@ class InvoicesController extends AbstractController
         $form = $this->createForm(FactureType::class, $invoice);
         $form->handleRequest($request);
 
-        if ($form->isSubmitted() && $form->isValid()) {
-            $document = $invoice->getUserDocument();
-            $invoice = $this->invoicesRepository->findByDocumentAndStatus($document, "shopping-cart", $documentManager);
-
-            if ($invoice) {
-                $this->invoicesRepository->createInvoice($invoice, $documentManager);
-
-                return new JsonResponse(["mensaje" => "Se ha creado la factura"], Response::HTTP_OK);
-            }
-
-            return new JsonResponse(["error" => "No se ha encontrado la lista de productos"], Response::HTTP_BAD_REQUEST);
+        if (!$form->isSubmitted() || !$form->isValid()) {
+            return new JsonResponse(["error" => "Ha ocurrido un error con los datos enviados"], Response::HTTP_BAD_REQUEST);
         }
 
-        return new JsonResponse(["error" => "Ha ocurrido un error con los datos enviados"], Response::HTTP_BAD_REQUEST);
+        $document = $invoice->getUser()->getDocument();
+        $invoice = $this->invoicesRepository->findByDocumentAndStatus($document, "shopping-cart");
+
+        if (!$invoice) {
+            return new JsonResponse(["error" => "No se ha encontrado la lista de productos"], Response::HTTP_BAD_REQUEST);
+        }
+        $this->invoicesRepository->createInvoice($invoice);
+
+        return new JsonResponse(["mensaje" => "Se ha creado la factura"], Response::HTTP_OK);
     }
 
     /**
@@ -121,40 +130,34 @@ class InvoicesController extends AbstractController
      * @throws TransportExceptionInterface
      */
     #[Route("/pay-invoice", name: "pay-invoice", methods: ["POST"])]
-    public function payInvoice(Request $request, DocumentManager $documentManager): ?JsonResponse
+    public function payInvoice(Request $request): ?JsonResponse
     {
         $invoice = new Invoice();
         $form = $this->createForm(PayInvoiceType::class, $invoice);
         $form->handleRequest($request);
 
-        if ($form->isSubmitted() && $form->isValid()) {
-            $id = $invoice->getId();
-            $invoice = $this->invoicesRepository->findById($id, $documentManager);
-
-            if ($invoice) {
-                $invoiceEmail = $this->invoicesRepository->findByDocumentAndStatus(
-                    $invoice->getUserDocument(),
-                    "pay",
-                    $documentManager
-                );
-
-                if ($invoiceEmail == null) {
-                    $user = $this->userRepository->findByDocument(
-                        $invoice->getUserDocument(),
-                        $documentManager
-                    );
-                    $this->emailController->sendEmail($user->getEmail(), "first-shop");
-                }
-
-                $this->invoicesRepository->payInvoice($invoice, $documentManager);
-
-                return new JsonResponse(["mensaje" => "Se ha pagado"], Response::HTTP_OK);
-            } else {
-                return new JsonResponse(["error" => "No se ha encontrado la factura"], Response::HTTP_BAD_REQUEST);
-            }
-        } else {
+        if (!$form->isSubmitted() || !$form->isValid()) {
             return new JsonResponse(["error" => "Ha ocurrido un error con los datos enviados"], Response::HTTP_BAD_REQUEST);
         }
+
+        $invoice = $this->invoicesRepository->findById($invoice->getId(), "invoice");
+
+        if (!$invoice) {
+            return new JsonResponse(["error" => "No se ha encontrado la factura"], Response::HTTP_BAD_REQUEST);
+        }
+
+        $invoiceEmail = $this->invoicesRepository->findByDocumentAndStatus(
+            $invoice->getUserDocument(),
+            "pay",
+        );
+
+        if ($invoiceEmail == null) {
+            $this->emailService->sendEmail($invoice->getUser()->getEmail(), "first-shop");
+        }
+
+        $this->invoicesRepository->payInvoice($invoice);
+
+        return new JsonResponse(["mensaje" => "Se ha pagado"], Response::HTTP_OK);
     }
 
     // Endpoints View
@@ -164,15 +167,15 @@ class InvoicesController extends AbstractController
     {
         $session = $request->getSession();
 
-        if (!empty($session->get("user")) && !empty($session->get("rol")) && $session->get("rol") == "ADMIN") {
-            $invoices = $this->invoicesRepository->findAll($session->get("document"), $this->documentManager);
-
-            return $this->render("InvoiceTemplates/invoiceList.html.twig", [
-                "invoices" => $invoices
-            ]);
+        if (empty($session->get("user")) || empty($session->get("rol")) || $session->get("rol") != "ADMIN") {
+            return $this->redirectToRoute("login_template");
         }
 
-        return $this->redirectToRoute("login_template");
+        $invoices = $this->invoicesRepository->findAllByUser($session->get("user"));
+
+        return $this->render("InvoiceTemplates/invoiceList.html.twig", [
+            "invoices" => $invoices
+        ]);
     }
 
     #[Route("/list/{status}", name: "invoices_list_status")]
@@ -180,15 +183,15 @@ class InvoicesController extends AbstractController
     {
         $session = $request->getSession();
 
-        if (!empty($session->get("user")) && !empty($session->get("rol")) && $session->get("rol") == "ADMIN") {
-            $invoices = $this->invoicesRepository->findAllForStatus($session->get("document"), $status, $this->documentManager);
-
-            return $this->render("InvoiceTemplates/invoiceList.html.twig", [
-                "invoices" => $invoices
-            ]);
+        if (empty($session->get("user")) || empty($session->get("rol")) || $session->get("rol") != "ADMIN") {
+            return $this->redirectToRoute("login_template");
         }
 
-        return $this->redirectToRoute("login_template");
+        $invoices = $this->invoicesRepository->findAllForStatus($session->get("user"), $status);
+
+        return $this->render("InvoiceTemplates/invoiceList.html.twig", [
+            "invoices" => $invoices
+        ]);
     }
 
     #[Route("/shopping-cart/list", name: "shopping_cart_list")]
@@ -196,19 +199,18 @@ class InvoicesController extends AbstractController
     {
         $session = $request->getSession();
 
-        if (!empty($session->get("user")) && !empty($session->get("rol")) && $session->get("rol") == "ADMIN") {
-            $shoppingCart = $this->invoicesRepository->findByDocumentAndStatus(
-                $session->get("document"),
-                "shopping-cart",
-                $this->documentManager
-            );
-
-            return $this->render("InvoiceTemplates/shoppingCartDetails.html.twig", [
-                "shoppingCart" => $shoppingCart
-            ]);
+        if (empty($session->get("user")) || empty($session->get("rol")) || $session->get("rol") != "ADMIN") {
+            return $this->redirectToRoute("login_template");
         }
 
-        return $this->redirectToRoute("login_template");
+        $shoppingCart = $this->invoicesRepository->findByDocumentAndStatus(
+            $session->get("document"),
+            "shopping-cart"
+        );
+
+        return $this->render("InvoiceTemplates/shoppingCartDetails.html.twig", [
+            "shoppingCart" => $shoppingCart
+        ]);
     }
 
     #[Route("/details/{id}", name: "invoices_details")]
@@ -216,15 +218,15 @@ class InvoicesController extends AbstractController
     {
         $session = $request->getSession();
 
-        if (!empty($session->get("user")) && !empty($session->get("rol")) && $session->get("rol") == "ADMIN") {
-            $invoice = $this->invoicesRepository->findById($id, $this->documentManager);
-
-            return $this->render("InvoiceTemplates/invoiceDetails.html.twig", [
-                "invoice" => $invoice
-            ]);
+        if (empty($session->get("user")) || empty($session->get("rol")) || $session->get("rol") != "ADMIN") {
+            return $this->redirectToRoute("login_template");
         }
 
-        return $this->redirectToRoute("login_template");
+        $invoice = $this->invoicesRepository->findById($id, "invoice");
+
+        return $this->render("InvoiceTemplates/invoiceDetails.html.twig", [
+            "invoice" => $invoice
+        ]);
     }
 
     /**
@@ -237,27 +239,27 @@ class InvoicesController extends AbstractController
         $product = new Product();
         $form = $this->createForm(ProductShoppingCartType::class, $product);
 
-        if (!empty($session->get("user")) && !empty($session->get("rol")) && $session->get("rol") == "ADMIN") {
-            $form->handleRequest($request);
+        if (empty($session->get("user")) || empty($session->get("rol")) || $session->get("rol") != "ADMIN") {
+            return $this->redirectToRoute("login_template");
+        }
 
-            if ($form->isSubmitted() && $form->isValid()) {
-                $products = $session->get("shopping-cart");
-                $products[] = $product;
-                $session->set("shopping-cart", array());
+        $form->handleRequest($request);
 
-                $this->invoicesRepository->addProductsToShoppingCart(
-                    $products,
-                    $session->get("document"),
-                    $this->documentManager
-                );
-
-                return $this->redirect("/product/details/" . $product->getId() . "?mnsj=ok");
-            }
-
+        if (!$form->isSubmitted() || !$form->isValid()) {
             return $this->redirect("/product/details/" . $product->getId() . "?mnsj=err");
         }
 
-        return $this->redirectToRoute("login_template");
+        $products = new ArrayCollection();
+        $amount  = $product->getAmount();
+        $product = $this->productRepository->findByCode($product->getCode());
+        $products->add($product);
+
+        $this->invoicesRepository->addProductsToShoppingCart(
+            $products,
+            $session->get("user")
+        );
+
+        return $this->redirect("/product/details/" . $product->getId() . "?mnsj=ok");
     }
 
     /**
@@ -270,24 +272,21 @@ class InvoicesController extends AbstractController
         $invoice = new Invoice();
         $form = $this->createForm(FactureType::class, $invoice);
 
-        if (!empty($session->get("user")) && !empty($session->get("rol")) && $session->get("rol") == "ADMIN") {
-            $form->handleRequest($request);
+        if (empty($session->get("user")) || empty($session->get("rol")) || $session->get("rol") != "ADMIN") {
+            return $this->redirectToRoute("login_template");
+        }
 
-            if ($form->isSubmitted() && $form->isValid()) {
-                $invoice = $this->invoicesRepository->findByDocumentAndStatus(
-                    $invoice->getUserDocument(),
-                    "shopping-cart",
-                    $this->documentManager
-                );
-                $this->invoicesRepository->createInvoice($invoice, $this->documentManager);
+        $form->handleRequest($request);
 
-                return $this->redirect("/invoices/details/" . $invoice->getId());
-            }
-
+        if (!$form->isSubmitted() || !$form->isValid()) {
             return $this->redirect("/invoices/list");
         }
 
-        return $this->redirectToRoute("login_template");
+        $invoice = $this->invoicesRepository->findByCode($invoice->getCode(), "shopping-cart");
+
+        $this->invoicesRepository->createInvoice($invoice);
+
+        return $this->redirect("/invoices/details/" . $invoice->getId());
     }
 
     /**
@@ -299,31 +298,31 @@ class InvoicesController extends AbstractController
     {
         $session = $request->getSession();
 
-        if (!empty($session->get("user")) && !empty($session->get("rol")) && $session->get("rol") == "ADMIN") {
-            $invoice = $this->invoicesRepository->findById($id, $this->documentManager);
-
-            if ($invoice) {
-                $invoiceEmail = $this->invoicesRepository->findByDocumentAndStatus(
-                    $invoice->getUserDocument(),
-                    "pay",
-                    $this->documentManager
-                );
-
-                if ($invoiceEmail == null) {
-                    $user = $this->userRepository->findByDocument(
-                        $invoice->getUserDocument(),
-                        $this->documentManager
-                    );
-                    $this->emailController->sendEmail($user->getEmail(), "first-shop");
-                }
-
-                $this->invoicesRepository->payInvoice($invoice, $this->documentManager);
-            }
-
-            return $this->redirect("/invoices/details/" . $invoice->getId());
+        if (empty($session->get("user")) || empty($session->get("rol")) || $session->get("rol") != "ADMIN") {
+            return $this->redirectToRoute("login_template");
         }
 
-        return $this->redirectToRoute("login_template");
+        $invoice = $this->invoicesRepository->findById($id, "invoice");
+
+        if (!$invoice) {
+            return $this->redirect("/invoices/details/" . $id);
+        }
+
+        $invoiceEmail = $this->invoicesRepository->findAllForStatus(
+            $invoice->getUser(),
+            "pay"
+        );
+
+        if ($invoiceEmail == null) {
+            $user = $this->userRepository->findByDocument(
+                $invoice->getUser()->getDocument()
+            );
+            $this->emailService->sendEmail($user->getEmail(), "first-shop");
+        }
+
+        $this->invoicesRepository->payInvoice($invoice);
+
+        return $this->redirect("/invoices/details/" . $invoice->getId());
     }
 
     /**
@@ -335,14 +334,14 @@ class InvoicesController extends AbstractController
     {
         $session = $request->getSession();
 
-        if (!empty($session->get("user")) && !empty($session->get("rol")) && $session->get("rol") == "ADMIN") {
-            $invoice = $this->invoicesRepository->findById($id, $this->documentManager);
-            $this->invoicesRepository->deleteInvoice($invoice, $this->documentManager);
-
-            return $this->redirect("/invoices/details/" . $invoice->getId());
+        if (empty($session->get("user")) || empty($session->get("rol")) || $session->get("rol") != "ADMIN") {
+            return $this->redirectToRoute("login_template");
         }
 
-        return $this->redirectToRoute("login_template");
+        $invoice = $this->invoicesRepository->findById($id, "invoice");
+        $this->invoicesRepository->deleteInvoice($invoice);
+
+        return $this->redirect("/invoices/details/" . $invoice->getId());
     }
 
     /**
@@ -354,18 +353,17 @@ class InvoicesController extends AbstractController
     {
         $session = $request->getSession();
 
-        if (!empty($session->get("user")) && !empty($session->get("rol")) && $session->get("rol") == "ADMIN") {
-            $shoppingCart = $this->invoicesRepository->findByDocumentAndStatus(
-                $document,
-                "shopping-cart",
-                $this->documentManager
-            );
-            $this->invoicesRepository->deleteShoppingCart($shoppingCart, $this->documentManager);
-
-            return $this->redirect("/invoices/details/" . $shoppingCart->getId());
+        if (empty($session->get("user")) || empty($session->get("rol")) || $session->get("rol") != "ADMIN") {
+            return $this->redirectToRoute("login_template");
         }
 
-        return $this->redirectToRoute("login_template");
+        $shoppingCart = $this->invoicesRepository->findByDocumentAndStatus(
+            $document,
+            "shopping-cart"
+        );
+        $this->invoicesRepository->deleteShoppingCart($shoppingCart);
+
+        return $this->redirect("/invoices/details/" . $shoppingCart->getId());
     }
 
     /**
@@ -377,16 +375,15 @@ class InvoicesController extends AbstractController
     {
         $session = $request->getSession();
 
-        if (!empty($session->get("user")) && !empty($session->get("rol")) && $session->get("rol") == "ADMIN") {
-            $this->invoicesRepository->deleteProductToShoppingCart(
-                $session->get("document"),
-                $id,
-                $this->documentManager
-            );
-
-            return $this->redirect("/invoices/shopping-cart/list");
+        if (empty($session->get("user")) || empty($session->get("rol")) || $session->get("rol") != "ADMIN") {
+            return $this->redirectToRoute("login_template");
         }
 
-        return $this->redirectToRoute("login_template");
+        $this->invoicesRepository->deleteProductToShoppingCart(
+            $session->get("document"),
+            $id
+        );
+
+        return $this->redirect("/invoices/shopping-cart/list");
     }
 }

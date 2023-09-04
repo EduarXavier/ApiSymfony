@@ -1,38 +1,67 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Document;
 
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ODM\MongoDB\Mapping\Annotations as MongoDB;
+use Doctrine\ODM\MongoDB\Mapping\Annotations\EmbedMany;
+use Doctrine\ODM\MongoDB\Mapping\Annotations\EmbedOne;
+use Doctrine\ODM\MongoDB\Mapping\Annotations\Field;
+use Doctrine\ODM\MongoDB\Mapping\Annotations\Id;
+use Doctrine\ODM\MongoDB\Mapping\Annotations\ReferenceOne;
 
 #[MongoDB\Document]
 class Invoice
 {
-    #[MongoDB\Id()]
+    #[Id()]
     private string $id;
 
-    #[MongoDB\Field(type:'collection')]
-    private array $products;
+    #[Field(type:'string')]
+    private string $code;
 
-    #[MongoDB\Field(type:'string')]
+    #[EmbedMany(targetDocument : Product::class)]
+    private Collection $products;
+
+    #[Field(type:'string')]
     private string $date;
 
-    #[MongoDB\Field(type:'string')]
-    private string $userDocument;
+    #[EmbedOne(targetDocument : User::class)]
+    private User $user;
 
-    #[MongoDB\Field(type:'string')]
+    #[Field(type:'string')]
     private string $status;
+
+    public function __construct()
+    {
+        $this->products = new ArrayCollection();
+    }
 
     public function getId(): string
     {
         return $this->id;
     }
 
-    public function getProducts(): array
+    public function getCode(): string
+    {
+        return $this->code;
+    }
+
+    public function setCode(string $code): static
+    {
+        $this->code = $code;
+
+        return $this;
+    }
+
+    public function getProducts(): Collection
     {
         return $this->products;
     }
 
-    public function setProducts(array $products): static
+    public function setProducts(Collection $products): static
     {
         $this->products = $products;
 
@@ -51,14 +80,28 @@ class Invoice
         return $this;
     }
 
-    public function getUserDocument(): string
+    public function addProducts(Product $product): static
     {
-        return $this->userDocument;
+        if (!$this->products->contains($product)) {
+            $this->products->add($product);
+        }
+
+        return $this;
     }
 
-    public function setUserDocument(string $userDocument): static
+    public function removeProduct(Product $product): bool
     {
-        $this->userDocument = $userDocument;
+        return $this->products->removeElement($product);
+    }
+
+    public function getUser(): User
+    {
+        return $this->user;
+    }
+
+    public function setUser(User $userDocument): static
+    {
+        $this->user = $userDocument;
 
         return $this;
     }

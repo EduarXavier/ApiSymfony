@@ -21,7 +21,7 @@
                         <div class="row col-9">
                             <div class="card-body">
                                 <h5 class="card-title">
-                                    usuario: {{ shoppingCart.userDocument }}
+                                    usuario: {{ shoppingCart.user.email }}
                                 </h5>
                                 <p class="card-text">
                                     ID: {{ shoppingCart.id }}
@@ -38,7 +38,7 @@
                                 <table class="table">
                                     <thead>
                                     <tr>
-                                        <th scope="col">ID</th>
+                                        <th scope="col">Nombre</th>
                                         <th scope="col">Cantidad</th>
                                         <th scope="col">Acción</th>
                                     </tr>
@@ -49,7 +49,7 @@
                                         <tr>
                                             <th scope="row">
                                                 <a href="/product/details/{{ product.id }}" class="text-decoration-none">
-                                                    {{ product.id }}
+                                                    {{ product.name }}
                                                 </a>
                                             </th>
                                             <td>{{ product.amount }}</td>
@@ -73,8 +73,8 @@
                                 %}
                                     <form action="/invoices/create/invoice/" method="POST">
                                         <input
-                                            value="{{ shoppingCart.userDocument }}"
-                                            name="userDocument"
+                                            value="{{ shoppingCart.code }}"
+                                            name="code"
                                             class="d-none"
                                         >
                                         <button

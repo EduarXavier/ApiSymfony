@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Form;
 
 use App\Document\Invoice;
@@ -13,7 +15,7 @@ class FactureType extends AbstractType
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $builder
-            ->add('userDocument', TextType::class)
+            ->add('code', TextType::class)
         ;
     }
 

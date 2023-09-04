@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Document;
 
 use Doctrine\ODM\MongoDB\Mapping\Annotations as MongoDB;
@@ -8,7 +10,10 @@ use Doctrine\ODM\MongoDB\Mapping\Annotations as MongoDB;
 class Product
 {
     #[MongoDB\Id()]
-    private string $id;
+    protected string $id;
+
+    #[MongoDB\Field(type: 'string')]
+    private string $code;
 
     #[MongoDB\Field(type: 'string')]
     private string $name;
@@ -22,6 +27,16 @@ class Product
     public function getId(): string
     {
         return $this->id;
+    }
+
+    public function getCode(): string
+    {
+        return $this->code;
+    }
+
+    public function setCode(string $code): void
+    {
+        $this->code = $code;
     }
 
     public function getName(): string

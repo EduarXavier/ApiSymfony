@@ -1,18 +1,21 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Repository;
 
 use App\Document\Product;
+use Doctrine\Bundle\MongoDBBundle\Repository\ServiceDocumentRepository;
 use Doctrine\ODM\MongoDB\DocumentManager;
 use Doctrine\ODM\MongoDB\LockException;
 use Doctrine\ODM\MongoDB\Mapping\MappingException;
 use Doctrine\ODM\MongoDB\MongoDBException;
 
-class ProductRepository implements ProductRepositoryInterface
+class ProductRepository extends ServiceDocumentRepository
 {
-    public function findAll(DocumentManager $documentManager): ?array
+    public function findAll(): array
     {
-        $repository = $documentManager->getRepository(Product::class);
+        $repository = $this->getDocumentManager()->getRepository(Product::class);
 
         return $repository->findBy(["amount" => ['$gt' => 0]], limit: 20);
     }
@@ -21,18 +24,26 @@ class ProductRepository implements ProductRepositoryInterface
      * @throws MappingException
      * @throws LockException
      */
-    public function findById(string $id, DocumentManager $documentManager): ?Product
+    public function findById(string $id): ?Product
     {
-        return $documentManager->getRepository(Product::class)->find($id);
+        return $this->getDocumentManager()->getRepository(Product::class)->find($id);
+    }
+
+    public function findByCode(string $code): ?Product
+    {
+        $repository = $this->getDocumentManager()->getRepository(Product::class);
+
+        return $repository->findBy(["code" => $code])[0];
     }
 
     /**
      * @throws MongoDBException
      */
-    public function addProduct(Product $product, DocumentManager $documentManager): ?string
+    public function addProduct(Product $product): ?string
     {
-        $documentManager->persist($product);
-        $documentManager->flush();
+        $product->setCode(password_hash($product->getName(), PASSWORD_BCRYPT));
+        $this->getDocumentManager()->persist($product);
+        $this->getDocumentManager()->flush();
 
         return $product->getId();
     }
@@ -40,9 +51,9 @@ class ProductRepository implements ProductRepositoryInterface
     /**
      * @throws MongoDBException
      */
-    public function updateProduct(Product $product, DocumentManager $documentManager): ?string
+    public function updateProduct(Product $product): ?string
     {
-        $documentManager->flush();
+        $this->getDocumentManager()->flush();
 
         return $product->getId();
     }
@@ -50,10 +61,10 @@ class ProductRepository implements ProductRepositoryInterface
     /**
      * @throws MongoDBException
      */
-    public function deleteProduct(Product $product, DocumentManager $documentManager): ?bool
+    public function deleteProduct(Product $product): ?bool
     {
-        $documentManager->remove($product);
-        $documentManager->flush();
+        $this->getDocumentManager()->remove($product);
+        $this->getDocumentManager()->flush();
 
         return true;
     }

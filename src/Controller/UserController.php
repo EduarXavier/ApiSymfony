@@ -1,12 +1,14 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Controller;
 
 use App\Document\User;
 use App\Form\UserType;
 use App\Form\UserUpdateType;
 use App\Repository\UserRepository;
-use App\Repository\UserRepositoryInterface;
+use App\Services\EmailService;
 use Doctrine\ODM\MongoDB\DocumentManager;
 use Doctrine\ODM\MongoDB\Mapping\MappingException;
 use Doctrine\ODM\MongoDB\MongoDBException;
@@ -20,16 +22,16 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 #[Route('/user')]
 class UserController extends AbstractController
 {
-    private UserRepositoryInterface $userRepository;
-    private DocumentManager $documentManager;
-    private EmailController $emailController;
+    private UserRepository $userRepository;
+    private EmailService $emailService;
 
-    public function __construct(DocumentManager $documentManager, EmailController $emailController)
+
+    public function __construct(UserRepository $userRepository, EmailService $emailService)
     {
-        $this->documentManager = $documentManager;
-        $this->emailController = $emailController;
-        $this->userRepository = new UserRepository();
+        $this->userRepository = $userRepository;
+        $this->emailService = $emailService;
     }
+
 
     /**
      * @throws MongoDBException
@@ -43,8 +45,8 @@ class UserController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            $this->userRepository->addUser($user, $this->documentManager);
-            $this->emailController->sendEmail($user->getEmail(), 'registro');
+            $this->userRepository->addUser($user);
+            $this->emailService->sendEmail($user->getEmail(), 'registro');
 
             return $this->json(['message' => 'Usuario agregado correctamente'], Response::HTTP_OK);
         }
@@ -61,29 +63,26 @@ class UserController extends AbstractController
     #[Route('/update/{id}', name: 'updateUser', methods: ['POST'])]
     public function updateUser($id, Request $request): JsonResponse
     {
-        $user = $this->userRepository->findById($id, $this->documentManager);
+        $user = $this->userRepository->findById($id,);
 
         if (!$user) {
             return $this->json(['error' => 'Usuario no encontrado'], Response::HTTP_BAD_REQUEST);
         }
 
-        $form = $this->createForm(UserUpdateType::class, $user, [
-            'method' => 'POST',
-            'validation_groups' => ['update'],
-        ]);
+        $form = $this->createForm(UserUpdateType::class, $user);
         $form->handleRequest($request);
 
-        if ($form->isSubmitted() && $form->isValid()) {
-            if ($this->userRepository->updateUser($user, $this->documentManager, null)) {
-                return $this->json(['message' => 'Usuario actualizado correctamente'], Response::HTTP_OK);
-            } else {
-                return $this->json(['error' => 'No se ha podido actualizar'], Response::HTTP_BAD_REQUEST);
-            }
+        if (!$form->isSubmitted() || !$form->isValid()) {
+            $errors = $form->getErrors(true);
+
+            return $this->json(['error' => $errors], Response::HTTP_BAD_REQUEST);
         }
 
-        $errors = $form->getErrors(true);
+        if ($this->userRepository->updateUser($user, null)) {
+            return $this->json(['message' => 'Usuario actualizado correctamente'], Response::HTTP_OK);
+        }
 
-        return $this->json(['error' => $errors], Response::HTTP_BAD_REQUEST);
+        return $this->json(['error' => 'No se ha podido actualizar'], Response::HTTP_BAD_REQUEST);
     }
 
     /**
@@ -99,20 +98,17 @@ class UserController extends AbstractController
             return $this->json(['error' => 'Usuario no encontrado'], Response::HTTP_BAD_REQUEST);
         }
 
-        $form = $this->createForm(UserUpdateType::class, $user, [
-            'method' => 'POST',
-            'validation_groups' => ['update'],
-        ]);
+        $form = $this->createForm(UserUpdateType::class, $user);
         $form->handleRequest($request);
 
-        if ($form->isSubmitted() && $form->isValid()) {
-            $this->userRepository->updateUser($user, $this->documentManager, 'password');
+        if (!$form->isSubmitted() || !$form->isValid()) {
+            $errors = $form->getErrors(true);
 
-            return $this->json(['message' => 'Contraseña actualizada correctamente'], Response::HTTP_BAD_REQUEST);
+            return $this->json(['error' => $errors], Response::HTTP_BAD_REQUEST);
         }
 
-        $errors = $form->getErrors(true);
+        $this->userRepository->updateUser($user, 'password');
 
-        return $this->json(['error' => $errors], 400);
+        return $this->json(['message' => 'Contraseña actualizada correctamente'], Response::HTTP_BAD_REQUEST);
     }
 }
