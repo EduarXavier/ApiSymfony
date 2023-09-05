@@ -22,7 +22,7 @@ class Invoice
     #[Field(type:'string')]
     private string $code;
 
-    #[EmbedMany(targetDocument : Product::class)]
+    #[EmbedMany(targetDocument: Product::class)]
     private Collection $products;
 
     #[Field(type:'string')]

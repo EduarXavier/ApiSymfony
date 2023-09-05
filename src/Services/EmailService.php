@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Services;
 
 use Symfony\Bridge\Twig\Mime\TemplatedEmail;
@@ -36,6 +38,7 @@ class EmailService
             ->from(new Address('est_ex_avendano@fesc.edu.co'))
             ->to($user)
             ->subject($subject)
+            ->text($text)
             ->htmlTemplate($html);
 
         $this->mailer->send($email);

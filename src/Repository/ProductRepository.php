@@ -33,7 +33,7 @@ class ProductRepository extends ServiceDocumentRepository
     {
         $repository = $this->getDocumentManager()->getRepository(Product::class);
 
-        return $repository->findBy(["code" => $code])[0];
+        return $repository->findOneBy(["code" => $code]) ?? null;
     }
 
     /**
@@ -53,6 +53,9 @@ class ProductRepository extends ServiceDocumentRepository
      */
     public function updateProduct(Product $product): ?string
     {
+        $productUpdate = $this->findByCode($product->getCode());
+        $productUpdate->setAmount($product->getAmount());
+        $this->getDocumentManager()->persist($productUpdate);
         $this->getDocumentManager()->flush();
 
         return $product->getId();

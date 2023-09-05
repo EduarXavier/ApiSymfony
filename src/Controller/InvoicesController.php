@@ -11,11 +11,10 @@ use App\Form\PayInvoiceType;
 use App\Form\ProductShoppingCartType;
 use App\Form\ShoppingCartType;
 use App\Repository\InvoicesRepository;
-use App\Repository\InvoicesRepositoryInterface;
 use App\Repository\ProductRepository;
 use App\Repository\UserRepository;
-use App\Repository\UserRepositoryInterface;
 use App\Services\EmailService;
+use App\Services\InvoiceService;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ODM\MongoDB\DocumentManager;
 use Doctrine\ODM\MongoDB\MongoDBException;
@@ -36,13 +35,16 @@ class InvoicesController extends AbstractController
     private UserRepository $userRepository;
     private ProductRepository $productRepository;
     private EmailService $emailService;
+    private InvoiceService $invoiceService;
 
     public function __construct(
+        InvoiceService $invoicesService,
         EmailService $emailService,
         UserRepository $userRepository,
         InvoicesRepository $invoicesRepository,
         ProductRepository $productRepository
     ) {
+        $this->invoiceService = $invoicesService;
         $this->emailService = $emailService;
         $this->userRepository = $userRepository;
         $this->invoicesRepository = $invoicesRepository;
@@ -55,16 +57,18 @@ class InvoicesController extends AbstractController
      * @throws Exception
      */
     #[Route("/shopping-cart", name: "shopping_cart", methods: ["POST"])]
-    public function shoppingCart(Request $request, DocumentManager $documentManager): ?JsonResponse
+    public function shoppingCart(Request $request): ?JsonResponse
     {
         $invoices = new Invoice();
         $form = $this->createForm(ShoppingCartType::class, $invoices);
         $form->handleRequest($request);
 
-        if ($form->isSubmitted() && $form->isValid()) {
+        if (!$form->isSubmitted() || !$form->isValid()) {
             return new JsonResponse(["error" => "Ha ocurrido un error"], Response::HTTP_BAD_REQUEST);
         }
 
+        $user = $this->userRepository->findByDocument($invoices->getUser()->getDocument());
+        $invoices->setUser($user);
         $validation = $this->invoicesRepository->addProductsToShoppingCart(
             $invoices->getProducts(),
             $invoices->getUser()
@@ -77,7 +81,7 @@ class InvoicesController extends AbstractController
 
     /**
      * @throws MongoDBException
-     * @throws \Doctrine\ODM\MongoDB\Mapping\MappingException
+     * @throws MappingException
      */
     #[Route("/update/shopping-cart/", name: "update_shopping_cart", methods: ["POST"])]
     public function updateShoppingCart(Request $request, DocumentManager $documentManager): ?JsonResponse
@@ -251,15 +255,16 @@ class InvoicesController extends AbstractController
 
         $products = new ArrayCollection();
         $amount  = $product->getAmount();
-        $product = $this->productRepository->findByCode($product->getCode());
+        $product = clone $product;
+        $product->setAmount($amount);
         $products->add($product);
 
         $this->invoicesRepository->addProductsToShoppingCart(
             $products,
-            $session->get("user")
+            $session->get("user"),
         );
 
-        return $this->redirect("/product/details/" . $product->getId() . "?mnsj=ok");
+        return $this->redirect("/product/details/" . $product->getCode() . "?mnsj=ok");
     }
 
     /**
@@ -380,7 +385,7 @@ class InvoicesController extends AbstractController
         }
 
         $this->invoicesRepository->deleteProductToShoppingCart(
-            $session->get("document"),
+            $session->get("user"),
             $id
         );
 

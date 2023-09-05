@@ -74,14 +74,14 @@ class InvoicesRepository extends ServiceDocumentRepository
         $productsUser = $shoppingCart->getProducts();
 
         foreach ($products as $product) {
-            $productShop = $this->productRepository->findById($product->getId());
+            $productShop = $this->productRepository->findByCode($product->getCode());
 
             if ($productShop) {
 
                 $existingProduct = null;
 
                 foreach ($productsUser as $productArray) {
-                    if ($productArray->getId() === $product->getId()) {
+                    if ($productArray->getCode() === $product->getCode()) {
                         $shoppingCart->removeProduct($productArray);
                         $existingProduct = $productArray;
                         $productArray->setAmount($productArray->getAmount() + $product->getAmount());
@@ -92,7 +92,8 @@ class InvoicesRepository extends ServiceDocumentRepository
                 }
 
                 if ($existingProduct == null) {
-                    $shoppingCart->addProducts($product);
+                    $productShop->setAmount($product->getAmount());
+                    $shoppingCart->addProducts($productShop);
                 }
 
                 $this->updateProductAndCheckAvailability($productShop, $product->getAmount());
@@ -114,6 +115,7 @@ class InvoicesRepository extends ServiceDocumentRepository
         $invoices->setCode(password_hash(date("Y-m-d H:i:s"), PASSWORD_BCRYPT));
 
         foreach ($products as $product) {
+
             $productShop = $this->productRepository->findByCode($product->getCode());
 
             if ($productShop) {
@@ -161,6 +163,7 @@ class InvoicesRepository extends ServiceDocumentRepository
 
             foreach ($shoppingCart->getProducts() as $product) {
                 $productShop = $this->productRepository->findById($product->getId());
+
                 $newAmount = $productShop->getAmount() + $product->getAmount();
                 $productShop->setAmount($newAmount);
                 $this->productRepository->updateProduct($productShop);
@@ -267,17 +270,18 @@ class InvoicesRepository extends ServiceDocumentRepository
      * @throws MongoDBException
      * @throws MappingException
      */
-    public function deleteProductToShoppingCart(string $document, string $idProduct): bool
+    public function deleteProductToShoppingCart(User $user, string $idProduct): bool
     {
-        $shoppingCart = $this->findByDocumentAndStatus($document, "shopping-cart");
+        $shoppingCart = $this->findByDocumentAndStatus($user->getDocument(), "shopping-cart");
 
         foreach ($shoppingCart?->getProducts() as $product) {
-            if ($product->getId() == $idProduct) {
-                $shoppingCart->removeProduct($product);
+            $productClone = clone $product;
+            if ($productClone->getId() == $idProduct) {
+                $shoppingCart->removeProduct($productClone);
             }
         }
 
-        $this->getDocumentManager()->flush();
+        $this->updateShoppingCart($shoppingCart->getProducts(), $user);
 
         return true;
     }

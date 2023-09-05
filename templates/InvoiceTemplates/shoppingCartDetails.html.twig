@@ -48,11 +48,11 @@
                                     {% for product in shoppingCart.products %}
                                         <tr>
                                             <th scope="row">
-                                                <a href="/product/details/{{ product.id }}" class="text-decoration-none">
-                                                    {{ product.name }}
+                                                <a href="/product/details/{{ product.code ?? null }}" class="text-decoration-none">
+                                                    {{ product.name ?? null }}
                                                 </a>
                                             </th>
-                                            <td>{{ product.amount }}</td>
+                                            <td>{{ product.amount ?? null }}</td>
                                             <td>
                                                 <a
                                                         href="/invoices/shopping-cart/delete-product/{{ product.id }}"

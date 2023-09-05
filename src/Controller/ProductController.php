@@ -52,15 +52,11 @@ class ProductController extends AbstractController
         ]);
     }
 
-    /**
-     * @throws MappingException
-     * @throws LockException
-     */
-    #[Route('/details/{id}', name: 'product_details', methods: ['GET'])]
-    public function productDetails(Request $request, string $id): RedirectResponse|Response
+    #[Route('/details/{code}', name: 'product_details', methods: ['GET'])]
+    public function productDetails(Request $request, string $code): RedirectResponse|Response
     {
         $session = $request->getSession();
-        $product = $this->productRepository->findById($id);
+        $product = $this->productRepository->findByCode($code);
         $action = '';
         $message = '';
 
