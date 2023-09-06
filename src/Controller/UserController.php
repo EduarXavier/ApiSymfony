@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Controller;
 
 use App\Document\User;
+use App\Form\PasswordUpdateType;
 use App\Form\UserType;
 use App\Form\UserUpdateType;
 use App\Repository\UserRepository;
@@ -63,7 +64,7 @@ class UserController extends AbstractController
     #[Route('/update/{id}', name: 'updateUser', methods: ['POST'])]
     public function updateUser($id, Request $request): JsonResponse
     {
-        $user = $this->userRepository->findById($id,);
+        $user = $this->userRepository->findById($id);
 
         if (!$user) {
             return $this->json(['error' => 'Usuario no encontrado'], Response::HTTP_BAD_REQUEST);
@@ -98,7 +99,7 @@ class UserController extends AbstractController
             return $this->json(['error' => 'Usuario no encontrado'], Response::HTTP_BAD_REQUEST);
         }
 
-        $form = $this->createForm(UserUpdateType::class, $user);
+        $form = $this->createForm(PasswordUpdateType::class, $user);
         $form->handleRequest($request);
 
         if (!$form->isSubmitted() || !$form->isValid()) {
