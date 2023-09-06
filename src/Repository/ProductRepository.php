@@ -34,7 +34,6 @@ class ProductRepository extends ServiceDocumentRepository
      */
     public function findById(string $id): ?Product
     {
-        $this->documentManager->clear();
         return $this->documentManager->getRepository(Product::class)->find($id);
     }
 

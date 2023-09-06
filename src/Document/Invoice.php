@@ -21,8 +21,8 @@ class Invoice
     #[Field(type:'string')]
     private string $code;
 
-    #[EmbedMany(targetDocument: Product::class)]
-    private Collection $products;
+    #[EmbedMany(targetDocument: ProductInvoice::class)]
+    private ArrayCollection $products;
 
     #[Field(type:'string')]
     private string $date;
@@ -55,12 +55,12 @@ class Invoice
         return $this;
     }
 
-    public function getProducts(): Collection
+    public function getProducts(): ArrayCollection
     {
         return $this->products;
     }
 
-    public function setProducts(Collection $products): static
+    public function setProducts(ArrayCollection $products): static
     {
         $this->products = $products;
 
@@ -88,17 +88,9 @@ class Invoice
         return $this;
     }
 
-    public function removeProduct(Product $product): bool
+    public function removeProduct(ProductInvoice $product): bool
     {
-        $products = new ArrayCollection();
-        foreach ($this->products as $productArray){
-            if ($productArray->getId() != $product->getId()){
-                $products->add($productArray);
-            }
-        }
-
-        $this->products = $products;
-        return true;
+        return $this->products->removeElement($product);
     }
 
     public function getUser(): User

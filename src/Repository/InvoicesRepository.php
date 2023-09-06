@@ -46,6 +46,28 @@ class InvoicesRepository extends ServiceDocumentRepository
         return $repository->findBy(["user.document" => $user->getDocument(), "status" => $status], ['date' => 'DESC'], limit: 20);
     }
 
+    public function findById(string $id, string $status)
+    {
+        $repository = $this->documentManager->getRepository(Invoice::class);
+
+        return $status ? $repository->findOneBy(["id" => $id]) : $repository->findOneBy(["id" => $id, "status" => $status]);
+    }
+
+    public function findByCode(string $code)
+    {
+        $repository = $this->documentManager->getRepository(Invoice::class);
+
+        return $repository->findOneBy(["code" => $code]);
+    }
+
+    public function findByDocumentAndStatus(string $document, string $status): ?Invoice
+    {
+        $this->documentManager->clear();
+        $repository = $this->documentManager->getRepository(Invoice::class);
+
+        return $repository->findOneBy(["user.document" => $document, "status" => $status]);
+    }
+
     /**
      * @throws MongoDBException
      * @throws Exception
@@ -74,7 +96,7 @@ class InvoicesRepository extends ServiceDocumentRepository
         $productsUser = clone $shoppingCart->getProducts();
 
         foreach ($products as $product){
-            $productShop = $this->productRepository->findByCode($product->getCode());
+            $productShop = clone $this->productRepository->findByCode($product->getCode());
 
             if(!$productShop){
                 break;
@@ -83,17 +105,11 @@ class InvoicesRepository extends ServiceDocumentRepository
             $existingProduct = null;
 
             foreach ($productsUser as $key => $productUser) {
-                $productUser = clone $productUser;
-
                 if ($productUser->getCode() === $product->getCode()) {
-                    //$shoppingCart->removeProduct(clone $productUser);
                     $productsUser->remove($key);
-
                     $existingProduct = $productUser;
                     $productUser->setAmount($productUser->getAmount() + $product->getAmount());
-
                     $productsUser->add(clone $productUser);
-                    //$shoppingCart->addProducts(clone $productUser);
 
                     break;
                 }
@@ -120,17 +136,17 @@ class InvoicesRepository extends ServiceDocumentRepository
      */
     private function createNewCart(Collection $products, User $user): void
     {
-        date_default_timezone_set('America/Bogota');
+        $fecha = new DateTime('now', new DateTimeZone('America/Bogota'));
         $invoices = new Invoice();
-        $invoices->setCode(password_hash(date("Y-m-d H:i:s"), PASSWORD_BCRYPT));
         $this->documentManager->persist($user);
         $invoices->setUser($user);
-        $invoices->setDate(date("Y-m-d H:i:s"));
+        $invoices->setDate($fecha->format("Y-m-d H:i:s"));
+        $invoices->setCode(str_ireplace(" ", "-", uniqid(). "-" . $user->getDocument()));
         $invoices->setStatus("shopping-cart");;
 
         foreach ($products as $product) {
 
-            $productShop = $this->productRepository->findByCode($product->getCode());
+            $productShop = clone $this->productRepository->findByCode($product->getCode());
 
             if ($productShop) {
                 $amount = $productShop->getAmount();
@@ -141,6 +157,20 @@ class InvoicesRepository extends ServiceDocumentRepository
                 $this->updateProductAndCheckAvailability($productShop, $product->getAmount());
             }
         }
+    }
+
+    /**
+     * @throws MongoDBException
+     * @throws Exception
+     */
+    public function createInvoice(Invoice $invoice): bool
+    {
+        $fecha = new DateTime('now', new DateTimeZone('America/Bogota'));
+        $invoice->setDate($fecha->format("Y-m-d H:i:s"));
+        $invoice->setStatus("invoice");
+        $this->documentManager->flush();
+
+        return true;
     }
 
     /**
@@ -161,89 +191,12 @@ class InvoicesRepository extends ServiceDocumentRepository
 
     /**
      * @throws MongoDBException
-     * @throws MappingException
-     */
-    public function updateShoppingCart(Collection $products, User $user): ?bool
-    {
-        $shoppingCart = $this->findByDocumentAndStatus($user->getDocument(), "shopping-cart");
-
-        if(!$shoppingCart) {
-            return false;
-        }
-
-        foreach ($shoppingCart->getProducts() as $product) {
-
-            if (count($products) == 0){
-                $productShop = $this->productRepository->findById($product->getId());
-                $newAmount = $productShop->getAmount() + $product->getAmount();
-                $productShop->setAmount($newAmount);
-                $this->productRepository->updateProduct($productShop);
-                break;
-            }
-
-            foreach ($products as $productArray)
-            {
-                if($product == $productArray)
-                {
-                    break;
-                }
-
-                $productShop = $this->productRepository->findById($product->getId());
-
-                $newAmount = $productShop->getAmount() + $product->getAmount();
-                $productShop->setAmount($newAmount);
-                $this->productRepository->updateProduct($productShop);
-            }
-        }
-
-        $shoppingCart->setProducts($products);
-        $this->documentManager->flush();
-
-        return true;
-    }
-
-    /**
-     * @throws MongoDBException
-     */
-    public function createInvoice(Invoice $invoice): bool
-    {
-        date_default_timezone_set('America/Bogota');
-        $invoice->setDate(date("Y-m-d H:i:s"));
-        $invoice->setStatus("invoice");
-        $this->documentManager->flush();
-
-        return true;
-    }
-
-    public function findByDocumentAndStatus(string $document, string $status): ?Invoice
-    {
-        $this->documentManager->clear();
-        $repository = $this->documentManager->getRepository(Invoice::class);
-
-        return $repository->findOneBy(["user.document" => $document, "status" => $status]);
-    }
-
-    public function findById(string $id, string $status)
-    {
-        $repository = $this->documentManager->getRepository(Invoice::class);
-
-        return $status ? $repository->findOneBy(["id" => $id]) : $repository->findOneBy(["id" => $id, "status" => $status]);
-    }
-
-    public function findByCode(string $code)
-    {
-        $repository = $this->documentManager->getRepository(Invoice::class);
-
-        return $repository->findOneBy(["code" => $code]);
-    }
-
-    /**
-     * @throws MongoDBException
+     * @throws Exception
      */
     public function payInvoice(Invoice $invoice): bool
     {
-        date_default_timezone_set('America/Bogota');
-        $invoice->setDate(date("Y-m-d H:i:s"));
+        $fecha = new DateTime('now', new DateTimeZone('America/Bogota'));
+        $invoice->setDate($fecha->format("Y-m-d H:i:s"));
         $invoice->setStatus("pay");
         $this->documentManager->flush();
 
@@ -260,19 +213,15 @@ class InvoicesRepository extends ServiceDocumentRepository
         $fecha = new DateTime('now', new DateTimeZone('America/Bogota'));
 
         if ($invoice->getStatus() == "invoice") {
-            $invoice->setStatus("shopping-cart");
-            $products = new ArrayCollection();
-
-            foreach ($invoice->getProducts() as $product){
-                $products->add(clone $product);
-            }
-
-            $this->documentManager->flush();
-            $this->updateShoppingCart(new ArrayCollection(), $invoice->getUser());
-
-            $invoice->setProducts($products);
             $invoice->setDate($fecha->format("Y-m-d H:i:s"));
             $invoice->setStatus("cancel");
+
+            foreach ($invoice->getProducts() as $product){
+                $productFind = $this->productRepository->findById($product->getId());
+                $productFind->setAmount($product->getAmount() + $productFind->getAmount());
+                $this->productRepository->updateProduct($productFind);
+            }
+
             $this->documentManager->flush();
 
             return true;
@@ -285,26 +234,19 @@ class InvoicesRepository extends ServiceDocumentRepository
      * @throws MongoDBException
      * @throws MappingException
      */
-    public function deleteInvoice(Invoice $invoice): bool
-    {
-        $this->updateShoppingCart(new ArrayCollection(), $invoice->getUser());
-        $invoice = $this->findByCode($invoice->getCode());
-        $invoice->setProducts(new ArrayCollection());
-        $this->documentManager->flush();
-
-        return true;
-    }
-
-    /**
-     * @throws MongoDBException
-     * @throws MappingException
-     */
     public function deleteShoppingCart(Invoice $shoppingCart): bool
     {
         if ($shoppingCart->getStatus() == "shopping-cart") {
+            foreach ($shoppingCart->getProducts() as $product){
+                $productShop = $this->productRepository->findById($product->getId());
+                $newAmount = $productShop->getAmount() + $product->getAmount();
+                $productShop->setAmount($newAmount);
+                $this->productRepository->updateProduct($productShop);
+            }
+
+            $invoice = $this->findByCode($shoppingCart->getCode());
+            $invoice->setProducts(new ArrayCollection());
             $this->documentManager->flush();
-            $this->updateShoppingCart(new ArrayCollection(), $shoppingCart->getUser());
-            $this->deleteInvoice($shoppingCart);
 
             return true;
         }
