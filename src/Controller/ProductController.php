@@ -91,13 +91,13 @@ class ProductController extends AbstractController
         }
 
         if ($form->isSubmitted() && $form->isValid()) {
-            $id = $this->productRepository->addProduct($product);
+            $code = $this->productRepository->addProduct($product);
 
-            if ($id) {
-                return $this->redirect("/product/details/$id");
+            if ($code) {
+                return $this->redirect("/product/details/$code");
             }
 
-            $this->addFlash('error', "No se ha agregado el producto: $id");
+            $this->addFlash('error', "No se ha agregado el producto: $code");
             $this->redirectToRoute('add_product');
         }
 
@@ -110,14 +110,13 @@ class ProductController extends AbstractController
 
     /**
      * @throws MongoDBException
-     * @throws MappingException
      * @throws LockException
      */
-    #[Route('/update/{id}', name: 'update_product')]
-    public function updateProduct(string $id, Request $request): Response
+    #[Route('/update/{code}', name: 'update_product')]
+    public function updateProduct(string $code, Request $request): Response
     {
         $session = $request->getSession();
-        $product = $this->productRepository->findById($id);
+        $product = $this->productRepository->findByCode($code);
         $form = $this->createForm(UpdateProductType::class, $product);
         $form->handleRequest($request);
 
@@ -129,10 +128,10 @@ class ProductController extends AbstractController
             $id = $this->productRepository->updateProduct($product);
 
             if ($id) {
-                return $this->redirect("/product/details/$id");
+                return $this->redirect("/product/details/$code");
             }
 
-            $this->addFlash('error', "No se ha actualizado el producto: $id");
+            $this->addFlash('error', "No se ha actualizado el producto: $code");
             $this->redirectToRoute('update_product');
         }
 
@@ -145,14 +144,13 @@ class ProductController extends AbstractController
 
     /**
      * @throws MongoDBException
-     * @throws MappingException
      * @throws LockException
      */
-    #[Route('/delete/{id}', name: 'delete_product')]
-    public function deleteProduct(string $id, Request $request): RedirectResponse|Response
+    #[Route('/delete/{code}', name: 'delete_product')]
+    public function deleteProduct(string $code, Request $request): RedirectResponse|Response
     {
         $session = $request->getSession();
-        $product = $this->productRepository->findById($id);
+        $product = $this->productRepository->findByCode($code);
         $form = $this->createForm(DeleteProductType::class, $product);
         $form->handleRequest($request);
 
@@ -167,7 +165,7 @@ class ProductController extends AbstractController
                 return $this->redirect('/product/list-view');
             }
 
-            $this->addFlash('error', "No se ha actualizado el producto: $id");
+            $this->addFlash('error', "No se ha actualizado el producto: $code");
             $this->redirectToRoute('delete_product');
         }
 

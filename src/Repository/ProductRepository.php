@@ -10,12 +10,20 @@ use Doctrine\ODM\MongoDB\DocumentManager;
 use Doctrine\ODM\MongoDB\LockException;
 use Doctrine\ODM\MongoDB\Mapping\MappingException;
 use Doctrine\ODM\MongoDB\MongoDBException;
+use Doctrine\Persistence\ManagerRegistry;
 
 class ProductRepository extends ServiceDocumentRepository
 {
+    private DocumentManager $documentManager;
+    public function __construct(ManagerRegistry $registry, $documentClass)
+    {
+        parent::__construct($registry, $documentClass);
+        $this->documentManager = $this->getDocumentManager();
+    }
+
     public function findAll(): array
     {
-        $repository = $this->getDocumentManager()->getRepository(Product::class);
+        $repository = $this->documentManager->getRepository(Product::class);
 
         return $repository->findBy(["amount" => ['$gt' => 0]], limit: 20);
     }
@@ -26,12 +34,13 @@ class ProductRepository extends ServiceDocumentRepository
      */
     public function findById(string $id): ?Product
     {
-        return $this->getDocumentManager()->getRepository(Product::class)->find($id);
+        $this->documentManager->clear();
+        return $this->documentManager->getRepository(Product::class)->find($id);
     }
 
     public function findByCode(string $code): ?Product
     {
-        $repository = $this->getDocumentManager()->getRepository(Product::class);
+        $repository = $this->documentManager->getRepository(Product::class);
 
         return $repository->findOneBy(["code" => $code]) ?? null;
     }
@@ -41,11 +50,11 @@ class ProductRepository extends ServiceDocumentRepository
      */
     public function addProduct(Product $product): ?string
     {
-        $product->setCode(password_hash($product->getName(), PASSWORD_BCRYPT));
-        $this->getDocumentManager()->persist($product);
-        $this->getDocumentManager()->flush();
+        $product->setCode(str_ireplace(" ", "-", uniqid(). "-" . $product->getName()));
+        $this->documentManager->persist($product);
+        $this->documentManager->flush();
 
-        return $product->getId();
+        return $product->getCode();
     }
 
     /**
@@ -55,8 +64,9 @@ class ProductRepository extends ServiceDocumentRepository
     {
         $productUpdate = $this->findByCode($product->getCode());
         $productUpdate->setAmount($product->getAmount());
-        $this->getDocumentManager()->persist($productUpdate);
-        $this->getDocumentManager()->flush();
+        $this->documentManager->persist($productUpdate);
+        $this->documentManager->flush();
+        $this->documentManager->clear();
 
         return $product->getId();
     }
@@ -66,8 +76,8 @@ class ProductRepository extends ServiceDocumentRepository
      */
     public function deleteProduct(Product $product): ?bool
     {
-        $this->getDocumentManager()->remove($product);
-        $this->getDocumentManager()->flush();
+        $this->documentManager->remove($product);
+        $this->documentManager->flush();
 
         return true;
     }

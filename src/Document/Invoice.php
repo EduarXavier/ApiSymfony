@@ -11,7 +11,6 @@ use Doctrine\ODM\MongoDB\Mapping\Annotations\EmbedMany;
 use Doctrine\ODM\MongoDB\Mapping\Annotations\EmbedOne;
 use Doctrine\ODM\MongoDB\Mapping\Annotations\Field;
 use Doctrine\ODM\MongoDB\Mapping\Annotations\Id;
-use Doctrine\ODM\MongoDB\Mapping\Annotations\ReferenceOne;
 
 #[MongoDB\Document]
 class Invoice
@@ -91,7 +90,15 @@ class Invoice
 
     public function removeProduct(Product $product): bool
     {
-        return $this->products->removeElement($product);
+        $products = new ArrayCollection();
+        foreach ($this->products as $productArray){
+            if ($productArray->getId() != $product->getId()){
+                $products->add($productArray);
+            }
+        }
+
+        $this->products = $products;
+        return true;
     }
 
     public function getUser(): User

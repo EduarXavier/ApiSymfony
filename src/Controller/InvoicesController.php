@@ -344,7 +344,7 @@ class InvoicesController extends AbstractController
         }
 
         $invoice = $this->invoicesRepository->findById($id, "invoice");
-        $this->invoicesRepository->deleteInvoice($invoice);
+        $this->invoicesRepository->cancelInvoice($invoice);
 
         return $this->redirect("/invoices/details/" . $invoice->getId());
     }

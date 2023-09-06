@@ -7,6 +7,8 @@ namespace App\Repository;
 use App\Document\Invoice;
 use App\Document\Product;
 use App\Document\User;
+use DateTime;
+use DateTimeZone;
 use Doctrine\Bundle\MongoDBBundle\Repository\ServiceDocumentRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
@@ -69,38 +71,46 @@ class InvoicesRepository extends ServiceDocumentRepository
      */
     private function addToExistingCart(Collection $products, Invoice $shoppingCart): void
     {
+        $productsUser = clone $shoppingCart->getProducts();
 
-        date_default_timezone_set('America/Bogota');
-        $productsUser = $shoppingCart->getProducts();
-
-        foreach ($products as $product) {
+        foreach ($products as $product){
             $productShop = $this->productRepository->findByCode($product->getCode());
 
-            if ($productShop) {
-
-                $existingProduct = null;
-
-                foreach ($productsUser as $productArray) {
-                    if ($productArray->getCode() === $product->getCode()) {
-                        $shoppingCart->removeProduct($productArray);
-                        $existingProduct = $productArray;
-                        $productArray->setAmount($productArray->getAmount() + $product->getAmount());
-                        $shoppingCart->addProducts($productArray);
-
-                        break;
-                    }
-                }
-
-                if ($existingProduct == null) {
-                    $productShop->setAmount($product->getAmount());
-                    $shoppingCart->addProducts($productShop);
-                }
-
-                $this->updateProductAndCheckAvailability($productShop, $product->getAmount());
+            if(!$productShop){
+                break;
             }
-        }
 
-        $shoppingCart->setProducts($productsUser);
+            $existingProduct = null;
+
+            foreach ($productsUser as $key => $productUser) {
+                $productUser = clone $productUser;
+
+                if ($productUser->getCode() === $product->getCode()) {
+                    //$shoppingCart->removeProduct(clone $productUser);
+                    $productsUser->remove($key);
+
+                    $existingProduct = $productUser;
+                    $productUser->setAmount($productUser->getAmount() + $product->getAmount());
+
+                    $productsUser->add(clone $productUser);
+                    //$shoppingCart->addProducts(clone $productUser);
+
+                    break;
+                }
+            }
+
+            if ($existingProduct == null) {
+                $amount = $product->getAmount();
+                $product = clone $productShop;
+                $product->setAmount($amount);
+                $productsUser->add(clone $product);
+            }
+
+            $shoppingCart->setProducts($productsUser);
+
+            $this->updateProductAndCheckAvailability($productShop, $product->getAmount());
+
+        }
     }
 
     /**
@@ -113,24 +123,24 @@ class InvoicesRepository extends ServiceDocumentRepository
         date_default_timezone_set('America/Bogota');
         $invoices = new Invoice();
         $invoices->setCode(password_hash(date("Y-m-d H:i:s"), PASSWORD_BCRYPT));
+        $this->documentManager->persist($user);
+        $invoices->setUser($user);
+        $invoices->setDate(date("Y-m-d H:i:s"));
+        $invoices->setStatus("shopping-cart");;
 
         foreach ($products as $product) {
 
             $productShop = $this->productRepository->findByCode($product->getCode());
 
             if ($productShop) {
-                $this->updateProductAndCheckAvailability($productShop, $product->getAmount());
-
+                $amount = $productShop->getAmount();
                 $productShop->setAmount($product->getAmount());
-                $invoices->addProducts($productShop);
+                $invoices->addProducts(clone $productShop);
+                $this->documentManager->persist($invoices);
+                $productShop->setAmount($amount);
+                $this->updateProductAndCheckAvailability($productShop, $product->getAmount());
             }
         }
-
-        $this->documentManager->persist($user);
-        $invoices->setUser($user);
-        $invoices->setDate(date("Y-m-d H:i:s"));
-        $invoices->setStatus("shopping-cart");;
-        $this->documentManager->persist($invoices);
     }
 
     /**
@@ -139,7 +149,6 @@ class InvoicesRepository extends ServiceDocumentRepository
      */
     private function updateProductAndCheckAvailability(Product $productShop, int $amount): void
     {
-        date_default_timezone_set('America/Bogota');
         $newAmountProduct = $productShop->getAmount() - $amount;
 
         if ($newAmountProduct >= 0) {
@@ -156,26 +165,41 @@ class InvoicesRepository extends ServiceDocumentRepository
      */
     public function updateShoppingCart(Collection $products, User $user): ?bool
     {
-        date_default_timezone_set('America/Bogota');
         $shoppingCart = $this->findByDocumentAndStatus($user->getDocument(), "shopping-cart");
 
-        if($shoppingCart) {
+        if(!$shoppingCart) {
+            return false;
+        }
 
-            foreach ($shoppingCart->getProducts() as $product) {
+        foreach ($shoppingCart->getProducts() as $product) {
+
+            if (count($products) == 0){
+                $productShop = $this->productRepository->findById($product->getId());
+                $newAmount = $productShop->getAmount() + $product->getAmount();
+                $productShop->setAmount($newAmount);
+                $this->productRepository->updateProduct($productShop);
+                break;
+            }
+
+            foreach ($products as $productArray)
+            {
+                if($product == $productArray)
+                {
+                    break;
+                }
+
                 $productShop = $this->productRepository->findById($product->getId());
 
                 $newAmount = $productShop->getAmount() + $product->getAmount();
                 $productShop->setAmount($newAmount);
                 $this->productRepository->updateProduct($productShop);
             }
-
-            $shoppingCart->getProducts()->clear();
-            $this->documentManager->flush();
-
-            return $this->addProductsToShoppingCart($products, $user);
         }
 
-        return false;
+        $shoppingCart->setProducts($products);
+        $this->documentManager->flush();
+
+        return true;
     }
 
     /**
@@ -191,8 +215,9 @@ class InvoicesRepository extends ServiceDocumentRepository
         return true;
     }
 
-    public function findByDocumentAndStatus(string $document, string $status)
+    public function findByDocumentAndStatus(string $document, string $status): ?Invoice
     {
+        $this->documentManager->clear();
         $repository = $this->documentManager->getRepository(Invoice::class);
 
         return $repository->findOneBy(["user.document" => $document, "status" => $status]);
@@ -228,17 +253,25 @@ class InvoicesRepository extends ServiceDocumentRepository
     /**
      * @throws MongoDBException
      * @throws MappingException
+     * @throws Exception
      */
-    public function deleteInvoice(Invoice $invoice): bool
+    public function cancelInvoice(Invoice $invoice): bool
     {
-        date_default_timezone_set('America/Bogota');
+        $fecha = new DateTime('now', new DateTimeZone('America/Bogota'));
+
         if ($invoice->getStatus() == "invoice") {
-            $products = $invoice->getProducts();
             $invoice->setStatus("shopping-cart");
+            $products = new ArrayCollection();
+
+            foreach ($invoice->getProducts() as $product){
+                $products->add(clone $product);
+            }
+
             $this->documentManager->flush();
             $this->updateShoppingCart(new ArrayCollection(), $invoice->getUser());
+
             $invoice->setProducts($products);
-            $invoice->setDate(date("Y-m-d H:i:s"));
+            $invoice->setDate($fecha->format("Y-m-d H:i:s"));
             $invoice->setStatus("cancel");
             $this->documentManager->flush();
 
@@ -252,13 +285,26 @@ class InvoicesRepository extends ServiceDocumentRepository
      * @throws MongoDBException
      * @throws MappingException
      */
+    public function deleteInvoice(Invoice $invoice): bool
+    {
+        $this->updateShoppingCart(new ArrayCollection(), $invoice->getUser());
+        $invoice = $this->findByCode($invoice->getCode());
+        $invoice->setProducts(new ArrayCollection());
+        $this->documentManager->flush();
+
+        return true;
+    }
+
+    /**
+     * @throws MongoDBException
+     * @throws MappingException
+     */
     public function deleteShoppingCart(Invoice $shoppingCart): bool
     {
-        date_default_timezone_set('America/Bogota');
         if ($shoppingCart->getStatus() == "shopping-cart") {
-            $shoppingCart->setDate(date("Y-m-d H:i:s"));
             $this->documentManager->flush();
             $this->updateShoppingCart(new ArrayCollection(), $shoppingCart->getUser());
+            $this->deleteInvoice($shoppingCart);
 
             return true;
         }
@@ -274,14 +320,18 @@ class InvoicesRepository extends ServiceDocumentRepository
     {
         $shoppingCart = $this->findByDocumentAndStatus($user->getDocument(), "shopping-cart");
 
-        foreach ($shoppingCart?->getProducts() as $product) {
-            $productClone = clone $product;
-            if ($productClone->getId() == $idProduct) {
-                $shoppingCart->removeProduct($productClone);
+        foreach ($shoppingCart->getProducts() as $product) {
+            if ($product->getId() == $idProduct){
+                $shoppingCart->removeProduct($product);
+                $this->documentManager->flush();
+
+                $productFind = $this->productRepository->findById($idProduct);
+                $productFind->setAmount($product->getAmount() + $productFind->getAmount());
+                $this->productRepository->updateProduct($productFind);
+
+                return true;
             }
         }
-
-        $this->updateShoppingCart($shoppingCart->getProducts(), $user);
 
         return true;
     }
