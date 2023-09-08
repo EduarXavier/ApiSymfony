@@ -7,6 +7,7 @@ namespace App\Services;
 use App\Document\Invoice;
 use App\Document\Product;
 use App\Document\User;
+use App\Document\UserInvoice;
 use App\Repository\InvoicesRepository;
 use App\Repository\ProductRepository;
 use DateTime;
@@ -34,12 +35,12 @@ class InvoiceService
         $this->productRepository = $productRepository;
     }
 
-    public function findAllByUser(User $user): array
+    public function findAllByUser(UserInvoice $user): array
     {
         return $this->invoicesRepository->findAllByUser($user);
     }
 
-    public function findAllForStatus(User $user, string $status): array
+    public function findAllForStatus(UserInvoice $user, string $status): array
     {
         return $this->invoicesRepository->findAllForStatus($user, $status);
     }
@@ -63,7 +64,7 @@ class InvoiceService
      * @throws MongoDBException
      * @throws Exception
      */
-    public function addProductsToShoppingCart(Collection $products, User $user): DocumentManager|bool
+    public function addProductsToShoppingCart(Collection $products, UserInvoice $user): DocumentManager|bool
     {
         $shoppingCart = $this->findByDocumentAndStatus($user->getDocument(), "shopping-cart");
 
@@ -124,7 +125,7 @@ class InvoiceService
      * @throws LockException
      * @throws Exception
      */
-    private function createNewCart(Collection $products, User $user): DocumentManager
+    private function createNewCart(Collection $products, UserInvoice $user): DocumentManager
     {
         $fecha = new DateTime('now', new DateTimeZone('America/Bogota'));
         $invoices = new Invoice();
@@ -237,9 +238,20 @@ class InvoiceService
      * @throws MongoDBException
      * @throws MappingException
      */
-    public function deleteProductToShoppingCart(User $user, string $idProduct): DocumentManager|bool
+    public function deleteProductToShoppingCart(UserInvoice $user, string $idProduct): DocumentManager|bool
     {
         $shoppingCart = $this->findByDocumentAndStatus($user->getDocument(), "shopping-cart");
+
+        if (count($shoppingCart->getProducts()) == 1) {
+            foreach ($shoppingCart->getProducts() as $product) {
+                $productFind = $this->productRepository->findById($idProduct);
+                $productFind->setAmount($product->getAmount() + $productFind->getAmount());
+                $this->productRepository->updateProduct($productFind);
+
+                return $this->invoicesRepository->deleteInvoice($shoppingCart);
+            }
+        }
+
 
         foreach ($shoppingCart->getProducts() as $product) {
             if ($product->getId() == $idProduct){

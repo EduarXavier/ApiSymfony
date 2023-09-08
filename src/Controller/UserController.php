@@ -46,8 +46,9 @@ class UserController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
+            $user->setName(ucfirst($user->getName()));
             $this->userRepository->addUser($user);
-            $this->emailService->sendEmail($user->getEmail(), 'registro');
+            $this->emailService->sendEmail($user, 'registro');
 
             return $this->json(['message' => 'Usuario agregado correctamente'], Response::HTTP_OK);
         }

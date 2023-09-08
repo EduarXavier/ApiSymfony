@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Document\User;
+use App\Document\UserInvoice;
 use Symfony\Bridge\Twig\Mime\TemplatedEmail;
 use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
 use Symfony\Component\Mailer\MailerInterface;
@@ -21,7 +23,7 @@ class EmailService
     /**
      * @throws TransportExceptionInterface
      */
-    public function sendEmail(string $user, string $mode): void
+    public function sendEmail(User|UserInvoice $user, string $mode): void
     {
         if ($mode == 'registro') {
             $subject = 'Gracias por registrarse';
@@ -33,13 +35,15 @@ class EmailService
             $html = "EmailTemplates/firstShop.html.twig";
         }
 
-
+        $user->setName(ucfirst($user->getName()));
         $email = (new TemplatedEmail())
             ->from(new Address('est_ex_avendano@fesc.edu.co'))
-            ->to($user)
+            ->to($user->getEmail())
             ->subject($subject)
             ->text($text)
-            ->htmlTemplate($html);
+            ->htmlTemplate($html)
+            ->context(["user" => $user])
+            ;
 
         $this->mailer->send($email);
     }

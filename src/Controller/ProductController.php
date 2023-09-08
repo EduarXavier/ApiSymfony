@@ -91,14 +91,11 @@ class ProductController extends AbstractController
         }
 
         if ($form->isSubmitted() && $form->isValid()) {
-            $code = $this->productRepository->addProduct($product);
+            $product->setName(ucfirst($product->getName()));
+            $dm = $this->productRepository->addProduct($product);
+            $dm->flush();
 
-            if ($code) {
-                return $this->redirect("/product/details/$code");
-            }
-
-            $this->addFlash('error', "No se ha agregado el producto: $code");
-            $this->redirectToRoute('add_product');
+            return $this->redirect("/product/details/" . $product->getCode());
         }
 
         return $this->render('ProductTemplates/productForms.html.twig', [
@@ -125,6 +122,7 @@ class ProductController extends AbstractController
         }
 
         if ($form->isSubmitted() && $form->isValid()) {
+            $product->setName(ucfirst($product->getName()));
             $id = $this->productRepository->updateProduct($product);
 
             if ($id) {
@@ -159,14 +157,10 @@ class ProductController extends AbstractController
         }
 
         if ($form->isSubmitted() && $form->isValid()) {
-            $response = $this->productRepository->deleteProduct($product);
+            $dm = $this->productRepository->deleteProduct($product);
+            $dm->flush();
 
-            if ($response) {
-                return $this->redirect('/product/list-view');
-            }
-
-            $this->addFlash('error', "No se ha actualizado el producto: $code");
-            $this->redirectToRoute('delete_product');
+            return $this->redirect('/product/list-view');
         }
 
         return $this->render('ProductTemplates/productForms.html.twig', [

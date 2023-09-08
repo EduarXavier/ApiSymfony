@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Document;
 
 use Doctrine\Common\Collections\ArrayCollection;
-use Doctrine\Common\Collections\Collection;
 use Doctrine\ODM\MongoDB\Mapping\Annotations as MongoDB;
 use Doctrine\ODM\MongoDB\Mapping\Annotations\EmbedMany;
 use Doctrine\ODM\MongoDB\Mapping\Annotations\EmbedOne;
@@ -27,8 +26,8 @@ class Invoice
     #[Field(type:'string')]
     private string $date;
 
-    #[EmbedOne(targetDocument : User::class)]
-    private User $user;
+    #[EmbedOne(targetDocument : UserInvoice::class)]
+    private UserInvoice $user;
 
     #[Field(type:'string')]
     private string $status;
@@ -93,14 +92,14 @@ class Invoice
         return $this->products->removeElement($product);
     }
 
-    public function getUser(): User
+    public function getUser(): UserInvoice
     {
         return $this->user;
     }
 
-    public function setUser(User $userDocument): static
+    public function setUser(UserInvoice $user): static
     {
-        $this->user = $userDocument;
+        $this->user = $user;
 
         return $this;
     }

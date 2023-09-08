@@ -6,6 +6,8 @@ namespace App\Controller;
 
 use App\Document\Invoice;
 use App\Document\Product;
+use App\Document\ProductInvoice;
+use App\Document\UserInvoice;
 use App\Form\FactureType;
 use App\Form\PayInvoiceType;
 use App\Form\ProductShoppingCartType;
@@ -60,7 +62,8 @@ class InvoiceController extends AbstractController
         }
 
         $user = $this->userRepository->findByDocument($invoices->getUser()->getDocument());
-        $invoices->setUser($user);
+        $userInvoive = new UserInvoice($user);
+        $invoices->setUser($userInvoive);
         $dm = $this->invoiceService->addProductsToShoppingCart(
             $invoices->getProducts(),
             $invoices->getUser()
@@ -89,7 +92,8 @@ class InvoiceController extends AbstractController
         }
 
         $user = $this->userRepository->findByDocument($invoices->getUser()->getDocument());
-        $invoices->setUser($user);
+        $userInvoive = new UserInvoice($user);
+        $invoices->setUser($userInvoive);
         $dm = $this->invoiceService->addProductsToShoppingCart(
             $invoices->getProducts(),
             $invoices->getUser()
@@ -157,7 +161,7 @@ class InvoiceController extends AbstractController
         );
 
         if ($invoiceEmail == null) {
-            $this->emailService->sendEmail($invoice->getUser()->getEmail(), "first-shop");
+            $this->emailService->sendEmail($invoice->getUser(), "first-shop");
         }
 
         $dm = $this->invoiceService->payInvoice($invoice);
@@ -177,7 +181,8 @@ class InvoiceController extends AbstractController
             return $this->redirectToRoute("login_template");
         }
 
-        $invoices = $this->invoiceService->findAllByUser($session->get("user"));
+        $user = new UserInvoice($session->get("user"));
+        $invoices = $this->invoiceService->findAllByUser($user);
 
         return $this->render("InvoiceTemplates/invoiceList.html.twig", [
             "invoices" => $invoices
@@ -193,7 +198,8 @@ class InvoiceController extends AbstractController
             return $this->redirectToRoute("login_template");
         }
 
-        $invoices = $this->invoiceService->findAllForStatus($session->get("user"), $status);
+        $user = new UserInvoice($session->get("user"));
+        $invoices = $this->invoiceService->findAllForStatus($user, $status);
 
         return $this->render("InvoiceTemplates/invoiceList.html.twig", [
             "invoices" => $invoices
@@ -242,7 +248,7 @@ class InvoiceController extends AbstractController
     public function addProductShoppingCart(Request $request): RedirectResponse
     {
         $session = $request->getSession();
-        $product = new Product();
+        $product = new ProductInvoice();
         $form = $this->createForm(ProductShoppingCartType::class, $product);
 
         if (empty($session->get("user")) || empty($session->get("rol")) || $session->get("rol") != "ADMIN") {
@@ -260,10 +266,10 @@ class InvoiceController extends AbstractController
         $product = clone $product;
         $product->setAmount($amount);
         $products->add($product);
-
+        $userInvoive = new UserInvoice($session->get("user"));
         $dm = $this->invoiceService->addProductsToShoppingCart(
             $products,
-            $session->get("user"),
+            $userInvoive,
         );
 
         $dm->flush();
@@ -327,7 +333,7 @@ class InvoiceController extends AbstractController
             $user = $this->userRepository->findByDocument(
                 $invoice->getUser()->getDocument()
             );
-            $this->emailService->sendEmail($user->getEmail(), "first-shop");
+            $this->emailService->sendEmail($user, "first-shop");
         }
 
         $dm = $this->invoiceService->payInvoice($invoice);
@@ -392,10 +398,8 @@ class InvoiceController extends AbstractController
             return $this->redirectToRoute("login_template");
         }
 
-        $dm = $this->invoiceService->deleteProductToShoppingCart(
-            $session->get("user"),
-            $id
-        );
+        $user = new UserInvoice($session->get("user"));
+        $dm = $this->invoiceService->deleteProductToShoppingCart($user, $id);
         $dm->flush();
 
         return $this->redirect("/invoices/shopping-cart/list");

@@ -14,16 +14,10 @@ use Doctrine\Persistence\ManagerRegistry;
 
 class ProductRepository extends ServiceDocumentRepository
 {
-    private DocumentManager $documentManager;
-    public function __construct(ManagerRegistry $registry, $documentClass)
-    {
-        parent::__construct($registry, $documentClass);
-        $this->documentManager = $this->getDocumentManager();
-    }
 
     public function findAll(): array
     {
-        $repository = $this->documentManager->getRepository(Product::class);
+        $repository = $this->getDocumentManager()->getRepository(Product::class);
 
         return $repository->findBy(["amount" => ['$gt' => 0]], limit: 20);
     }
@@ -34,26 +28,22 @@ class ProductRepository extends ServiceDocumentRepository
      */
     public function findById(string $id): ?Product
     {
-        return $this->documentManager->getRepository(Product::class)->find($id);
+        return $this->getDocumentManager()->getRepository(Product::class)->find($id);
     }
 
     public function findByCode(string $code): ?Product
     {
-        $repository = $this->documentManager->getRepository(Product::class);
+        $repository = $this->getDocumentManager()->getRepository(Product::class);
 
         return $repository->findOneBy(["code" => $code]) ?? null;
     }
 
-    /**
-     * @throws MongoDBException
-     */
-    public function addProduct(Product $product): ?string
+    public function addProduct(Product $product): DocumentManager
     {
         $product->setCode(str_ireplace(" ", "-", uniqid(). "-" . $product->getName()));
-        $this->documentManager->persist($product);
-        $this->documentManager->flush();
+        $this->getDocumentManager()->persist($product);
 
-        return $product->getCode();
+        return $this->getDocumentManager();
     }
 
     /**
@@ -63,21 +53,16 @@ class ProductRepository extends ServiceDocumentRepository
     {
         $productUpdate = $this->findByCode($product->getCode());
         $productUpdate->setAmount($product->getAmount());
-        $this->documentManager->persist($productUpdate);
-        $this->documentManager->flush();
-        $this->documentManager->clear();
+        $this->getDocumentManager()->persist($productUpdate);
+        $this->getDocumentManager()->flush();
 
         return $product->getId();
     }
 
-    /**
-     * @throws MongoDBException
-     */
-    public function deleteProduct(Product $product): ?bool
+    public function deleteProduct(Product $product): DocumentManager
     {
-        $this->documentManager->remove($product);
-        $this->documentManager->flush();
+        $this->getDocumentManager()->remove($product);
 
-        return true;
+        return $this->getDocumentManager();
     }
 }
