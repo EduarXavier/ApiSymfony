@@ -1,0 +1,85 @@
+
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ user.name ?? "Not found"}} - resume{% endblock %}
+
+{% block body %}
+
+    {% include '/layouts/navbar.html.twig' %}
+
+    <div class="container mt-5">
+
+        {% for flash_message in app.flashes('exito') %}
+            <div class="alert alert-success w-100" role="alert">
+                {{ flash_message }}
+            </div>
+        {% endfor %}
+
+        {% if user is empty %}
+            <div class="alert alert-info" role="alert">
+                No hay facturas registradas.
+            </div>
+        {% else %}
+
+            <h2 class="pt-5" style="text-align: center">Detalles del pedido</h2>
+            <div class="container mt-5">
+                <div class="row justify-content-center">
+                    <div class="col-6 card">
+                        <div class="row col-12">
+                            <div class="card-body">
+                                <h5 class="card-title">
+                                    usuario: {{ user.name }}
+                                </h5>
+                                <p class="card-text">
+                                    ID: {{ user.id }}
+                                </p>
+                                <p class="card-text">
+                                    Email: {{ user.email }}
+                                </p>
+                                <p class="card-text">
+                                    Productos: {{ products|length }}
+                                </p>
+                                <p>Ordenar por</p>
+                                <div class="mb-4">
+                                    <div class="btn-group w-100" role="group">
+                                        <a href="/invoices/resume" class="btn btn-primary">Nombre</a>
+                                        <a href="/invoices/resume/amount" class="btn btn-success">Cantidad</a>
+                                        <a href="/invoices/resume/price" class="btn btn-danger">Precio</a>
+                                        <a href="/invoices/resume/total" class="btn btn-secondary">Total</a>
+                                    </div>
+                                </div>
+                                <table class="table w-100">
+                                    <thead>
+                                    <tr>
+                                        <th scope="col">Nombre</th>
+                                        <th scope="col">Cantidad</th>
+                                        <th scope="col">Precio</th>
+                                        <th scope="col">Total</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+
+                                    {% for product in products %}
+                                        <tr>
+                                            <th scope="row">
+                                                <a href="/product/details/{{ product.code }}" class="text-decoration-none">
+                                                    {{ product.name }}
+                                                </a>
+                                            </th>
+                                            <td>{{ product.amount }}</td>
+                                            <td>{{ product.price }}</td>
+                                            <td>{{ product.amount * product.price }}</td>
+                                        </tr>
+                                    {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+
+    </div>
+
+{% endblock %}

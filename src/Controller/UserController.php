@@ -19,6 +19,8 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
+
 
 #[Route('/user')]
 class UserController extends AbstractController
@@ -62,6 +64,7 @@ class UserController extends AbstractController
      * @throws MongoDBException
      * @throws MappingException
      */
+    #[IsGranted("ROLE_ADMIN")]
     #[Route('/update/{id}', name: 'updateUser', methods: ['POST'])]
     public function updateUser($id, Request $request): JsonResponse
     {

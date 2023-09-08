@@ -5,11 +5,9 @@ declare(strict_types=1);
 namespace App\Controller;
 
 use App\Document\Invoice;
-use App\Document\Product;
 use App\Document\ProductInvoice;
 use App\Document\UserInvoice;
 use App\Form\FactureType;
-use App\Form\PayInvoiceType;
 use App\Form\ProductShoppingCartType;
 use App\Form\ShoppingCartType;
 use App\Repository\UserRepository;
@@ -62,11 +60,11 @@ class InvoiceController extends AbstractController
         }
 
         $user = $this->userRepository->findByDocument($invoices->getUser()->getDocument());
-        $userInvoive = new UserInvoice($user);
-        $invoices->setUser($userInvoive);
+        $userInvoive = new UserInvoice();
+        $userInvoive->setUser($user);
         $dm = $this->invoiceService->addProductsToShoppingCart(
             $invoices->getProducts(),
-            $invoices->getUser()
+            $userInvoive
         );
 
         if ($dm){
@@ -92,11 +90,11 @@ class InvoiceController extends AbstractController
         }
 
         $user = $this->userRepository->findByDocument($invoices->getUser()->getDocument());
-        $userInvoive = new UserInvoice($user);
-        $invoices->setUser($userInvoive);
+        $userInvoive = new UserInvoice();
+        $userInvoive->setUser($user);
         $dm = $this->invoiceService->addProductsToShoppingCart(
             $invoices->getProducts(),
-            $invoices->getUser()
+            $userInvoive
         );
 
         if ($dm){
@@ -121,6 +119,7 @@ class InvoiceController extends AbstractController
             return new JsonResponse(["error" => "Ha ocurrido un error con los datos enviados"], Response::HTTP_BAD_REQUEST);
         }
 
+        $invoice = $this->invoiceService->findByCode($invoice->getCode());
         $document = $invoice->getUser()->getDocument();
         $invoice = $this->invoiceService->findByDocumentAndStatus($document, "shopping-cart");
 
@@ -142,21 +141,21 @@ class InvoiceController extends AbstractController
     public function payInvoice(Request $request): ?JsonResponse
     {
         $invoice = new Invoice();
-        $form = $this->createForm(PayInvoiceType::class, $invoice);
+        $form = $this->createForm(FactureType::class, $invoice);
         $form->handleRequest($request);
 
         if (!$form->isSubmitted() || !$form->isValid()) {
             return new JsonResponse(["error" => "Ha ocurrido un error con los datos enviados"], Response::HTTP_BAD_REQUEST);
         }
 
-        $invoice = $this->invoiceService->findById($invoice->getId(), "invoice");
+        $invoice = $this->invoiceService->findByCode($invoice->getCode());
 
         if (!$invoice) {
             return new JsonResponse(["error" => "No se ha encontrado la factura"], Response::HTTP_BAD_REQUEST);
         }
 
         $invoiceEmail = $this->invoiceService->findByDocumentAndStatus(
-            $invoice->getUserDocument(),
+            $invoice->getUser()->getDocument(),
             "pay",
         );
 
@@ -181,11 +180,50 @@ class InvoiceController extends AbstractController
             return $this->redirectToRoute("login_template");
         }
 
-        $user = new UserInvoice($session->get("user"));
+        $user = new UserInvoice();
+        $user->setUser($session->get("user"));
         $invoices = $this->invoiceService->findAllByUser($user);
 
         return $this->render("InvoiceTemplates/invoiceList.html.twig", [
             "invoices" => $invoices
+        ]);
+    }
+
+    #[Route("/resume", name: "invoices_resume")]
+    public function resume(Request $request): RedirectResponse|Response
+    {
+        $session = $request->getSession();
+
+        if (empty($session->get("user")) || empty($session->get("rol")) || $session->get("rol") != "ADMIN") {
+            return $this->redirectToRoute("login_template");
+        }
+
+        $user = new UserInvoice();
+        $user->setUser($session->get("user"));
+        $products = $this->invoiceService->invoiceResume($user, null);
+
+        return $this->render("InvoiceTemplates/invoiceResume.html.twig", [
+            "products" => $products,
+            "user" => $user
+        ]);
+    }
+
+    #[Route("/resume/{status}", name: "invoices_resume_status")]
+    public function resumeStatus(Request $request, string $status): RedirectResponse|Response
+    {
+        $session = $request->getSession();
+
+        if (empty($session->get("user")) || empty($session->get("rol")) || $session->get("rol") != "ADMIN") {
+            return $this->redirectToRoute("login_template");
+        }
+
+        $user = new UserInvoice();
+        $user->setUser($session->get("user"));
+        $products = $this->invoiceService->invoiceResume($user, $status);
+
+        return $this->render("InvoiceTemplates/invoiceResume.html.twig", [
+            "products" => $products,
+            "user" => $user
         ]);
     }
 
@@ -198,7 +236,8 @@ class InvoiceController extends AbstractController
             return $this->redirectToRoute("login_template");
         }
 
-        $user = new UserInvoice($session->get("user"));
+        $user = new UserInvoice();
+        $user->setUser($session->get("user"));
         $invoices = $this->invoiceService->findAllForStatus($user, $status);
 
         return $this->render("InvoiceTemplates/invoiceList.html.twig", [
@@ -266,10 +305,11 @@ class InvoiceController extends AbstractController
         $product = clone $product;
         $product->setAmount($amount);
         $products->add($product);
-        $userInvoive = new UserInvoice($session->get("user"));
+        $user = new UserInvoice();
+        $user->setUser($session->get("user"));
         $dm = $this->invoiceService->addProductsToShoppingCart(
             $products,
-            $userInvoive,
+            $user,
         );
 
         $dm->flush();
@@ -398,7 +438,8 @@ class InvoiceController extends AbstractController
             return $this->redirectToRoute("login_template");
         }
 
-        $user = new UserInvoice($session->get("user"));
+        $user = new UserInvoice();
+        $user->setUser($session->get("user"));
         $dm = $this->invoiceService->deleteProductToShoppingCart($user, $id);
         $dm->flush();
 

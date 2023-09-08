@@ -64,7 +64,7 @@ class InvoiceService
      * @throws MongoDBException
      * @throws Exception
      */
-    public function addProductsToShoppingCart(Collection $products, UserInvoice $user): DocumentManager|bool
+    public function addProductsToShoppingCart(Collection $products, UserInvoice $user): ?DocumentManager
     {
         $shoppingCart = $this->findByDocumentAndStatus($user->getDocument(), "shopping-cart");
 
@@ -73,6 +73,46 @@ class InvoiceService
         }
 
         return $this->createNewCart($products, $user);
+    }
+
+    public function invoiceResume(UserInvoice $user, ?string $order ): ArrayCollection
+    {
+        $invoices = $this->invoicesRepository->findAllByUser($user);
+        $products = [];
+
+        foreach ($invoices as $invoice) {
+            foreach ($invoice->getProducts() as $product) {
+                if (isset($products[$product->getId()])) {
+                    $products[$product->getId()]->setAmount($products[$product->getId()]->getAmount() + $product->getAmount());
+                } else {
+                    $products[$product->getId()] = $product;
+                }
+            }
+        }
+
+        if ($order == "price") {
+            usort($products, function ($a, $b) {
+                return $b->getPrice() - $a->getPrice();
+            });
+        }
+        else if ($order == "amount") {
+            usort($products, function ($a, $b) {
+                return $b->getAmount() - $a->getAmount();
+            });
+        }
+        else if ($order == "total") {
+            usort($products, function ($a, $b) {
+                return $b->getAmount() * $b->getPrice() - $a->getAmount() * $a->getPrice();
+            });
+        }
+        else {
+            usort($products, function ($a, $b) {
+                return strcmp($a->getName(), $b->getName());
+            });
+        }
+
+        return new ArrayCollection($products);
+
     }
 
     /**
@@ -125,7 +165,7 @@ class InvoiceService
      * @throws LockException
      * @throws Exception
      */
-    private function createNewCart(Collection $products, UserInvoice $user): DocumentManager
+    private function createNewCart(Collection $products, UserInvoice $user): ?DocumentManager
     {
         $fecha = new DateTime('now', new DateTimeZone('America/Bogota'));
         $invoices = new Invoice();
@@ -137,16 +177,20 @@ class InvoiceService
 
         foreach ($products as $product) {
 
-            $productShop = clone $this->productRepository->findByCode($product->getCode());
+            $productShop = $this->productRepository->findByCode($product->getCode());
 
-            if ($productShop) {
-                $amount = $productShop->getAmount();
-                $productShop->setAmount($product->getAmount());
-                $invoices->addProducts(clone $productShop);
-                $this->invoicesRepository->getDocumentManager()->persist($invoices);
-                $productShop->setAmount($amount);
-                $this->updateProductAndCheckAvailability($productShop, $product->getAmount());
+            if (!$productShop) {
+                return null;
             }
+
+            $productShop = clone $productShop;
+            $amount = $productShop->getAmount();
+            $productShop->setAmount($product->getAmount());
+            $invoices->addProducts(clone $productShop);
+            $this->invoicesRepository->getDocumentManager()->persist($invoices);
+            $productShop->setAmount($amount);
+            $this->updateProductAndCheckAvailability($productShop, $product->getAmount());
+
         }
 
         return $this->invoicesRepository->getDocumentManager();

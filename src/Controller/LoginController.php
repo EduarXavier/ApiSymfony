@@ -10,12 +10,14 @@ use App\Repository\UserRepository;
 use Doctrine\ODM\MongoDB\DocumentManager;
 use Lexik\Bundle\JWTAuthenticationBundle\Encoder\JWTEncoderInterface;
 use Lexik\Bundle\JWTAuthenticationBundle\Exception\JWTEncodeFailureException;
+use Lexik\Bundle\JWTAuthenticationBundle\Services\JWTTokenManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Security\Http\Attribute\CurrentUser;
 
 class LoginController extends AbstractController
 {
@@ -29,11 +31,8 @@ class LoginController extends AbstractController
         $this->userRepository = $userRepository;
     }
 
-    /**
-     * @throws JWTEncodeFailureException
-     */
     #[Route('/login', name: 'login', methods: ['POST'])]
-    public function login(Request $request, JWTEncoderInterface $encoder): JsonResponse
+    public function login(Request $request, JWTTokenManagerInterface $JWTManager): JsonResponse
     {
         $user = new User();
         $form = $this->createForm(LoginType::class, $user);
@@ -49,7 +48,7 @@ class LoginController extends AbstractController
             return $this->json(['Error' => 'Credenciales Inválidas'], Response::HTTP_BAD_REQUEST);
         }
 
-        $token = $encoder->encode(['email' => $user->getEmail()]);
+        $token = $JWTManager->create($userFind);
 
         return $this->json(['token' => $token]);
     }

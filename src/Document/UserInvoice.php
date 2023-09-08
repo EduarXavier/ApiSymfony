@@ -34,7 +34,7 @@ class UserInvoice
     #[MongoDB\Index(background: true)]
     private string $email;
 
-    public function __construct(User $user)
+    public function setUser(User $user): static
     {
         $this->id = $user->getId();
         $this->name = $user->getName();
@@ -43,6 +43,8 @@ class UserInvoice
         $this->rol = $user->getRol();
         $this->phone = $user->getPhone();
         $this->email = $user->getEmail();
+
+        return $this;
     }
 
     public function getId(): string

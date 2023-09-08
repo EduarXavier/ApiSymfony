@@ -24,7 +24,7 @@
             <div class="container mt-5">
                 <div class="row justify-content-center">
                     <div class="col-6 card">
-                        <div class="row col-9">
+                        <div class="row col-12">
                             <div class="card-body">
                                 <h5 class="card-title">
                                     usuario: {{ invoice.user.name }}
@@ -44,7 +44,7 @@
                                 <table class="table">
                                     <thead>
                                         <tr>
-                                            <th scope="col">ID</th>
+                                            <th scope="col">Nombre</th>
                                             <th scope="col">Cantidad</th>
                                             {% if invoice.status == "shopping-cart" %}
                                                 <th scope="col">Acción</th>
@@ -57,7 +57,7 @@
                                             <tr>
                                                 <th scope="row">
                                                     <a href="/product/details/{{ product.code }}" class="text-decoration-none">
-                                                        {{ product.id }}
+                                                        {{ product.name }}
                                                     </a>
                                                 </th>
                                                 <td>{{ product.amount }}</td>

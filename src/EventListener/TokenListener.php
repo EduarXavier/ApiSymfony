@@ -35,9 +35,12 @@ class TokenListener
         if (
             $routeName !== 'product_list'
             && $routeName !== 'login'
+            && $routeName !== '_wdt'
             && $routeName !== "addUser"
             && $routeName !== "logout"
             && $routeName !== "login_template"
+            && $routeName !== "invoices_resume"
+            && $routeName !== "invoices_resume_status"
             && $routeName !== "send_email"
             && $routeName !== "product_details"
             && $routeName !== "add_product"

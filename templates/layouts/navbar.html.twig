@@ -4,10 +4,7 @@
         <span class="navbar-toggler-icon"></span>
     </button>
     <div class="collapse navbar-collapse" id="navbarNavDropdown">
-        <ul class="navbar-nav">
-            <li class="nav-item">
-                <a class="nav-link" href="/invoices/list">Facturas</a>
-            </li>
+        <ul class="navbar-nav" style="width: 90%">
             <li class="nav-item dropdown">
                 <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                     Productos
@@ -18,11 +15,17 @@
                 </div>
             </li>
             <li class="nav-item">
+                <a class="nav-link" href="/invoices/list">Facturas</a>
+            </li>
+            <li class="nav-item">
                 <a class="nav-link" href="/invoices/shopping-cart/list">Carrito</a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" href="/logout">Cerrar sesion</a>
+                <a class="nav-link" href="/invoices/resume">Resumen</a>
             </li>
         </ul>
+        <div class="navbar-nav ml-auto">
+            <a class="nav-link" href="/logout">Cerrar sesión</a>
+        </div>
     </div>
 </nav>

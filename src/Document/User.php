@@ -5,9 +5,10 @@ declare(strict_types=1);
 namespace App\Document;
 
 use Doctrine\ODM\MongoDB\Mapping\Annotations as MongoDB;
+use Symfony\Component\Security\Core\User\UserInterface;
 
 #[MongoDB\Document]
-class User
+class User implements UserInterface
 {
     #[MongoDB\Id()]
     private string $id;
@@ -138,5 +139,20 @@ class User
         $this->recoveryCode = $recoveryCode;
 
         return $this;
+    }
+
+    public function getRoles(): array
+    {
+        return ['ROLE_USER'];
+    }
+
+    public function eraseCredentials()
+    {
+        // TODO: Implement eraseCredentials() method.
+    }
+
+    public function getUserIdentifier(): string
+    {
+        return $this->email;
     }
 }
