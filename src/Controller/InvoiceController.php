@@ -48,7 +48,7 @@ class InvoiceController extends AbstractController
     /**
      * @throws Exception
      */
-    #[Route("/shopping-cart", name: "shopping_cart", methods: ["POST"])]
+    #[Route("/api/shopping-cart", name: "shopping_cart", methods: ["POST"])]
     public function shoppingCart(Request $request): ?JsonResponse
     {
         $invoices = new Invoice();
@@ -77,8 +77,9 @@ class InvoiceController extends AbstractController
 
     /**
      * @throws MongoDBException
+     * @throws \Doctrine\ODM\MongoDB\Mapping\MappingException
      */
-    #[Route("/update/shopping-cart/", name: "update_shopping_cart", methods: ["POST"])]
+    #[Route("/api/update/shopping-cart/", name: "update_shopping_cart", methods: ["POST"])]
     public function updateShoppingCart(Request $request, DocumentManager $documentManager): ?JsonResponse
     {
         $invoices = new Invoice();
@@ -90,11 +91,15 @@ class InvoiceController extends AbstractController
         }
 
         $user = $this->userRepository->findByDocument($invoices->getUser()->getDocument());
-        $userInvoive = new UserInvoice();
-        $userInvoive->setUser($user);
-        $dm = $this->invoiceService->addProductsToShoppingCart(
+        $invoice = $this->invoiceService->findByDocumentAndStatus($user->getDocument(), "shopping-cart");
+
+        if (!$invoice) {
+            return new JsonResponse(["error" => "No se ha encontrado el carrito"], Response::HTTP_BAD_REQUEST);
+        }
+
+        $dm = $this->invoiceService->addToExistingCart(
             $invoices->getProducts(),
-            $userInvoive
+            $invoice
         );
 
         if ($dm){
@@ -108,7 +113,7 @@ class InvoiceController extends AbstractController
     /**
      * @throws MongoDBException
      */
-    #[Route("/create-invoice", name: "create-invoice", methods: ["POST"])]
+    #[Route("/api/create-invoice", name: "create-invoice", methods: ["POST"])]
     public function createInvoices(Request $request, DocumentManager $documentManager): ?JsonResponse
     {
         $invoice = new Invoice();
@@ -120,11 +125,9 @@ class InvoiceController extends AbstractController
         }
 
         $invoice = $this->invoiceService->findByCode($invoice->getCode());
-        $document = $invoice->getUser()->getDocument();
-        $invoice = $this->invoiceService->findByDocumentAndStatus($document, "shopping-cart");
 
         if (!$invoice) {
-            return new JsonResponse(["error" => "No se ha encontrado la lista de productos"], Response::HTTP_BAD_REQUEST);
+            return new JsonResponse(["error" => "No se ha encontrado la factura"], Response::HTTP_BAD_REQUEST);
         }
 
         $dm = $this->invoiceService->createInvoice($invoice);
@@ -137,7 +140,7 @@ class InvoiceController extends AbstractController
      * @throws MongoDBException
      * @throws TransportExceptionInterface
      */
-    #[Route("/pay-invoice", name: "pay-invoice", methods: ["POST"])]
+    #[Route("/api/pay-invoice", name: "pay-invoice", methods: ["POST"])]
     public function payInvoice(Request $request): ?JsonResponse
     {
         $invoice = new Invoice();
@@ -297,7 +300,7 @@ class InvoiceController extends AbstractController
         $form->handleRequest($request);
 
         if (!$form->isSubmitted() || !$form->isValid()) {
-            return $this->redirect("/product/details/" . $product->getId() . "?mnsj=err");
+            return $this->redirect("/product/details/" . $product->getCode() . "?mnsj=err");
         }
 
         $products = new ArrayCollection();

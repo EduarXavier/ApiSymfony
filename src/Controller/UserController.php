@@ -19,7 +19,6 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 
 #[Route('/user')]
@@ -64,8 +63,7 @@ class UserController extends AbstractController
      * @throws MongoDBException
      * @throws MappingException
      */
-    #[IsGranted("ROLE_ADMIN")]
-    #[Route('/update/{id}', name: 'updateUser', methods: ['POST'])]
+    #[Route('/api/update/{id}', name: 'updateUser', methods: ['POST'])]
     public function updateUser($id, Request $request): JsonResponse
     {
         $user = $this->userRepository->findById($id);
@@ -94,7 +92,7 @@ class UserController extends AbstractController
      * @throws MongoDBException
      * @throws MappingException
      */
-    #[Route('/update/password/{id}', name: 'updatePassword', methods: ['POST'])]
+    #[Route('/api/update/password/{id}', name: 'updatePassword', methods: ['POST'])]
     public function changePassword($id, Request $request, DocumentManager $documentManager): JsonResponse
     {
         $user = $this->userRepository->findById($id, $documentManager);

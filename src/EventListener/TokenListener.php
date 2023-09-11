@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\EventListener;
 
+use App\Repository\UserRepository;
 use Lexik\Bundle\JWTAuthenticationBundle\Encoder\JWTEncoderInterface;
 use Lexik\Bundle\JWTAuthenticationBundle\Exception\JWTDecodeFailureException;
 use Symfony\Component\Security\Core\Exception\AccessDeniedException;
@@ -12,10 +13,12 @@ use Symfony\Component\HttpKernel\Event\ControllerEvent;
 class TokenListener
 {
     private JWTEncoderInterface $jwtEncoder;
+    private UserRepository $userRepository;
 
-    public function __construct(JWTEncoderInterface $jwtEncoder)
+    public function __construct(JWTEncoderInterface $jwtEncoder, UserRepository $userRepository)
     {
         $this->jwtEncoder = $jwtEncoder;
+        $this->userRepository = $userRepository;
     }
 
     /**
@@ -30,35 +33,10 @@ class TokenListener
         }
 
         $request = $event->getRequest();
-        $routeName = $request->get('_route');
+        $pattern = '/api/';
+        $pathInfo = $request->getPathInfo();
 
-        if (
-            $routeName !== 'product_list'
-            && $routeName !== 'login'
-            && $routeName !== '_wdt'
-            && $routeName !== "addUser"
-            && $routeName !== "logout"
-            && $routeName !== "login_template"
-            && $routeName !== "invoices_resume"
-            && $routeName !== "invoices_resume_status"
-            && $routeName !== "send_email"
-            && $routeName !== "product_details"
-            && $routeName !== "add_product"
-            && $routeName !== "update_product"
-            && $routeName !== "delete_product"
-            && $routeName !== "invoices_list"
-            && $routeName !== "invoices_list_status"
-            && $routeName !== "product_list_view"
-            && $routeName !== "invoices_details"
-            && $routeName !== "create_invoice_document"
-            && $routeName !== "add_product_shopping_cart"
-            && $routeName !== "create_invoice_view"
-            && $routeName !== "shopping_cart_list"
-            && $routeName !== "pay_invoice_view"
-            && $routeName !== "delete_invoice_view"
-            && $routeName !== "delete_shopping_cart_view"
-            && $routeName !== "delete_product_to_shopping_cart_view"
-        ) {
+        if (preg_match($pattern, $pathInfo)) {
             $authorizationHeader = $request->headers->get('Authorization');
 
             if (!$authorizationHeader) {
@@ -73,7 +51,10 @@ class TokenListener
 
             $token = $tokenParts[1];
             $decodedToken = $this->jwtEncoder->decode($token);
-            $email = $decodedToken['email'];
+            $email = $decodedToken['username'];
+            if (!$this->userRepository->findBy(["email" => $email])) {
+                throw new \Exception('El usuario proporcionado no se ha encontrado');
+            }
         }
     }
 }

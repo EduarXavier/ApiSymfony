@@ -120,7 +120,7 @@ class InvoiceService
      * @throws LockException
      * @throws Exception
      */
-    private function addToExistingCart(Collection $products, Invoice $shoppingCart): DocumentManager
+    public function addToExistingCart(Collection $products, Invoice $shoppingCart): DocumentManager|bool
     {
         $productsUser = clone $shoppingCart->getProducts();
 
