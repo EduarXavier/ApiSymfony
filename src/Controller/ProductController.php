@@ -29,13 +29,17 @@ class ProductController extends AbstractController
         $this->productRepository = $productRepository;
     }
 
-    #[Route('/list', name: 'product_list', methods: ['GET'])]
+    //API
+
+    #[Route('/api/list', name: 'product_list', methods: ['GET'])]
     public function productList(): ?JsonResponse
     {
         $products = $this->productRepository->findAll();
 
         return $this->json($products, Response::HTTP_OK);
     }
+
+    //VIEW
 
     #[Route('/list-view', name: 'product_list_view', methods: ['GET'])]
     public function productListTemplate(Request $request): Response

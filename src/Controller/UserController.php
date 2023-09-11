@@ -17,6 +17,7 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
+use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 
@@ -40,7 +41,7 @@ class UserController extends AbstractController
      * @throws TransportExceptionInterface
      */
     #[Route('/add', name: 'addUser', methods: ['POST'])]
-    public function addUser(Request $request): ?JsonResponse
+    public function addUser(Request $request, UserPasswordHasherInterface $passwordHasher): ?JsonResponse
     {
         $user = new User();
         $form = $this->createForm(UserType::class, $user, ['method' => 'POST']);
@@ -48,6 +49,11 @@ class UserController extends AbstractController
 
         if ($form->isSubmitted() && $form->isValid()) {
             $user->setName(ucfirst($user->getName()));
+            $hashedPassword = $passwordHasher->hashPassword(
+                $user,
+                $user->getPassword()
+            );
+            $user->setPassword($hashedPassword);
             $this->userRepository->addUser($user);
             $this->emailService->sendEmail($user, 'registro');
 

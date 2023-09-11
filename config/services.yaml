@@ -22,12 +22,6 @@ services:
             - '../src/Entity/'
             - '../src/Kernel.php'
 
-    App\EventListener\TokenListener:
-        arguments:
-            $jwtEncoder: '@lexik_jwt_authentication.encoder'
-        tags:
-            - { name: kernel.event_listener, event: kernel.controller }
-
     App\EventListener\RequestListener:
         tags:
             - { name: kernel.event_subscriber }

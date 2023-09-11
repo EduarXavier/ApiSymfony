@@ -40,7 +40,6 @@ class UserRepository extends ServiceDocumentRepository
      */
     public function addUser(User $user): bool
     {
-        $user->setPassword(password_hash($user->getPassword(), PASSWORD_BCRYPT));
         $this->getDocumentManager()->persist($user);
         $this->getDocumentManager()->flush();
 

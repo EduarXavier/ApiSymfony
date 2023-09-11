@@ -31,28 +31,6 @@ class LoginController extends AbstractController
         $this->userRepository = $userRepository;
     }
 
-    #[Route('/login', name: 'login', methods: ['POST'])]
-    public function login(Request $request, JWTTokenManagerInterface $JWTManager): JsonResponse
-    {
-        $user = new User();
-        $form = $this->createForm(LoginType::class, $user);
-        $form->handleRequest($request);
-
-        if (!$form->isSubmitted() || !$form->isValid()) {
-            return $this->json(['Error' => 'Datos de formulario inválidos'], Response::HTTP_BAD_REQUEST);
-        }
-
-        $userFind = $this->userRepository->findByEmail($user->getEmail());
-
-        if (!$userFind || !password_verify($user->getPassword(), $userFind->getPassword())) {
-            return $this->json(['Error' => 'Credenciales Inválidas'], Response::HTTP_BAD_REQUEST);
-        }
-
-        $token = $JWTManager->create($userFind);
-
-        return $this->json(['token' => $token]);
-    }
-
     #[Route('/login-view', name: 'login_template')]
     public function loginView(Request $request): Response
     {
