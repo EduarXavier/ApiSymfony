@@ -10,36 +10,38 @@ use Doctrine\ODM\MongoDB\Mapping\Annotations as MongoDB;
 class Product
 {
     #[MongoDB\Id(strategy: "UUID")]
-    protected string $id;
+    protected ?string $id;
 
     #[MongoDB\Field(type: 'string')]
-    private string $code;
+    private ?string $code;
 
     #[MongoDB\Field(type: 'string')]
-    private string $name;
+    private ?string $name;
 
     #[MongoDB\Field(type:'int')]
-    private int $price;
+    private ?int $price;
 
     #[MongoDB\Field(type:'int')]
-    private int $amount;
+    private ?int $amount;
 
-    public function getId(): string
+    public function getId(): ?string
     {
         return $this->id;
     }
 
-    public function getCode(): string
+    public function getCode(): ?string
     {
         return $this->code;
     }
 
-    public function setCode(string $code): void
+    public function setCode(string $code): static
     {
         $this->code = $code;
+
+        return $this;
     }
 
-    public function getName(): string
+    public function getName(): ?string
     {
         return $this->name;
     }
@@ -51,7 +53,7 @@ class Product
         return $this;
     }
 
-    public function getPrice(): int
+    public function getPrice(): ?int
     {
         return $this->price;
     }
@@ -63,7 +65,7 @@ class Product
         return $this;
     }
 
-    public function getAmount(): int
+    public function getAmount(): ?int
     {
         return $this->amount;
     }

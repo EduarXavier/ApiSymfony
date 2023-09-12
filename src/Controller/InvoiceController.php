@@ -26,6 +26,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Serializer\SerializerInterface;
 
 #[Route("/invoices")]
 class InvoiceController extends AbstractController
@@ -34,17 +35,20 @@ class InvoiceController extends AbstractController
     private InvoicesRepository $invoicesRepository;
     private EmailService $emailService;
     private InvoiceService $invoiceService;
+    private SerializerInterface $serializer;
 
     public function __construct(
         InvoiceService $invoicesService,
         EmailService $emailService,
         UserRepository $userRepository,
-        InvoicesRepository $invoicesRepository
+        InvoicesRepository $invoicesRepository,
+        SerializerInterface $serializer
     ) {
         $this->invoiceService = $invoicesService;
         $this->emailService = $emailService;
         $this->userRepository = $userRepository;
         $this->invoicesRepository = $invoicesRepository;
+        $this->serializer = $serializer;
     }
 
     // Endpoints API
@@ -64,8 +68,8 @@ class InvoiceController extends AbstractController
         }
 
         $user = $this->userRepository->findByDocument($invoices->getUser()->getDocument());
-        $userInvoive = new UserInvoice();
-        $userInvoive->setUser($user);
+        $userJson = $this->serializer->serialize($user, "json");
+        $userInvoive = $this->serializer->deserialize($userJson, UserInvoice::class, "json");
         $dm = $this->invoiceService->addProductsToShoppingCart(
             $invoices->getProducts(),
             $userInvoive
@@ -187,9 +191,7 @@ class InvoiceController extends AbstractController
             return $this->redirectToRoute("login_template");
         }
 
-        $user = new UserInvoice();
-        $user->setUser($session->get("user"));
-        $invoices = $this->invoicesRepository->findAllByUser($user);
+        $invoices = $this->invoicesRepository->findAllByUser($session->get("user"));
 
         return $this->render("InvoiceTemplates/invoiceList.html.twig", [
             "invoices" => $invoices
@@ -205,8 +207,7 @@ class InvoiceController extends AbstractController
             return $this->redirectToRoute("login_template");
         }
 
-        $user = new UserInvoice();
-        $user->setUser($session->get("user"));
+        $user = $session->get("user");
         $products = $this->invoiceService->invoiceResume($user, null);
 
         return $this->render("InvoiceTemplates/invoiceResume.html.twig", [
@@ -224,8 +225,7 @@ class InvoiceController extends AbstractController
             return $this->redirectToRoute("login_template");
         }
 
-        $user = new UserInvoice();
-        $user->setUser($session->get("user"));
+        $user = $session->get("user");
         $products = $this->invoiceService->invoiceResume($user, $status);
 
         return $this->render("InvoiceTemplates/invoiceResume.html.twig", [
@@ -243,9 +243,7 @@ class InvoiceController extends AbstractController
             return $this->redirectToRoute("login_template");
         }
 
-        $user = new UserInvoice();
-        $user->setUser($session->get("user"));
-        $invoices = $this->invoicesRepository->findAllForStatus($user, $status);
+        $invoices = $this->invoicesRepository->findAllForStatus($session->get("user"), $status);
 
         return $this->render("InvoiceTemplates/invoiceList.html.twig", [
             "invoices" => $invoices
@@ -309,11 +307,9 @@ class InvoiceController extends AbstractController
 
         $products = new ArrayCollection();
         $products->add($product);
-        $user = new UserInvoice();
-        $user->setUser($session->get("user"));
         $dm = $this->invoiceService->addProductsToShoppingCart(
             $products,
-            $user,
+            $session->get("user"),
         );
 
         $dm->flush();
@@ -433,8 +429,8 @@ class InvoiceController extends AbstractController
      * @throws \Doctrine\ODM\MongoDB\Mapping\MappingException
      * @throws MongoDBException
      */
-    #[Route("/shopping-cart/delete-product/{id}", name: "delete_product_to_shopping_cart_view")]
-    public function deleteProductToShoppingCartView(Request $request, string $id): RedirectResponse
+    #[Route("/shopping-cart/delete-product/{code}", name: "delete_product_to_shopping_cart_view")]
+    public function deleteProductToShoppingCartView(Request $request, string $code): RedirectResponse
     {
         $session = $request->getSession();
 
@@ -442,9 +438,7 @@ class InvoiceController extends AbstractController
             return $this->redirectToRoute("login_template");
         }
 
-        $user = new UserInvoice();
-        $user->setUser($session->get("user"));
-        $dm = $this->invoiceService->deleteProductToShoppingCart($user, $id);
+        $dm = $this->invoiceService->deleteProductToShoppingCart($session->get("user"), $code);
         $dm->flush();
 
         return $this->redirect("/invoices/shopping-cart/list");

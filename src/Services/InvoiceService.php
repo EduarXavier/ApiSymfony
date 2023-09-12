@@ -21,22 +21,26 @@ use Doctrine\ODM\MongoDB\Mapping\MappingException;
 use Doctrine\ODM\MongoDB\MongoDBException;
 use Exception;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Serializer\SerializerInterface;
 
 
 class InvoiceService
 {
     private InvoicesRepository $invoicesRepository;
     private ProductService $productService;
+    private SerializerInterface $serializer;
     private ProductRepository $productRepository;
 
     public function __construct (
         InvoicesRepository $invoicesRepository,
         ProductRepository $productRepository,
-        ProductService $productService
+        ProductService $productService,
+        SerializerInterface $serializer
     ) {
         $this->invoicesRepository = $invoicesRepository;
         $this->productService = $productService;
         $this->productRepository = $productRepository;
+        $this->serializer = $serializer;
     }
 
     /**
@@ -122,8 +126,8 @@ class InvoiceService
 
             if ($existingProduct == null) {
                 $amount = $product->getAmount();
-                $product = new ProductInvoice();
-                $product->setProduct($productShop);
+                $productJson = $this->serializer->serialize($productShop, "json");
+                $product = $this->serializer->deserialize($productJson, ProductInvoice::class, "json");
                 $product->setAmount($amount);
                 $productsUser->add($product);
             }
@@ -160,8 +164,8 @@ class InvoiceService
                 return null;
             }
 
-            $productInvoice = new ProductInvoice();
-            $productInvoice->setProduct($productShop);
+            $productJson = $this->serializer->serialize($productShop, "json");
+            $productInvoice = $this->serializer->deserialize($productJson, ProductInvoice::class, "json");
             $productInvoice->setAmount($product->getAmount());
             $invoices->addProducts($productInvoice);
             $this->invoicesRepository->getDocumentManager()->persist($invoices);
@@ -265,13 +269,13 @@ class InvoiceService
      * @throws MongoDBException
      * @throws MappingException
      */
-    public function deleteProductToShoppingCart(UserInvoice $user, string $idProduct): DocumentManager|bool
+    public function deleteProductToShoppingCart(UserInvoice $user, string $code): DocumentManager|bool
     {
         $shoppingCart = $this->invoicesRepository->findByDocumentAndStatus($user->getDocument(), "shopping-cart");
 
         if (count($shoppingCart->getProducts()) == 1) {
             foreach ($shoppingCart->getProducts() as $product) {
-                $productFind = $this->productRepository->findById($idProduct);
+                $productFind = $this->productRepository->findByCode($code);
                 $productFind->setAmount($product->getAmount() + $productFind->getAmount());
                 $this->productService->updateProduct($productFind);
 
@@ -281,11 +285,11 @@ class InvoiceService
 
 
         foreach ($shoppingCart->getProducts() as $product) {
-            if ($product->getId() == $idProduct) {
+            if ($product->getCode() == $code) {
                 $shoppingCart->removeProduct($product);
                 $this->invoicesRepository->getDocumentManager()->persist($shoppingCart);
 
-                $productFind = $this->productRepository->findById($idProduct);
+                $productFind = $this->productRepository->findByCode($code);
                 $productFind->setAmount($product->getAmount() + $productFind->getAmount());
                 $this->productService->updateProduct($productFind);
 

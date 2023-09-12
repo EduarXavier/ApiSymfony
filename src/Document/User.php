@@ -38,9 +38,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[MongoDB\Field(type:'string')]
     private string $password;
 
-    #[MongoDB\Field(type:'string')]
-    private string $recoveryCode;
-
     public function getId(): string
     {
         return $this->id;
@@ -126,18 +123,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function setPassword(string $password): static
     {
         $this->password = $password;
-
-        return $this;
-    }
-
-    public function getRecoveryCode(): string
-    {
-        return $this->recoveryCode;
-    }
-
-    public function setRecoveryCode(string $recoveryCode): static
-    {
-        $this->recoveryCode = $recoveryCode;
 
         return $this;
     }

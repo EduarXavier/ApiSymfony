@@ -34,19 +34,6 @@ class UserInvoice
     #[MongoDB\Index(background: true)]
     private string $email;
 
-    public function setUser(User $user): static
-    {
-        $this->id = $user->getId();
-        $this->name = $user->getName();
-        $this->document = $user->getDocument();
-        $this->address = $user->getAddress();
-        $this->rol = $user->getRol();
-        $this->phone = $user->getPhone();
-        $this->email = $user->getEmail();
-
-        return $this;
-    }
-
     public function getId(): string
     {
         return $this->id;

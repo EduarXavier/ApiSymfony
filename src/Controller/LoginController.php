@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Controller;
 
 use App\Document\User;
+use App\Document\UserInvoice;
 use App\Form\LoginType;
 use App\Repository\UserRepository;
 use Doctrine\ODM\MongoDB\DocumentManager;
@@ -18,17 +19,22 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Security\Http\Attribute\CurrentUser;
+use Symfony\Component\Serializer\SerializerInterface;
 
 class LoginController extends AbstractController
 {
     private UserRepository $userRepository;
+    private SerializerInterface $serializer;
+
 
     public function __construct
     (
-        UserRepository $userRepository
+        UserRepository $userRepository,
+        SerializerInterface $serializer
     )
     {
         $this->userRepository = $userRepository;
+        $this->serializer = $serializer;
     }
 
     #[Route('/login-view', name: 'login_template')]
@@ -48,7 +54,10 @@ class LoginController extends AbstractController
 
         if ($userFind && password_verify($user->getPassword(), $userFind->getPassword())) {
             $session = $request->getSession();
-            $session->set('user', $userFind);
+
+            $userJson = $this->serializer->serialize($userFind, "json");
+            $userSession = $this->serializer->deserialize($userJson, UserInvoice::class, "json");
+            $session->set('user', $userSession);
             $session->set('email', $user->getEmail());
             $session->set('rol', $userFind->getRol());
             $session->set('document', $userFind->getDocument());
