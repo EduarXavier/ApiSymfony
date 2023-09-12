@@ -97,8 +97,8 @@
                                 {% elseif invoice.status == "shopping-cart" and invoice.products|length != 0 %}
                                     <form action="/invoices/create/invoice/" method="POST">
                                         <input
-                                                value="{{ invoice.user.document }}"
-                                                name="userDocument"
+                                                value="{{ invoice.code }}"
+                                                name="code"
                                                 class="d-none"
                                         >
                                         <button

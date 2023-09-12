@@ -36,6 +36,7 @@ class ProductInvoice
         $this->id = $product->getId();
         $this->code = $product->getCode();
         $this->amount = $product->getAmount();
+        $this->price = $product->getPrice();
 
         return $this;
     }
