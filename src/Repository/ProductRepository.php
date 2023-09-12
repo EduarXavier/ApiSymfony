@@ -37,31 +37,4 @@ class ProductRepository extends ServiceDocumentRepository
 
         return $repository->findOneBy(["code" => $code]) ?? null;
     }
-
-    public function addProduct(Product $product): DocumentManager
-    {
-        $product->setCode(str_ireplace(" ", "-", uniqid(). "-" . $product->getName()));
-        $this->getDocumentManager()->persist($product);
-
-        return $this->getDocumentManager();
-    }
-
-    /**
-     * @throws MongoDBException
-     */
-    public function updateProduct(Product $product): DocumentManager
-    {
-        $productUpdate = $this->findByCode($product->getCode());
-        $productUpdate->setAmount($product->getAmount());
-        $this->getDocumentManager()->persist($productUpdate);
-
-        return $this->getDocumentManager();
-    }
-
-    public function deleteProduct(Product $product): DocumentManager
-    {
-        $this->getDocumentManager()->remove($product);
-
-        return $this->getDocumentManager();
-    }
 }

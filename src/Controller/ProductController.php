@@ -9,6 +9,7 @@ use App\Form\DeleteProductType;
 use App\Form\ProductType;
 use App\Form\UpdateProductType;
 use App\Repository\ProductRepository;
+use App\Services\ProductService;
 use Doctrine\ODM\MongoDB\LockException;
 use Doctrine\ODM\MongoDB\Mapping\MappingException;
 use Doctrine\ODM\MongoDB\MongoDBException;
@@ -23,10 +24,12 @@ use Symfony\Component\Routing\Annotation\Route;
 class ProductController extends AbstractController
 {
     private ProductRepository $productRepository;
+    private ProductService $productService;
 
-    public function __construct(ProductRepository $productRepository)
+    public function __construct(ProductRepository $productRepository, ProductService $productService)
     {
         $this->productRepository = $productRepository;
+        $this->productService = $productService;
     }
 
     //API
@@ -96,7 +99,7 @@ class ProductController extends AbstractController
 
         if ($form->isSubmitted() && $form->isValid()) {
             $product->setName(ucfirst($product->getName()));
-            $dm = $this->productRepository->addProduct($product);
+            $dm = $this->productService->addProduct($product);
             $dm->flush();
 
             return $this->redirect("/product/details/" . $product->getCode());
@@ -127,7 +130,7 @@ class ProductController extends AbstractController
 
         if ($form->isSubmitted() && $form->isValid()) {
             $product->setName(ucfirst($product->getName()));
-            $dm = $this->productRepository->updateProduct($product);
+            $dm = $this->productService->updateProduct($product);
             $dm->flush();
 
             return $this->redirect("/product/details/$code");
@@ -157,7 +160,7 @@ class ProductController extends AbstractController
         }
 
         if ($form->isSubmitted() && $form->isValid()) {
-            $dm = $this->productRepository->deleteProduct($product);
+            $dm = $this->productService->deleteProduct($product);
             $dm->flush();
 
             return $this->redirect('/product/list-view');

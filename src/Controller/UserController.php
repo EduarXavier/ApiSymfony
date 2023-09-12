@@ -10,6 +10,7 @@ use App\Form\UserType;
 use App\Form\UserUpdateType;
 use App\Repository\UserRepository;
 use App\Services\EmailService;
+use App\Services\UserService;
 use Doctrine\ODM\MongoDB\DocumentManager;
 use Doctrine\ODM\MongoDB\Mapping\MappingException;
 use Doctrine\ODM\MongoDB\MongoDBException;
@@ -26,12 +27,17 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 class UserController extends AbstractController
 {
     private UserRepository $userRepository;
+    private UserService $userService;
     private EmailService $emailService;
 
 
-    public function __construct(UserRepository $userRepository, EmailService $emailService)
-    {
+    public function __construct(
+        UserRepository $userRepository,
+        UserService $userService,
+        EmailService $emailService
+    ) {
         $this->userRepository = $userRepository;
+        $this->userService = $userService;
         $this->emailService = $emailService;
     }
 
@@ -59,7 +65,7 @@ class UserController extends AbstractController
             $user->getPassword()
         );
         $user->setPassword($hashedPassword);
-        $dm = $this->userRepository->addUser($user);
+        $dm = $this->userService->addUser($user);
         $this->emailService->sendEmail($user, 'registro');
         $dm->flush();
 
@@ -88,7 +94,7 @@ class UserController extends AbstractController
             return $this->json(['error' => $errors], Response::HTTP_BAD_REQUEST);
         }
 
-        $dm = $this->userRepository->updateUser($user, null);
+        $dm = $this->userService->updateUser($user, null);
         $dm->flush();
 
         return $this->json(['message' => 'Usuario actualizado correctamente'], Response::HTTP_OK);
@@ -116,7 +122,7 @@ class UserController extends AbstractController
             return $this->json(['error' => $errors], Response::HTTP_BAD_REQUEST);
         }
 
-        $dm = $this->userRepository->updateUser($user, 'password');
+        $dm = $this->userService->updateUser($user, 'password');
         $dm->flush();
 
         return $this->json(['message' => 'Contraseña actualizada correctamente'], Response::HTTP_BAD_REQUEST);

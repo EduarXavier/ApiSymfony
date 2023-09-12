@@ -58,38 +58,4 @@ class InvoicesRepository extends ServiceDocumentRepository
         return $repository->findOneBy(["user.document" => $document, "status" => $status]) ?? null;
     }
 
-    /**
-     * @throws MongoDBException
-     * @throws Exception
-     */
-    public function createInvoice(Invoice $invoice): DocumentManager
-    {
-        $fecha = new DateTime('now', new DateTimeZone('America/Bogota'));
-        $invoice->setDate($fecha->format("Y-m-d H:i:s"));
-        $invoice->setStatus("invoice");
-
-        return $this->getDocumentManager();
-    }
-
-    /**
-     * @throws MongoDBException
-     * @throws Exception
-     */
-    public function payInvoice(Invoice $invoice): DocumentManager
-    {
-        $fecha = new DateTime('now', new DateTimeZone('America/Bogota'));
-        $invoice->setDate($fecha->format("Y-m-d H:i:s"));
-        $invoice->setStatus("pay");
-
-        return $this->getDocumentManager();
-    }
-
-    public function deleteInvoice(Invoice $invoice): DocumentManager
-    {
-        $this->getDocumentManager()->persist($invoice);
-        $this->getDocumentManager()->remove($invoice);
-
-        return $this->getDocumentManager();
-    }
-
 }

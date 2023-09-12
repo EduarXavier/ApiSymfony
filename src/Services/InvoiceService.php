@@ -36,38 +36,13 @@ class InvoiceService
         $this->productRepository = $productRepository;
     }
 
-    public function findAllByUser(UserInvoice $user): array
-    {
-        return $this->invoicesRepository->findAllByUser($user);
-    }
-
-    public function findAllForStatus(UserInvoice $user, string $status): array
-    {
-        return $this->invoicesRepository->findAllForStatus($user, $status);
-    }
-
-    public function findById(string $id, string $status)
-    {
-        return $this->invoicesRepository->findById($id, $status);
-    }
-
-    public function findByCode(string $code)
-    {
-        return $this->invoicesRepository->findByCode($code);
-    }
-
-    public function findByDocumentAndStatus(string $document, string $status): ?Invoice
-    {
-        return $this->invoicesRepository->findByDocumentAndStatus($document, $status);
-    }
-
     /**
      * @throws MongoDBException
      * @throws Exception
      */
     public function addProductsToShoppingCart(Collection $products, UserInvoice $user): ?DocumentManager
     {
-        $shoppingCart = $this->findByDocumentAndStatus($user->getDocument(), "shopping-cart");
+        $shoppingCart = $this->invoicesRepository->findByDocumentAndStatus($user->getDocument(), "shopping-cart");
 
         if ($shoppingCart) {
             return $this->addToExistingCart($products, $shoppingCart);
@@ -199,7 +174,11 @@ class InvoiceService
      */
     public function createInvoice(Invoice $invoice): DocumentManager
     {
-        return $this->invoicesRepository->createInvoice($invoice);
+        $fecha = new DateTime('now', new DateTimeZone('America/Bogota'));
+        $invoice->setDate($fecha->format("Y-m-d H:i:s"));
+        $invoice->setStatus("invoice");
+
+        return $this->invoicesRepository->getDocumentManager();
     }
 
     /**
@@ -224,7 +203,11 @@ class InvoiceService
      */
     public function payInvoice(Invoice $invoice): DocumentManager
     {
-        return $this->invoicesRepository->payInvoice($invoice);
+        $fecha = new DateTime('now', new DateTimeZone('America/Bogota'));
+        $invoice->setDate($fecha->format("Y-m-d H:i:s"));
+        $invoice->setStatus("pay");
+
+        return $this->invoicesRepository->getDocumentManager();
     }
 
     /**
@@ -266,7 +249,7 @@ class InvoiceService
                 $this->productRepository->updateProduct($productShop);
             }
 
-            $invoice = $this->findByCode($shoppingCart->getCode());
+            $invoice = $this->invoicesRepository->findByCode($shoppingCart->getCode());
             $invoice->setProducts(new ArrayCollection());
 
             return $this->invoicesRepository->getDocumentManager();
@@ -281,7 +264,7 @@ class InvoiceService
      */
     public function deleteProductToShoppingCart(UserInvoice $user, string $idProduct): DocumentManager|bool
     {
-        $shoppingCart = $this->findByDocumentAndStatus($user->getDocument(), "shopping-cart");
+        $shoppingCart = $this->invoicesRepository->findByDocumentAndStatus($user->getDocument(), "shopping-cart");
 
         if (count($shoppingCart->getProducts()) == 1) {
             foreach ($shoppingCart->getProducts() as $product) {
@@ -289,7 +272,7 @@ class InvoiceService
                 $productFind->setAmount($product->getAmount() + $productFind->getAmount());
                 $this->productRepository->updateProduct($productFind);
 
-                return $this->invoicesRepository->deleteInvoice($shoppingCart);
+                return $this->deleteInvoice($shoppingCart);
             }
         }
 
@@ -308,6 +291,14 @@ class InvoiceService
         }
 
         return false;
+    }
+
+    public function deleteInvoice(Invoice $invoice): DocumentManager
+    {
+        $this->invoicesRepository->getDocumentManager()->persist($invoice);
+        $this->invoicesRepository->getDocumentManager()->remove($invoice);
+
+        return $this->invoicesRepository->getDocumentManager();
     }
 
 }

@@ -35,23 +35,4 @@ class UserRepository extends ServiceDocumentRepository
 
         return $repository->findOneBy(['document' => $document]);
     }
-
-    public function addUser(User $user): DocumentManager
-    {
-        $this->getDocumentManager()->persist($user);
-
-        return $this->getDocumentManager();
-    }
-
-    /**
-     * @throws MongoDBException
-     */
-    public function updateUser(User $user, string | null $method): DocumentManager
-    {
-        if ($method == 'password') {
-            $user->setPassword(password_hash($user->getPassword(), PASSWORD_BCRYPT));
-        }
-
-        return $this->getDocumentManager();
-    }
 }

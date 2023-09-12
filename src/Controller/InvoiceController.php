@@ -10,6 +10,7 @@ use App\Document\UserInvoice;
 use App\Form\FactureType;
 use App\Form\ProductShoppingCartType;
 use App\Form\ShoppingCartType;
+use App\Repository\InvoicesRepository;
 use App\Repository\UserRepository;
 use App\Services\EmailService;
 use App\Services\InvoiceService;
@@ -30,17 +31,20 @@ use Symfony\Component\Routing\Annotation\Route;
 class InvoiceController extends AbstractController
 {
     private UserRepository $userRepository;
+    private InvoicesRepository $invoicesRepository;
     private EmailService $emailService;
     private InvoiceService $invoiceService;
 
     public function __construct(
         InvoiceService $invoicesService,
         EmailService $emailService,
-        UserRepository $userRepository
+        UserRepository $userRepository,
+        InvoicesRepository $invoicesRepository
     ) {
         $this->invoiceService = $invoicesService;
         $this->emailService = $emailService;
         $this->userRepository = $userRepository;
+        $this->invoicesRepository = $invoicesRepository;
     }
 
     // Endpoints API
@@ -91,7 +95,7 @@ class InvoiceController extends AbstractController
         }
 
         $user = $this->userRepository->findByDocument($invoices->getUser()->getDocument());
-        $invoice = $this->invoiceService->findByDocumentAndStatus($user->getDocument(), "shopping-cart");
+        $invoice = $this->invoicesRepository->findByDocumentAndStatus($user->getDocument(), "shopping-cart");
 
         if (!$invoice) {
             return new JsonResponse(["error" => "No se ha encontrado el carrito"], Response::HTTP_BAD_REQUEST);
@@ -124,7 +128,7 @@ class InvoiceController extends AbstractController
             return new JsonResponse(["error" => "Ha ocurrido un error con los datos enviados"], Response::HTTP_BAD_REQUEST);
         }
 
-        $invoice = $this->invoiceService->findByCode($invoice->getCode());
+        $invoice = $this->invoicesRepository->findByCode($invoice->getCode());
 
         if (!$invoice) {
             return new JsonResponse(["error" => "No se ha encontrado la factura"], Response::HTTP_BAD_REQUEST);
@@ -151,13 +155,13 @@ class InvoiceController extends AbstractController
             return new JsonResponse(["error" => "Ha ocurrido un error con los datos enviados"], Response::HTTP_BAD_REQUEST);
         }
 
-        $invoice = $this->invoiceService->findByCode($invoice->getCode());
+        $invoice = $this->invoicesRepository->findByCode($invoice->getCode());
 
         if (!$invoice) {
             return new JsonResponse(["error" => "No se ha encontrado la factura"], Response::HTTP_BAD_REQUEST);
         }
 
-        $invoiceEmail = $this->invoiceService->findByDocumentAndStatus(
+        $invoiceEmail = $this->invoicesRepository->findByDocumentAndStatus(
             $invoice->getUser()->getDocument(),
             "pay",
         );
@@ -185,7 +189,7 @@ class InvoiceController extends AbstractController
 
         $user = new UserInvoice();
         $user->setUser($session->get("user"));
-        $invoices = $this->invoiceService->findAllByUser($user);
+        $invoices = $this->invoicesRepository->findAllByUser($user);
 
         return $this->render("InvoiceTemplates/invoiceList.html.twig", [
             "invoices" => $invoices
@@ -241,7 +245,7 @@ class InvoiceController extends AbstractController
 
         $user = new UserInvoice();
         $user->setUser($session->get("user"));
-        $invoices = $this->invoiceService->findAllForStatus($user, $status);
+        $invoices = $this->invoicesRepository->findAllForStatus($user, $status);
 
         return $this->render("InvoiceTemplates/invoiceList.html.twig", [
             "invoices" => $invoices
@@ -257,7 +261,7 @@ class InvoiceController extends AbstractController
             return $this->redirectToRoute("login_template");
         }
 
-        $shoppingCart = $this->invoiceService->findByDocumentAndStatus(
+        $shoppingCart = $this->invoicesRepository->findByDocumentAndStatus(
             $session->get("document"),
             "shopping-cart"
         );
@@ -276,7 +280,7 @@ class InvoiceController extends AbstractController
             return $this->redirectToRoute("login_template");
         }
 
-        $invoice = $this->invoiceService->findById($id, "invoice");
+        $invoice = $this->invoicesRepository->findById($id, "invoice");
 
         return $this->render("InvoiceTemplates/invoiceDetails.html.twig", [
             "invoice" => $invoice
@@ -337,7 +341,7 @@ class InvoiceController extends AbstractController
             return $this->redirect("/invoices/list");
         }
 
-        $invoice = $this->invoiceService->findByCode($invoice->getCode());
+        $invoice = $this->invoicesRepository->findByCode($invoice->getCode());
 
         $dm = $this->invoiceService->createInvoice($invoice);
         $dm->flush();
@@ -358,13 +362,13 @@ class InvoiceController extends AbstractController
             return $this->redirectToRoute("login_template");
         }
 
-        $invoice = $this->invoiceService->findById($id, "invoice");
+        $invoice = $this->invoicesRepository->findById($id, "invoice");
 
         if (!$invoice) {
             return $this->redirect("/invoices/details/" . $id);
         }
 
-        $invoiceEmail = $this->invoiceService->findAllForStatus(
+        $invoiceEmail = $this->invoicesRepository->findAllForStatus(
             $invoice->getUser(),
             "pay"
         );
@@ -395,7 +399,7 @@ class InvoiceController extends AbstractController
             return $this->redirectToRoute("login_template");
         }
 
-        $invoice = $this->invoiceService->findById($id, "invoice");
+        $invoice = $this->invoicesRepository->findById($id, "invoice");
         $dm = $this->invoiceService->cancelInvoice($invoice);
         $dm->flush();
 
@@ -415,7 +419,7 @@ class InvoiceController extends AbstractController
             return $this->redirectToRoute("login_template");
         }
 
-        $shoppingCart = $this->invoiceService->findByDocumentAndStatus(
+        $shoppingCart = $this->invoicesRepository->findByDocumentAndStatus(
             $document,
             "shopping-cart"
         );

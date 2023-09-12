@@ -35,7 +35,7 @@ class EmailService
             $html = "EmailTemplates/firstShop.html.twig";
         }
 
-        $user->setName(ucfirst($user->getName()));
+        $user->setName($user->getName());
         $email = (new TemplatedEmail())
             ->from(new Address('est_ex_avendano@fesc.edu.co'))
             ->to($user->getEmail())
