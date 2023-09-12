@@ -78,7 +78,7 @@ class Invoice
         return $this;
     }
 
-    public function addProducts(Product $product): static
+    public function addProducts(ProductInvoice $product): static
     {
         if (!$this->products->contains($product)) {
             $this->products->add($product);

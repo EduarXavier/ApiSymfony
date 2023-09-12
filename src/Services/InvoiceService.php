@@ -6,6 +6,7 @@ namespace App\Services;
 
 use App\Document\Invoice;
 use App\Document\Product;
+use App\Document\ProductInvoice;
 use App\Document\User;
 use App\Document\UserInvoice;
 use App\Repository\InvoicesRepository;
@@ -94,18 +95,15 @@ class InvoiceService
             usort($products, function ($a, $b) {
                 return $b->getPrice() - $a->getPrice();
             });
-        }
-        else if ($order == "amount") {
+        } else if ($order == "amount") {
             usort($products, function ($a, $b) {
                 return $b->getAmount() - $a->getAmount();
             });
-        }
-        else if ($order == "total") {
+        } else if ($order == "total") {
             usort($products, function ($a, $b) {
                 return $b->getAmount() * $b->getPrice() - $a->getAmount() * $a->getPrice();
             });
-        }
-        else {
+        } else {
             usort($products, function ($a, $b) {
                 return strcmp($a->getName(), $b->getName());
             });
@@ -124,10 +122,10 @@ class InvoiceService
     {
         $productsUser = clone $shoppingCart->getProducts();
 
-        foreach ($products as $product){
+        foreach ($products as $product) {
             $productShop = clone $this->productRepository->findByCode($product->getCode());
 
-            if(!$productShop){
+            if (!$productShop) {
                 break;
             }
 
@@ -146,9 +144,10 @@ class InvoiceService
 
             if ($existingProduct == null) {
                 $amount = $product->getAmount();
-                $product = clone $productShop;
+                $product = new ProductInvoice();
+                $product->setProduct($productShop);
                 $product->setAmount($amount);
-                $productsUser->add(clone $product);
+                $productsUser->add($product);
             }
 
             $shoppingCart->setProducts($productsUser);
@@ -183,14 +182,12 @@ class InvoiceService
                 return null;
             }
 
-            $productShop = clone $productShop;
-            $amount = $productShop->getAmount();
-            $productShop->setAmount($product->getAmount());
-            $invoices->addProducts(clone $productShop);
+            $productInvoice = new ProductInvoice();
+            $productInvoice->setProduct($productShop);
+            $productInvoice->setAmount($product->getAmount());
+            $invoices->addProducts($productInvoice);
             $this->invoicesRepository->getDocumentManager()->persist($invoices);
-            $productShop->setAmount($amount);
             $this->updateProductAndCheckAvailability($productShop, $product->getAmount());
-
         }
 
         return $this->invoicesRepository->getDocumentManager();
@@ -243,7 +240,7 @@ class InvoiceService
             $invoice->setDate($fecha->format("Y-m-d H:i:s"));
             $invoice->setStatus("cancel");
 
-            foreach ($invoice->getProducts() as $product){
+            foreach ($invoice->getProducts() as $product) {
                 $productFind = $this->productRepository->findById($product->getId());
                 $productFind->setAmount($product->getAmount() + $productFind->getAmount());
                 $this->productRepository->updateProduct($productFind);
@@ -262,7 +259,7 @@ class InvoiceService
     public function deleteShoppingCart(Invoice $shoppingCart): DocumentManager|bool
     {
         if ($shoppingCart->getStatus() == "shopping-cart") {
-            foreach ($shoppingCart->getProducts() as $product){
+            foreach ($shoppingCart->getProducts() as $product) {
                 $productShop = $this->productRepository->findById($product->getId());
                 $newAmount = $productShop->getAmount() + $product->getAmount();
                 $productShop->setAmount($newAmount);
@@ -298,7 +295,7 @@ class InvoiceService
 
 
         foreach ($shoppingCart->getProducts() as $product) {
-            if ($product->getId() == $idProduct){
+            if ($product->getId() == $idProduct) {
                 $shoppingCart->removeProduct($product);
                 $this->invoicesRepository->getDocumentManager()->persist($shoppingCart);
 

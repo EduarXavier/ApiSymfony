@@ -67,7 +67,7 @@ class InvoiceController extends AbstractController
             $userInvoive
         );
 
-        if ($dm){
+        if ($dm) {
             $dm->flush();
             return new JsonResponse(["mensaje" => "Agregado con éxito"], Response::HTTP_OK);
         }
@@ -102,7 +102,7 @@ class InvoiceController extends AbstractController
             $invoice
         );
 
-        if ($dm){
+        if ($dm) {
             $dm->flush();
             return new JsonResponse(["mensaje" => "Agregado con éxito"], Response::HTTP_OK);
         }
@@ -304,9 +304,6 @@ class InvoiceController extends AbstractController
         }
 
         $products = new ArrayCollection();
-        $amount  = $product->getAmount();
-        $product = clone $product;
-        $product->setAmount($amount);
         $products->add($product);
         $user = new UserInvoice();
         $user->setUser($session->get("user"));
@@ -340,7 +337,7 @@ class InvoiceController extends AbstractController
             return $this->redirect("/invoices/list");
         }
 
-        $invoice = $this->invoiceService->findByCode($invoice->getCode(), "shopping-cart");
+        $invoice = $this->invoiceService->findByCode($invoice->getCode());
 
         $dm = $this->invoiceService->createInvoice($invoice);
         $dm->flush();

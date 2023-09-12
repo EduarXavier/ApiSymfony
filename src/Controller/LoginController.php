@@ -47,7 +47,6 @@ class LoginController extends AbstractController
         $userFind = $this->userRepository->findByEmail($user->getEmail());
 
         if ($userFind && password_verify($user->getPassword(), $userFind->getPassword())) {
-
             $session = $request->getSession();
             $session->set('user', $userFind);
             $session->set('email', $user->getEmail());

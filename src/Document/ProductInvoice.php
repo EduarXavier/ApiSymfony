@@ -30,6 +30,16 @@ class ProductInvoice
         return $this->id;
     }
 
+    public function setProduct(Product $product): static
+    {
+        $this->name = $product->getName();
+        $this->id = $product->getId();
+        $this->code = $product->getCode();
+        $this->amount = $product->getAmount();
+
+        return $this;
+    }
+
     public function getCode(): string
     {
         return $this->code;

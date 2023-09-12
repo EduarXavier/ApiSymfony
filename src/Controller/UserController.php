@@ -47,23 +47,23 @@ class UserController extends AbstractController
         $form = $this->createForm(UserType::class, $user, ['method' => 'POST']);
         $form->handleRequest($request);
 
-        if ($form->isSubmitted() && $form->isValid()) {
-            $user->setName(ucfirst($user->getName()));
-            $hashedPassword = $passwordHasher->hashPassword(
-                $user,
-                $user->getPassword()
-            );
-            $user->setPassword($hashedPassword);
-            $dm = $this->userRepository->addUser($user);
-            $this->emailService->sendEmail($user, 'registro');
-            $dm->flush();
+        if (!$form->isSubmitted() || !$form->isValid()) {
+            $errors = $form->getErrors(true);
 
-            return $this->json(['message' => 'Usuario agregado correctamente'], Response::HTTP_OK);
+            return $this->json(['error' => $errors], Response::HTTP_BAD_REQUEST);
         }
 
-        $errors = $form->getErrors(true);
+        $user->setName(ucfirst($user->getName()));
+        $hashedPassword = $passwordHasher->hashPassword(
+            $user,
+            $user->getPassword()
+        );
+        $user->setPassword($hashedPassword);
+        $dm = $this->userRepository->addUser($user);
+        $this->emailService->sendEmail($user, 'registro');
+        $dm->flush();
 
-        return $this->json(['error' => $errors], Response::HTTP_BAD_REQUEST);
+        return $this->json(['message' => 'Usuario agregado correctamente'], Response::HTTP_OK);
     }
 
     /**
