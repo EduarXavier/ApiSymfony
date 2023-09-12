@@ -40,7 +40,7 @@ class UserController extends AbstractController
      * @throws MongoDBException
      * @throws TransportExceptionInterface
      */
-    #[Route('/add', name: 'addUser', methods: ['POST'])]
+    #[Route('/api/add', name: 'addUser', methods: ['POST'])]
     public function addUser(Request $request, UserPasswordHasherInterface $passwordHasher): ?JsonResponse
     {
         $user = new User();
@@ -54,8 +54,9 @@ class UserController extends AbstractController
                 $user->getPassword()
             );
             $user->setPassword($hashedPassword);
-            $this->userRepository->addUser($user);
+            $dm = $this->userRepository->addUser($user);
             $this->emailService->sendEmail($user, 'registro');
+            $dm->flush();
 
             return $this->json(['message' => 'Usuario agregado correctamente'], Response::HTTP_OK);
         }
@@ -87,11 +88,10 @@ class UserController extends AbstractController
             return $this->json(['error' => $errors], Response::HTTP_BAD_REQUEST);
         }
 
-        if ($this->userRepository->updateUser($user, null)) {
-            return $this->json(['message' => 'Usuario actualizado correctamente'], Response::HTTP_OK);
-        }
+        $dm = $this->userRepository->updateUser($user, null);
+        $dm->flush();
 
-        return $this->json(['error' => 'No se ha podido actualizar'], Response::HTTP_BAD_REQUEST);
+        return $this->json(['message' => 'Usuario actualizado correctamente'], Response::HTTP_OK);
     }
 
     /**
@@ -116,7 +116,8 @@ class UserController extends AbstractController
             return $this->json(['error' => $errors], Response::HTTP_BAD_REQUEST);
         }
 
-        $this->userRepository->updateUser($user, 'password');
+        $dm = $this->userRepository->updateUser($user, 'password');
+        $dm->flush();
 
         return $this->json(['message' => 'Contraseña actualizada correctamente'], Response::HTTP_BAD_REQUEST);
     }

@@ -29,8 +29,6 @@ security:
             json_login:
                 provider: mongodb_users
                 check_path: /api/login
-                username_path: username
-                password_path: password
 
             # activate different ways to authenticate
             # https://symfony.com/doc/current/security.html#the-firewall
@@ -43,6 +41,7 @@ security:
     access_control:
         - { path: ^/api/login, roles: "PUBLIC_ACCESS" }
         - { path: ^/product/api/list, roles: "PUBLIC_ACCESS" }
+        - { path: ^/user/api/add, roles: "PUBLIC_ACCESS" }
         - { path: ^.*\/api\/, roles: "IS_AUTHENTICATED_FULLY" }
 
 when@test:

@@ -127,14 +127,10 @@ class ProductController extends AbstractController
 
         if ($form->isSubmitted() && $form->isValid()) {
             $product->setName(ucfirst($product->getName()));
-            $id = $this->productRepository->updateProduct($product);
+            $dm = $this->productRepository->updateProduct($product);
+            $dm->flush();
 
-            if ($id) {
-                return $this->redirect("/product/details/$code");
-            }
-
-            $this->addFlash('error', "No se ha actualizado el producto: $code");
-            $this->redirectToRoute('update_product');
+            return $this->redirect("/product/details/$code");
         }
 
         return $this->render('ProductTemplates/productForms.html.twig', [

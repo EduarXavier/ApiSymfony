@@ -49,14 +49,13 @@ class ProductRepository extends ServiceDocumentRepository
     /**
      * @throws MongoDBException
      */
-    public function updateProduct(Product $product): ?string
+    public function updateProduct(Product $product): DocumentManager
     {
         $productUpdate = $this->findByCode($product->getCode());
         $productUpdate->setAmount($product->getAmount());
         $this->getDocumentManager()->persist($productUpdate);
-        $this->getDocumentManager()->flush();
 
-        return $product->getId();
+        return $this->getDocumentManager();
     }
 
     public function deleteProduct(Product $product): DocumentManager

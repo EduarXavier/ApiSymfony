@@ -6,6 +6,7 @@ namespace App\Repository;
 
 use App\Document\User;
 use Doctrine\Bundle\MongoDBBundle\Repository\ServiceDocumentRepository;
+use Doctrine\ODM\MongoDB\DocumentManager;
 use Doctrine\ODM\MongoDB\LockException;
 use Doctrine\ODM\MongoDB\Mapping\MappingException;
 use Doctrine\ODM\MongoDB\MongoDBException;
@@ -35,28 +36,22 @@ class UserRepository extends ServiceDocumentRepository
         return $repository->findOneBy(['document' => $document]);
     }
 
-    /**
-     * @throws MongoDBException
-     */
-    public function addUser(User $user): bool
+    public function addUser(User $user): DocumentManager
     {
         $this->getDocumentManager()->persist($user);
-        $this->getDocumentManager()->flush();
 
-        return true;
+        return $this->getDocumentManager();
     }
 
     /**
      * @throws MongoDBException
      */
-    public function updateUser(User $user, string | null $method): bool
+    public function updateUser(User $user, string | null $method): DocumentManager
     {
         if ($method == 'password') {
             $user->setPassword(password_hash($user->getPassword(), PASSWORD_BCRYPT));
         }
 
-        $this->getDocumentManager()->flush();
-
-        return true;
+        return $this->getDocumentManager();
     }
 }
