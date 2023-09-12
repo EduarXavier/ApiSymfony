@@ -26,13 +26,16 @@ use Symfony\Component\HttpFoundation\Response;
 class InvoiceService
 {
     private InvoicesRepository $invoicesRepository;
+    private ProductService $productService;
     private ProductRepository $productRepository;
 
     public function __construct (
         InvoicesRepository $invoicesRepository,
-        ProductRepository $productRepository
+        ProductRepository $productRepository,
+        ProductService $productService
     ) {
         $this->invoicesRepository = $invoicesRepository;
+        $this->productService = $productService;
         $this->productRepository = $productRepository;
     }
 
@@ -191,7 +194,7 @@ class InvoiceService
 
         if ($newAmountProduct >= 0) {
             $productShop->setAmount($newAmountProduct);
-            $this->productRepository->updateProduct($productShop);
+            $this->productService->updateProduct($productShop);
         } else {
             throw new Exception("No hay tantos productos", Response::HTTP_BAD_REQUEST);
         }
@@ -226,7 +229,7 @@ class InvoiceService
             foreach ($invoice->getProducts() as $product) {
                 $productFind = $this->productRepository->findById($product->getId());
                 $productFind->setAmount($product->getAmount() + $productFind->getAmount());
-                $this->productRepository->updateProduct($productFind);
+                $this->productService->updateProduct($productFind);
             }
 
             return $this->invoicesRepository->getDocumentManager();
@@ -246,7 +249,7 @@ class InvoiceService
                 $productShop = $this->productRepository->findById($product->getId());
                 $newAmount = $productShop->getAmount() + $product->getAmount();
                 $productShop->setAmount($newAmount);
-                $this->productRepository->updateProduct($productShop);
+                $this->productService->updateProduct($productShop);
             }
 
             $invoice = $this->invoicesRepository->findByCode($shoppingCart->getCode());
@@ -270,7 +273,7 @@ class InvoiceService
             foreach ($shoppingCart->getProducts() as $product) {
                 $productFind = $this->productRepository->findById($idProduct);
                 $productFind->setAmount($product->getAmount() + $productFind->getAmount());
-                $this->productRepository->updateProduct($productFind);
+                $this->productService->updateProduct($productFind);
 
                 return $this->deleteInvoice($shoppingCart);
             }
@@ -284,7 +287,7 @@ class InvoiceService
 
                 $productFind = $this->productRepository->findById($idProduct);
                 $productFind->setAmount($product->getAmount() + $productFind->getAmount());
-                $this->productRepository->updateProduct($productFind);
+                $this->productService->updateProduct($productFind);
 
                 return $this->invoicesRepository->getDocumentManager();
             }
