@@ -33,17 +33,6 @@ class InvoiceTest extends TestCase
         self::assertInstanceOf(ArrayCollection::class, $this->invoice->getProducts());
     }
 
-    public function testSetProducts(): void
-    {
-        $product = (new ProductInvoice())
-            ->setName('Product Mock');
-
-        $product->setCode('Code Mock');
-
-        self::assertSame($this->invoice, $this->invoice->setProducts(new ArrayCollection([$product])));
-        self::assertTrue($this->invoice->getProducts()->contains($product));
-    }
-
     public function testGetDate(): void
     {
         $date = (new DateTime('today'))->getTimestamp();
@@ -53,7 +42,7 @@ class InvoiceTest extends TestCase
 
     public function testSetDate(): void
     {
-        $date = (new DateTime('tomorrow'))->getTimestamp();
+        $date = (new DateTime('tomorrow'));
 
         self::assertSame($this->invoice, $this->invoice->setDate($date));
         self::assertEquals($date, $this->invoice->getDate());
@@ -113,7 +102,7 @@ class InvoiceTest extends TestCase
     {
         //parent::setUp();
         $this->invoice = (new Invoice())
-            ->setDate((new DateTime('today'))->getTimestamp())
+            ->setDate((new DateTime('today')))
             ->setCode('');
     }
 

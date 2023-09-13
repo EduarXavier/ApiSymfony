@@ -60,13 +60,6 @@ class Invoice
         return $this->products;
     }
 
-    public function setProducts(ArrayCollection $products): static
-    {
-        $this->products = $products;
-
-        return $this;
-    }
-
     public function getDate(): DateTime
     {
         return $this->date;
