@@ -28,7 +28,6 @@ class ProductManager
     {
         $productUpdate = $this->productRepository->findByCode($product->getCode());
         $productUpdate->setAmount($product->getAmount());
-        $this->productRepository->getDocumentManager()->persist($productUpdate);
     }
 
     public function deleteProduct(Product $product): void

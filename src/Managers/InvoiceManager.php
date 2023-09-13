@@ -118,10 +118,12 @@ class InvoiceManager
 
             foreach ($productsUser as $key => $productUser) {
                 if ($productUser->getCode() === $product->getCode()) {
+                    $productJson = $this->serializer->serialize($productShop, "json");
+                    $productInvoice = $this->serializer->deserialize($productJson, ProductInvoice::class, "json");
+                    $productInvoice->setAmount($productUser->getAmount() + $product->getAmount());
                     $productsUser->remove($key);
                     $existingProduct = $productUser;
-                    $productUser->setAmount($productUser->getAmount() + $product->getAmount());
-                    $productsUser->add($productUser);
+                    $productsUser->add($productInvoice);
                     break;
                 }
             }
