@@ -147,11 +147,10 @@ class InvoiceService
      */
     private function createNewCart(Collection $products, UserInvoice $user): ?DocumentManager
     {
-        $fecha = new DateTime('now', new DateTimeZone('America/Bogota'));
         $invoices = new Invoice();
         $this->invoicesRepository->getDocumentManager()->persist($user);
         $invoices->setUser($user);
-        $invoices->setDate($fecha->format("Y-m-d H:i:s"));
+        $invoices->setDate($this->getDate());
         $invoices->setCode(str_ireplace(" ", "-", uniqid(). "-" . $user->getDocument()));
         $invoices->setStatus("shopping-cart");;
 
@@ -180,8 +179,7 @@ class InvoiceService
      */
     public function createInvoice(Invoice $invoice): DocumentManager
     {
-        $fecha = new DateTime('now', new DateTimeZone('America/Bogota'));
-        $invoice->setDate($fecha->format("Y-m-d H:i:s"));
+        $invoice->setDate($this->getDate());
         $invoice->setStatus("invoice");
 
         return $this->invoicesRepository->getDocumentManager();
@@ -209,8 +207,7 @@ class InvoiceService
      */
     public function payInvoice(Invoice $invoice): DocumentManager
     {
-        $fecha = new DateTime('now', new DateTimeZone('America/Bogota'));
-        $invoice->setDate($fecha->format("Y-m-d H:i:s"));
+        $invoice->setDate($this->getDate());
         $invoice->setStatus("pay");
 
         return $this->invoicesRepository->getDocumentManager();
@@ -223,10 +220,8 @@ class InvoiceService
      */
     public function cancelInvoice(Invoice $invoice): DocumentManager|bool
     {
-        $fecha = new DateTime('now', new DateTimeZone('America/Bogota'));
-
         if ($invoice->getStatus() == "invoice") {
-            $invoice->setDate($fecha->format("Y-m-d H:i:s"));
+            $invoice->setDate($this->getDate());
             $invoice->setStatus("cancel");
 
             foreach ($invoice->getProducts() as $product) {
@@ -282,7 +277,6 @@ class InvoiceService
             }
         }
 
-
         foreach ($shoppingCart->getProducts() as $product) {
             if ($product->getCode() == $code) {
                 $shoppingCart->removeProduct($product);
@@ -307,4 +301,13 @@ class InvoiceService
         return $this->invoicesRepository->getDocumentManager();
     }
 
+    /**
+     * @throws Exception
+     */
+    protected function getDate(): string
+    {
+        $fecha = new DateTime('now', new DateTimeZone('America/Bogota'));
+
+        return $fecha->format("Y-m-d H:i:s");
+    }
 }

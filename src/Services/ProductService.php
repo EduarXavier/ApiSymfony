@@ -41,5 +41,4 @@ class ProductService
 
         return $this->productRepository->getDocumentManager();
     }
-
 }

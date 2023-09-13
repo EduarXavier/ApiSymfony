@@ -30,7 +30,6 @@ class UserController extends AbstractController
     private UserService $userService;
     private EmailService $emailService;
 
-
     public function __construct(
         UserRepository $userRepository,
         UserService $userService,
