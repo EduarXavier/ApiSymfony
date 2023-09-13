@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace App\Services;
+namespace App\Managers;
 
 use App\Document\User;
 use App\Repository\UserRepository;
 use Symfony\Contracts\Service\Attribute\Required;
 
-class UserService
+class UserManager
 {
     private UserRepository $userRepository;
 

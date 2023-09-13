@@ -10,10 +10,10 @@ use App\Document\UserInvoice;
 use App\Form\FactureType;
 use App\Form\ProductShoppingCartType;
 use App\Form\ShoppingCartType;
+use App\Managers\InvoiceManager;
 use App\Repository\InvoicesRepository;
 use App\Repository\UserRepository;
 use App\Services\EmailService;
-use App\Services\InvoiceService;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ODM\MongoDB\DocumentManager;
 use Doctrine\ODM\MongoDB\MongoDBException;
@@ -35,7 +35,7 @@ class InvoiceController extends AbstractController
     private UserRepository $userRepository;
     private InvoicesRepository $invoicesRepository;
     private EmailService $emailService;
-    private InvoiceService $invoiceService;
+    private InvoiceManager $invoiceManager;
     private DocumentManager $documentManager;
     private SerializerInterface $serializer;
 
@@ -58,9 +58,9 @@ class InvoiceController extends AbstractController
     }
 
     #[Required]
-    public function setInvoiceService(InvoiceService $invoiceService): void
+    public function setInvoiceManager(InvoiceManager $invoiceManager): void
     {
-        $this->invoiceService = $invoiceService;
+        $this->invoiceManager = $invoiceManager;
     }
 
     #[Required]
@@ -96,7 +96,7 @@ class InvoiceController extends AbstractController
         $userInvoive = $this->serializer->deserialize($userJson, UserInvoice::class, "json");
 
 
-        if ($this->invoiceService->addProductsToShoppingCart($invoices->getProducts(), $userInvoive)) {
+        if ($this->invoiceManager->addProductsToShoppingCart($invoices->getProducts(), $userInvoive)) {
             return new JsonResponse(["error" => "No se han podido agregar los productos"], Response::HTTP_BAD_REQUEST);
         }
 
@@ -127,7 +127,7 @@ class InvoiceController extends AbstractController
             return new JsonResponse(["error" => "No se ha encontrado el carrito"], Response::HTTP_BAD_REQUEST);
         }
 
-        if (!$this->invoiceService->addToExistingCart($invoices->getProducts(), $invoice)) {
+        if (!$this->invoiceManager->addToExistingCart($invoices->getProducts(), $invoice)) {
             return new JsonResponse(["error" => "No se han podido agregar los productos"], Response::HTTP_BAD_REQUEST);
         }
 
@@ -156,7 +156,7 @@ class InvoiceController extends AbstractController
             return new JsonResponse(["error" => "No se ha encontrado la factura"], Response::HTTP_BAD_REQUEST);
         }
 
-        $this->invoiceService->createInvoice($invoice);
+        $this->invoiceManager->createInvoice($invoice);
         $this->documentManager->flush();
 
         return new JsonResponse(["mensaje" => "Se ha creado la factura"], Response::HTTP_OK);
@@ -192,7 +192,7 @@ class InvoiceController extends AbstractController
             $this->emailService->sendEmail($invoice->getUser(), "first-shop");
         }
 
-        $this->invoiceService->payInvoice($invoice);
+        $this->invoiceManager->payInvoice($invoice);
         $this->documentManager->flush();
 
         return new JsonResponse(["mensaje" => "Se ha pagado"], Response::HTTP_OK);
@@ -226,7 +226,7 @@ class InvoiceController extends AbstractController
         }
 
         $user = $session->get("user");
-        $products = $this->invoiceService->invoiceResume($user, null);
+        $products = $this->invoiceManager->invoiceResume($user, null);
 
         return $this->render("InvoiceTemplates/invoiceResume.html.twig", [
             "products" => $products,
@@ -244,7 +244,7 @@ class InvoiceController extends AbstractController
         }
 
         $user = $session->get("user");
-        $products = $this->invoiceService->invoiceResume($user, $status);
+        $products = $this->invoiceManager->invoiceResume($user, $status);
 
         return $this->render("InvoiceTemplates/invoiceResume.html.twig", [
             "products" => $products,
@@ -326,7 +326,7 @@ class InvoiceController extends AbstractController
         $products = new ArrayCollection();
         $products->add($product);
 
-        if (!$this->invoiceService->addProductsToShoppingCart($products, $session->get("user"))) {
+        if (!$this->invoiceManager->addProductsToShoppingCart($products, $session->get("user"))) {
             return $this->redirect("/product/details/" . $product->getCode() . "?mnsj=err");
         }
 
@@ -357,7 +357,7 @@ class InvoiceController extends AbstractController
 
         $invoice = $this->invoicesRepository->findByCode($invoice->getCode());
 
-        $this->invoiceService->createInvoice($invoice);
+        $this->invoiceManager->createInvoice($invoice);
         $this->documentManager->flush();
 
         return $this->redirect("/invoices/details/" . $invoice->getId());
@@ -394,7 +394,7 @@ class InvoiceController extends AbstractController
             $this->emailService->sendEmail($user, "first-shop");
         }
 
-        $this->invoiceService->payInvoice($invoice);
+        $this->invoiceManager->payInvoice($invoice);
         $this->documentManager->flush();
 
         return $this->redirect("/invoices/details/" . $invoice->getId());
@@ -415,7 +415,7 @@ class InvoiceController extends AbstractController
 
         $invoice = $this->invoicesRepository->findById($id, "invoice");
 
-        if (!$this->invoiceService->cancelInvoice($invoice)) {
+        if (!$this->invoiceManager->cancelInvoice($invoice)) {
             $this->addFlash('error', 'No se ha podido cancelar');
             $this->redirect("/invoices/details/" . $invoice->getId());
         }
@@ -443,7 +443,7 @@ class InvoiceController extends AbstractController
             "shopping-cart"
         );
 
-        if (!$this->invoiceService->deleteShoppingCart($shoppingCart)) {
+        if (!$this->invoiceManager->deleteShoppingCart($shoppingCart)) {
             $this->addFlash('error', 'No se ha podido eliminar');
             $this->redirect("/invoices/details/" . $shoppingCart->getId());
         }
@@ -466,7 +466,7 @@ class InvoiceController extends AbstractController
             return $this->redirectToRoute("login_template");
         }
 
-        $this->invoiceService->deleteProductToShoppingCart($session->get("user"), $code);
+        $this->invoiceManager->deleteProductToShoppingCart($session->get("user"), $code);
         $this->documentManager->flush();
 
         return $this->redirect("/invoices/shopping-cart/list");

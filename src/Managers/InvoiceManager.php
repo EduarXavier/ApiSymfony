@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Services;
+namespace App\Managers;
 
 use App\Document\Invoice;
 use App\Document\Product;
@@ -23,10 +23,10 @@ use Symfony\Component\Serializer\SerializerInterface;
 use Symfony\Contracts\Service\Attribute\Required;
 
 
-class InvoiceService
+class InvoiceManager
 {
     private InvoicesRepository $invoicesRepository;
-    private ProductService $productService;
+    private ProductManager $productManager;
     private SerializerInterface $serializer;
     private ProductRepository $productRepository;
 
@@ -37,9 +37,9 @@ class InvoiceService
     }
 
     #[Required]
-    public function setProductService(ProductService $productService): void
+    public function setProductManager(ProductManager $productManager): void
     {
-        $this->productService = $productService;
+        $this->productManager = $productManager;
     }
 
     #[Required]
@@ -196,7 +196,7 @@ class InvoiceService
 
         if ($newAmountProduct >= 0) {
             $productShop->setAmount($newAmountProduct);
-            $this->productService->updateProduct($productShop);
+            $this->productManager->updateProduct($productShop);
         } else {
             throw new Exception("No hay tantos productos", Response::HTTP_BAD_REQUEST);
         }
@@ -226,7 +226,7 @@ class InvoiceService
             foreach ($invoice->getProducts() as $product) {
                 $productFind = $this->productRepository->findById($product->getId());
                 $productFind->setAmount($product->getAmount() + $productFind->getAmount());
-                $this->productService->updateProduct($productFind);
+                $this->productManager->updateProduct($productFind);
             }
 
             return true;
@@ -246,7 +246,7 @@ class InvoiceService
                 $productShop = $this->productRepository->findById($product->getId());
                 $newAmount = $productShop->getAmount() + $product->getAmount();
                 $productShop->setAmount($newAmount);
-                $this->productService->updateProduct($productShop);
+                $this->productManager->updateProduct($productShop);
             }
 
             $invoice = $this->invoicesRepository->findByCode($shoppingCart->getCode());
@@ -270,7 +270,7 @@ class InvoiceService
             foreach ($shoppingCart->getProducts() as $product) {
                 $productFind = $this->productRepository->findByCode($code);
                 $productFind->setAmount($product->getAmount() + $productFind->getAmount());
-                $this->productService->updateProduct($productFind);
+                $this->productManager->updateProduct($productFind);
                 $this->deleteInvoice($shoppingCart);
 
                 return true;
@@ -284,7 +284,8 @@ class InvoiceService
 
                 $productFind = $this->productRepository->findByCode($code);
                 $productFind->setAmount($product->getAmount() + $productFind->getAmount());
-                $this->productService->updateProduct($productFind);
+                $this->productManager->updateProduct($productFind);
+                $this->productManager->updateProduct($productFind);
 
                 return true;
             }

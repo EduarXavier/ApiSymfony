@@ -9,7 +9,7 @@ use App\Form\DeleteProductType;
 use App\Form\ProductType;
 use App\Form\UpdateProductType;
 use App\Repository\ProductRepository;
-use App\Services\ProductService;
+use App\Managers\ProductManager;
 use Doctrine\ODM\MongoDB\DocumentManager;
 use Doctrine\ODM\MongoDB\LockException;
 use Doctrine\ODM\MongoDB\MongoDBException;
@@ -25,7 +25,7 @@ use Symfony\Contracts\Service\Attribute\Required;
 class ProductController extends AbstractController
 {
     private ProductRepository $productRepository;
-    private ProductService $productService;
+    private ProductManager $productManager;
     private DocumentManager $documentManager;
 
     #[Required]
@@ -35,9 +35,9 @@ class ProductController extends AbstractController
     }
 
     #[Required]
-    public function setProductService(ProductService $productService): void
+    public function setProductManager(ProductManager $productManager): void
     {
-        $this->productService = $productService;
+        $this->productManager = $productManager;
     }
 
     #[Required]
@@ -113,7 +113,7 @@ class ProductController extends AbstractController
 
         if ($form->isSubmitted() && $form->isValid()) {
             $product->setName(ucfirst($product->getName()));
-            $this->productService->addProduct($product);
+            $this->productManager->addProduct($product);
             $this->documentManager->flush();
 
             return $this->redirect("/product/details/" . $product->getCode());
@@ -144,7 +144,7 @@ class ProductController extends AbstractController
 
         if ($form->isSubmitted() && $form->isValid()) {
             $product->setName(ucfirst($product->getName()));
-            $this->productService->updateProduct($product);
+            $this->productManager->updateProduct($product);
             $this->documentManager->flush();
 
             return $this->redirect("/product/details/$code");
@@ -174,7 +174,7 @@ class ProductController extends AbstractController
         }
 
         if ($form->isSubmitted() && $form->isValid()) {
-            $this->productService->deleteProduct($product);
+            $this->productManager->deleteProduct($product);
             $this->documentManager->flush();
 
             return $this->redirect('/product/list-view');

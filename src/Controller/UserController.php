@@ -8,19 +8,19 @@ use App\Document\User;
 use App\Form\PasswordUpdateType;
 use App\Form\UserType;
 use App\Form\UserUpdateType;
+use App\Managers\UserManager;
 use App\Repository\UserRepository;
 use App\Services\EmailService;
-use App\Services\UserService;
 use Doctrine\ODM\MongoDB\DocumentManager;
 use Doctrine\ODM\MongoDB\Mapping\MappingException;
 use Doctrine\ODM\MongoDB\MongoDBException;
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Annotation\Route;
-use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Contracts\Service\Attribute\Required;
 
 
@@ -28,7 +28,7 @@ use Symfony\Contracts\Service\Attribute\Required;
 class UserController extends AbstractController
 {
     private UserRepository $userRepository;
-    private UserService $userService;
+    private UserManager $userManager;
     private EmailService $emailService;
     private DocumentManager $documentManager;
 
@@ -39,9 +39,9 @@ class UserController extends AbstractController
     }
 
     #[Required]
-    public function setUserService(UserService $userService): void
+    public function setUserManager(UserManager $userManager): void
     {
-        $this->userService = $userService;
+        $this->userManager = $userManager;
     }
 
     #[Required]
@@ -86,7 +86,7 @@ class UserController extends AbstractController
             return $this->json(['Error' => 'Ya existe un usuario con este Email'], Response::HTTP_BAD_REQUEST);
         }
 
-        $this->userService->addUser($user);
+        $this->userManager->addUser($user);
         $this->emailService->sendEmail($user, 'registro');
         $this->documentManager->flush();
 
@@ -115,7 +115,7 @@ class UserController extends AbstractController
             return $this->json(['error' => $errors], Response::HTTP_BAD_REQUEST);
         }
 
-        $this->userService->updateUser($user, null);
+        $this->userManager->updateUser($user, null);
         $this->documentManager->flush();
 
         return $this->json(['message' => 'Usuario actualizado correctamente'], Response::HTTP_OK);
@@ -143,7 +143,7 @@ class UserController extends AbstractController
             return $this->json(['error' => $errors], Response::HTTP_BAD_REQUEST);
         }
 
-        $this->userService->updateUser($user, 'password');
+        $this->userManager->updateUser($user, 'password');
         $this->documentManager->flush();
 
         return $this->json(['message' => 'Contraseña actualizada correctamente'], Response::HTTP_BAD_REQUEST);

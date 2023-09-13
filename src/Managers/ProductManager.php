@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace App\Services;
+namespace App\Managers;
 
 use App\Document\Product;
 use App\Repository\ProductRepository;
 use Symfony\Contracts\Service\Attribute\Required;
 
-class ProductService
+class ProductManager
 {
     private ProductRepository $productRepository;
 
