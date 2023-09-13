@@ -14,13 +14,13 @@ use DateTime;
 use DateTimeZone;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
-use Doctrine\ODM\MongoDB\DocumentManager;
 use Doctrine\ODM\MongoDB\LockException;
 use Doctrine\ODM\MongoDB\Mapping\MappingException;
 use Doctrine\ODM\MongoDB\MongoDBException;
 use Exception;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Serializer\SerializerInterface;
+use Symfony\Contracts\Service\Attribute\Required;
 
 
 class InvoiceService
@@ -30,16 +30,28 @@ class InvoiceService
     private SerializerInterface $serializer;
     private ProductRepository $productRepository;
 
-    public function __construct (
-        InvoicesRepository $invoicesRepository,
-        ProductRepository $productRepository,
-        ProductService $productService,
-        SerializerInterface $serializer
-    ) {
+    #[Required]
+    public function setInvoicesRepository(InvoicesRepository $invoicesRepository): void
+    {
         $this->invoicesRepository = $invoicesRepository;
+    }
+
+    #[Required]
+    public function setProductService(ProductService $productService): void
+    {
         $this->productService = $productService;
-        $this->productRepository = $productRepository;
+    }
+
+    #[Required]
+    public function setSerializerInterface(SerializerInterface $serializer): void
+    {
         $this->serializer = $serializer;
+    }
+
+    #[Required]
+    public function setProductRepository(ProductRepository $productRepository): void
+    {
+        $this->productRepository = $productRepository;
     }
 
     /**

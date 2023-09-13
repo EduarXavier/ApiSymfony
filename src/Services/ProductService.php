@@ -6,15 +6,15 @@ namespace App\Services;
 
 use App\Document\Product;
 use App\Repository\ProductRepository;
-use Doctrine\ODM\MongoDB\DocumentManager;
+use Symfony\Contracts\Service\Attribute\Required;
 
 class ProductService
 {
     private ProductRepository $productRepository;
 
-    public function __construct (
-        ProductRepository $productRepository,
-    ) {
+    #[Required]
+    public function setProductRepository(ProductRepository $productRepository): void
+    {
         $this->productRepository = $productRepository;
     }
 

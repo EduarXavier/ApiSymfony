@@ -21,6 +21,7 @@ use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Contracts\Service\Attribute\Required;
 
 
 #[Route('/user')]
@@ -31,18 +32,29 @@ class UserController extends AbstractController
     private EmailService $emailService;
     private DocumentManager $documentManager;
 
-    public function __construct(
-        UserRepository $userRepository,
-        UserService $userService,
-        EmailService $emailService,
-        DocumentManager $documentManager
-    ) {
+    #[Required]
+    public function setUserRepository(UserRepository $userRepository): void
+    {
         $this->userRepository = $userRepository;
-        $this->userService = $userService;
-        $this->emailService = $emailService;
-        $this->documentManager = $documentManager;
     }
 
+    #[Required]
+    public function setUserService(UserService $userService): void
+    {
+        $this->userService = $userService;
+    }
+
+    #[Required]
+    public function setEmailService(EmailService $emailService): void
+    {
+        $this->emailService = $emailService;
+    }
+
+    #[Required]
+    public function setDocumentManager(DocumentManager $documentManager): void
+    {
+        $this->documentManager = $documentManager;
+    }
 
     /**
      * @throws MongoDBException

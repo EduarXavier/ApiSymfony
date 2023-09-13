@@ -27,6 +27,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Serializer\SerializerInterface;
+use Symfony\Contracts\Service\Attribute\Required;
 
 #[Route("/invoices")]
 class InvoiceController extends AbstractController
@@ -38,20 +39,40 @@ class InvoiceController extends AbstractController
     private DocumentManager $documentManager;
     private SerializerInterface $serializer;
 
-    public function __construct(
-        InvoiceService $invoicesService,
-        EmailService $emailService,
-        UserRepository $userRepository,
-        InvoicesRepository $invoicesRepository,
-        SerializerInterface $serializer,
-        DocumentManager $documentManager
-    ) {
-        $this->invoiceService = $invoicesService;
-        $this->emailService = $emailService;
+    #[Required]
+    public function setUserRepository(UserRepository $userRepository): void
+    {
         $this->userRepository = $userRepository;
+    }
+
+    #[Required]
+    public function setInvoiceRepository(InvoicesRepository $invoicesRepository): void
+    {
         $this->invoicesRepository = $invoicesRepository;
-        $this->serializer = $serializer;
+    }
+
+    #[Required]
+    public function setEmailService(EmailService $emailService): void
+    {
+        $this->emailService = $emailService;
+    }
+
+    #[Required]
+    public function setInvoiceService(InvoiceService $invoiceService): void
+    {
+        $this->invoiceService = $invoiceService;
+    }
+
+    #[Required]
+    public function setDocumentManager(DocumentManager $documentManager): void
+    {
         $this->documentManager = $documentManager;
+    }
+
+    #[Required]
+    public function setSerializerInterface(SerializerInterface $serializer): void
+    {
+        $this->serializer = $serializer;
     }
 
     // Endpoints API

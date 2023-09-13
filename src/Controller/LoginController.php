@@ -14,21 +14,23 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Serializer\SerializerInterface;
+use Symfony\Contracts\Service\Attribute\Required;
 
 class LoginController extends AbstractController
 {
     private UserRepository $userRepository;
     private SerializerInterface $serializer;
 
+    #[Required]
+    public function setSerializerInterface(SerializerInterface $serializer): void
+    {
+        $this->serializer = $serializer;
+    }
 
-    public function __construct
-    (
-        UserRepository $userRepository,
-        SerializerInterface $serializer
-    )
+    #[Required]
+    public function setUserRepository(UserRepository $userRepository): void
     {
         $this->userRepository = $userRepository;
-        $this->serializer = $serializer;
     }
 
     #[Route('/login-view', name: 'login_template')]

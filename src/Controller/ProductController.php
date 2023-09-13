@@ -19,6 +19,7 @@ use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Contracts\Service\Attribute\Required;
 
 #[Route('/product')]
 class ProductController extends AbstractController
@@ -27,13 +28,21 @@ class ProductController extends AbstractController
     private ProductService $productService;
     private DocumentManager $documentManager;
 
-    public function __construct(
-        ProductRepository $productRepository,
-        ProductService $productService,
-        DocumentManager $documentManager
-    ) {
+    #[Required]
+    public function setProductRepository(ProductRepository $productRepository): void
+    {
         $this->productRepository = $productRepository;
+    }
+
+    #[Required]
+    public function setProductService(ProductService $productService): void
+    {
         $this->productService = $productService;
+    }
+
+    #[Required]
+    public function setDocumentManager(DocumentManager $documentManager): void
+    {
         $this->documentManager = $documentManager;
     }
 

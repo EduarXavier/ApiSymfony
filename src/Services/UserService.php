@@ -6,7 +6,7 @@ namespace App\Services;
 
 use App\Document\User;
 use App\Repository\UserRepository;
-use Doctrine\ODM\MongoDB\DocumentManager;
+use Symfony\Contracts\Service\Attribute\Required;
 
 class UserService
 {
@@ -15,6 +15,12 @@ class UserService
     public function __construct (
         UserRepository $userRepository,
     ) {
+        $this->userRepository = $userRepository;
+    }
+
+    #[Required]
+    public function setUserRepository(UserRepository $userRepository): void
+    {
         $this->userRepository = $userRepository;
     }
 
