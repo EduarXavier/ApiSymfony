@@ -72,22 +72,14 @@ class InvoiceService
             }
         }
 
-        if ($order == "price") {
-            usort($products, function ($a, $b) {
-                return $b->getPrice() - $a->getPrice();
-            });
-        } else if ($order == "amount") {
-            usort($products, function ($a, $b) {
-                return $b->getAmount() - $a->getAmount();
-            });
-        } else if ($order == "total") {
-            usort($products, function ($a, $b) {
-                return $b->getAmount() * $b->getPrice() - $a->getAmount() * $a->getPrice();
-            });
-        } else {
-            usort($products, function ($a, $b) {
-                return strcmp($a->getName(), $b->getName());
-            });
+        switch ($order) {
+            case "price" : usort($products, fn($a, $b) => $b->getPrice() - $a->getPrice());
+                break;
+            case "amount" : usort($products, fn($a, $b) => $b->getAmount() - $a->getAmount());
+                break;
+            case "total" : usort($products, fn($a, $b) => $b->getAmount() - $a->getAmount());
+                break;
+            default : usort($products, fn($a, $b) => strcmp($a->getName(), $b->getName()));
         }
 
         return new ArrayCollection($products);
@@ -101,10 +93,10 @@ class InvoiceService
      */
     public function addToExistingCart(Collection $products, Invoice $shoppingCart): bool
     {
-        $productsUser = clone $shoppingCart->getProducts();
+        $productsUser = $shoppingCart->getProducts();
 
         foreach ($products as $product) {
-            $productShop = clone $this->productRepository->findByCode($product->getCode());
+            $productShop = $this->productRepository->findByCode($product->getCode());
 
             if (!$productShop) {
                 break;
@@ -117,8 +109,7 @@ class InvoiceService
                     $productsUser->remove($key);
                     $existingProduct = $productUser;
                     $productUser->setAmount($productUser->getAmount() + $product->getAmount());
-                    $productsUser->add(clone $productUser);
-
+                    $productsUser->add($productUser);
                     break;
                 }
             }
