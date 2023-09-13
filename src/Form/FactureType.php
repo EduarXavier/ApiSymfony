@@ -15,7 +15,12 @@ class FactureType extends AbstractType
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $builder
-            ->add('code', TextType::class)
+            ->add('code', TextType::class,[
+                'label' => false,
+                'attr' => [
+                    'class' => 'd-none',
+                ]
+            ])
         ;
     }
 

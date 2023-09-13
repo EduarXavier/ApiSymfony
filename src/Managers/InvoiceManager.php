@@ -241,21 +241,11 @@ class InvoiceManager
      */
     public function deleteShoppingCart(Invoice $shoppingCart): bool
     {
-        if ($shoppingCart->getStatus() == "shopping-cart") {
-            foreach ($shoppingCart->getProducts() as $product) {
-                $productShop = $this->productRepository->findById($product->getId());
-                $newAmount = $productShop->getAmount() + $product->getAmount();
-                $productShop->setAmount($newAmount);
-                $this->productManager->updateProduct($productShop);
-            }
-
-            $invoice = $this->invoicesRepository->findByCode($shoppingCart->getCode());
-            $invoice->setProducts(new ArrayCollection());
-
-            return true;
+        foreach ($shoppingCart->getProducts() as $product) {
+           $this->deleteProductToShoppingCart($shoppingCart->getUSer(), $product->getCode());
         }
 
-        return false;
+        return true;
     }
 
     /**

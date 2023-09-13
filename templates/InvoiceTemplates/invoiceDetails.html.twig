@@ -1,4 +1,3 @@
-
 {% extends 'base.html.twig' %}
 
 {% block title %}{{ invoice.id ?? "Not found"}} - details{% endblock %}
@@ -6,9 +5,7 @@
 {% block body %}
 
     {% include '/layouts/navbar.html.twig' %}
-
     <div class="container mt-5">
-
         {% for flash_message in app.flashes('exito') %}
             <div class="alert alert-success w-100" role="alert">
                 {{ flash_message }}
@@ -56,62 +53,47 @@
                                         </tr>
                                     </thead>
                                     <tbody>
-
                                         {% for product in invoice.products %}
                                             <tr>
                                                 <th scope="row">
-                                                    <a href="/product/details/{{ product.code }}" class="text-decoration-none">
+                                                    <a href="{{ path('product_details', {'code': product.code}) }}" class="text-decoration-none">
                                                         {{ product.name }}
                                                     </a>
                                                 </th>
                                                 <td>{{ product.amount }}</td>
-
                                                 {% if invoice.status == "shopping-cart" %}
                                                     <td>
                                                         <a
-                                                                href="/invoices/shopping-cart/delete-product/{{ product.code }}"
+                                                                href="{{ path('delete_product_to_shopping_cart_view', {'code': product.code}) }}"
                                                                 class="btn btn-primary text-decoration-none"
                                                         >
                                                             Eliminar
                                                         </a>
                                                     </td>
                                                 {% endif %}
-
                                             </tr>
                                         {% endfor %}
                                     </tbody>
                                 </table>
-
                                 {% if invoice.status == "invoice" %}
-                                    <form action="/invoices/delete/invoice/{{ invoice.id }}" method="POST">
-                                        <button
-                                                class="btn btn-danger"
-                                                type="submit"
-                                        >
-                                            Cancelar
-                                        </button>
-                                    </form>
-                                    <br>
+                                    <a
+                                            class="btn btn-danger"
+                                            type="submit"
+                                            href="{{ path('delete_invoice_view', {'id': invoice.id}) }}"
+                                    >
+                                        Cancelar
+                                    </a>
                                     <a
                                             class="btn btn-primary"
-                                            href="/invoices/pay/{{ invoice.id }}"
+                                            href="{{ path('pay_invoice_view', {'id': invoice.id}) }}"
                                     >
                                         Pagar
                                     </a>
                                 {% elseif invoice.status == "shopping-cart" and invoice.products|length != 0 %}
-                                    <form action="/invoices/create/invoice/" method="POST">
-                                        <input
-                                                value="{{ invoice.code }}"
-                                                name="code"
-                                                class="d-none"
-                                        >
-                                        <button
-                                                class="btn btn-primary"
-                                                type="submit"
-                                        >
-                                            Generar pedido
-                                        </button>
-                                    </form>
+                                    {{ form_start(formCreateInvoice, {"action" : path('create_invoice_view') , "method" : "POST"}) }}
+                                    {{ form_widget(formCreateInvoice) }}
+                                    <button type="submit" class="btn btn-primary">Generar pedido</button>
+                                    {{ form_end(formCreateInvoice) }}
                                 {% endif %}
                             </div>
                         </div>
@@ -119,7 +101,5 @@
                 </div>
             </div>
         {% endif %}
-
     </div>
-
 {% endblock %}

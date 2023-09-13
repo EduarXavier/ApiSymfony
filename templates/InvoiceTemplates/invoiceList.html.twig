@@ -3,40 +3,32 @@
 {% block title %}Lista de pedidos{% endblock %}
 
 {% block body %}
-
     {% include '/layouts/navbar.html.twig' %}
-
     <div class="container mt-5">
-
         <h2 class="text-center mb-4">Mis facturas</h2>
         <div class="d-flex justify-content-center w-100">
             <div class="col-md-6">
                 <h4 class="text-center">Seleccionar Opción</h4>
                 <div class="d-flex justify-content-center mb-4">
                     <div class="btn-group" role="group">
-                        <a href="/invoices/list/invoice" class="btn btn-primary">Facturas</a>
-                        <a href="/invoices/list/pay" class="btn btn-success">Pago</a>
-                        <a href="/invoices/list/cancel" class="btn btn-danger">Cancelado</a>
-                        <a href="/invoices/list/" class="btn btn-secondary">Todo</a>
+                        <a href="{{ path('invoices_list_status', {'status': 'invoice'}) }}" class="btn btn-primary">Facturas</a>
+                        <a href="{{ path('invoices_list_status', {'status': 'pay'}) }}" class="btn btn-success">Pago</a>
+                        <a href="{{ path('invoices_list_status', {'status': 'cancel'}) }}" class="btn btn-danger">Cancelado</a>
+                        <a href="{{ path('invoices_list') }}" class="btn btn-secondary">Todo</a>
                     </div>
                 </div>
             </div>
         </div>
-
         {% if invoices is empty %}
             <div class="alert alert-info" role="alert">
                 No hay pedidos disponibles en este momento.
             </div>
         {% else %}
-
             <div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-4">
-
                 {% for invoice in invoices %}
-
-                    <a href="/invoices/details/{{ invoice.id }}" class="text-decoration-none">
+                    <a href="{{ path('invoices_details', {'id': invoice.id}) }}" class="text-decoration-none">
                         <div class="col text-dark">
                             <div class="card shadow-lg rounded">
-
                                 {% if invoice.status == "shopping-cart" %}
                                     <div class="card-header bg-secondary text-white">
                                         {{ invoice.user.name }}
@@ -54,7 +46,6 @@
                                         {{ invoice.user.name }}
                                     </div>
                                 {% endif %}
-
                                 <div class="card-body">
                                     <p>
                                         <strong>Estado:</strong> {{ invoice.status }}
@@ -73,5 +64,4 @@
             </div>
         {% endif %}
     </div>
-
 {% endblock %}

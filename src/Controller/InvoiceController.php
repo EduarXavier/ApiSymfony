@@ -282,8 +282,11 @@ class InvoiceController extends AbstractController
             "shopping-cart"
         );
 
+        $formCreateInvoice = $this->createForm(FactureType::class, $shoppingCart);
+
         return $this->render("InvoiceTemplates/shoppingCartDetails.html.twig", [
-            "shoppingCart" => $shoppingCart
+            "shoppingCart" => $shoppingCart,
+            "formCreateInvoice" => $formCreateInvoice
         ]);
     }
 
@@ -297,9 +300,11 @@ class InvoiceController extends AbstractController
         }
 
         $invoice = $this->invoicesRepository->findById($id, "invoice");
+        $formCreateInvoice = $this->createForm(FactureType::class, $invoice);
 
         return $this->render("InvoiceTemplates/invoiceDetails.html.twig", [
-            "invoice" => $invoice
+            "invoice" => $invoice,
+            "formCreateInvoice" => $formCreateInvoice
         ]);
     }
 

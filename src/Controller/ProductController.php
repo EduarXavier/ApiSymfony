@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace App\Controller;
 
 use App\Document\Product;
+use App\Document\ProductInvoice;
 use App\Form\DeleteProductType;
+use App\Form\ProductShoppingCartType;
 use App\Form\ProductType;
 use App\Form\UpdateProductType;
 use App\Repository\ProductRepository;
@@ -19,6 +21,7 @@ use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Serializer\SerializerInterface;
 use Symfony\Contracts\Service\Attribute\Required;
 
 #[Route('/product')]
@@ -27,6 +30,7 @@ class ProductController extends AbstractController
     private ProductRepository $productRepository;
     private ProductManager $productManager;
     private DocumentManager $documentManager;
+    private SerializerInterface $serializer;
 
     #[Required]
     public function setProductRepository(ProductRepository $productRepository): void
@@ -44,6 +48,12 @@ class ProductController extends AbstractController
     public function setDocumentManager(DocumentManager $documentManager): void
     {
         $this->documentManager = $documentManager;
+    }
+
+    #[Required]
+    public function setSerializerInterface(SerializerInterface $serializer): void
+    {
+        $this->serializer = $serializer;
     }
 
     //API
@@ -90,9 +100,15 @@ class ProductController extends AbstractController
             $message = $_GET['mnsj'] == "ok" ? 'Se ha agregado con éxito' : 'Ha ocurrido un error';
         }
 
+        $productJson = $this->serializer->serialize($product, "json");
+        $productInvoice = $this->serializer->deserialize($productJson, ProductInvoice::class, "json");
+        $productInvoice->setAmount(1);
+        $formAddShoppingCart = $this->createForm(ProductShoppingCartType::class, $productInvoice);
+
         return $this->render('ProductTemplates/productDetails.html.twig', [
             'product' => $product,
             $action => $message,
+            'formAddShoppingCart' => $formAddShoppingCart
         ]);
     }
 
