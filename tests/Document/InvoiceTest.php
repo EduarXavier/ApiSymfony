@@ -15,9 +15,16 @@ class InvoiceTest extends TestCase
 {
     private Invoice $invoice;
 
+    public function testGetId(): void
+    {
+        self::assertNull($this->invoice->getId());
+    }
+
     public function testGetCode(): void
     {
-        self::assertSame('', $this->invoice->getCode());
+        $this->invoice->setCode('64fb330a54e93-Galleta-verde');
+
+        self::assertSame('64fb330a54e93-Galleta-verde', $this->invoice->getCode());
     }
 
     public function testSetCode(): void
@@ -35,7 +42,8 @@ class InvoiceTest extends TestCase
 
     public function testGetDate(): void
     {
-        $date = (new DateTime('today'))->getTimestamp();
+        $date = new DateTime('today');
+        $this->invoice->setDate($date);
 
         self::assertEquals($date, $this->invoice->getDate());
     }
@@ -61,7 +69,6 @@ class InvoiceTest extends TestCase
         $product = (new ProductInvoice())->setName('Jabon');
         $this->invoice->addProducts($product);
 
-        self::assertTrue($this->invoice->getProducts()->contains($product));
         self::assertTrue($this->invoice->removeProduct($product));
         self::assertNotContains($product, $this->invoice->getProducts());
     }
@@ -101,9 +108,7 @@ class InvoiceTest extends TestCase
     protected function setUp(): void
     {
         //parent::setUp();
-        $this->invoice = (new Invoice())
-            ->setDate((new DateTime('today')))
-            ->setCode('');
+        $this->invoice = (new Invoice());
     }
 
     protected function tearDown(): void

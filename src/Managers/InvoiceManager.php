@@ -95,7 +95,6 @@ class InvoiceManager
         }
 
         return new ArrayCollection($products);
-
     }
 
     /**
@@ -137,7 +136,6 @@ class InvoiceManager
             }
 
             $this->updateProductAndCheckAvailability($productShop, $product->getAmount());
-
         }
 
         return true;

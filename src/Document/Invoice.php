@@ -7,30 +7,26 @@ namespace App\Document;
 use DateTime;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ODM\MongoDB\Mapping\Annotations as MongoDB;
-use Doctrine\ODM\MongoDB\Mapping\Annotations\EmbedMany;
-use Doctrine\ODM\MongoDB\Mapping\Annotations\EmbedOne;
-use Doctrine\ODM\MongoDB\Mapping\Annotations\Field;
-use Doctrine\ODM\MongoDB\Mapping\Annotations\Id;
 
 #[MongoDB\Document]
 class Invoice
 {
-    #[Id()]
-    private string $id;
+    #[MongoDb\Id(strategy: 'auto')]
+    protected ?string $id;
 
-    #[Field(type:'string')]
+    #[MongoDb\Field(type:'string')]
     private string $code;
 
-    #[EmbedMany(targetDocument: ProductInvoice::class)]
+    #[MongoDb\EmbedMany(targetDocument: ProductInvoice::class)]
     private ArrayCollection $products;
 
-    #[Field(type:'date')]
+    #[MongoDb\Field(type:'date')]
     private DateTime $date;
 
-    #[EmbedOne(targetDocument : UserInvoice::class)]
+    #[MongoDb\EmbedOne(targetDocument : UserInvoice::class)]
     private UserInvoice $user;
 
-    #[Field(type:'string')]
+    #[MongoDb\Field(type:'string')]
     private string $status;
 
     public function __construct()
@@ -38,7 +34,7 @@ class Invoice
         $this->products = new ArrayCollection();
     }
 
-    public function getId(): string
+    public function getId(): ?string
     {
         return $this->id;
     }
