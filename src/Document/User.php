@@ -11,7 +11,7 @@ use Symfony\Component\Security\Core\User\UserInterface;
 #[MongoDB\Document]
 class User implements UserInterface, PasswordAuthenticatedUserInterface
 {
-    #[MongoDB\Id()]
+    #[MongoDB\Id]
     private string $id;
 
     #[MongoDB\Field(type: 'string')]

@@ -10,7 +10,7 @@ use Doctrine\ODM\MongoDB\Mapping\Annotations\EmbeddedDocument;
 #[EmbeddedDocument]
 class UserInvoice
 {
-    #[MongoDB\Id()]
+    #[MongoDB\Id]
     private string $id;
 
     #[MongoDB\Field(type: 'string')]

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Document;
 
+use DateTime;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ODM\MongoDB\Mapping\Annotations as MongoDB;
 use Doctrine\ODM\MongoDB\Mapping\Annotations\EmbedMany;
@@ -23,8 +24,8 @@ class Invoice
     #[EmbedMany(targetDocument: ProductInvoice::class)]
     private ArrayCollection $products;
 
-    #[Field(type:'string')]
-    private string $date;
+    #[Field(type:'date')]
+    private DateTime $date;
 
     #[EmbedOne(targetDocument : UserInvoice::class)]
     private UserInvoice $user;
@@ -66,12 +67,12 @@ class Invoice
         return $this;
     }
 
-    public function getDate(): string
+    public function getDate(): DateTime
     {
         return $this->date;
     }
 
-    public function setDate(string $date): static
+    public function setDate(DateTime $date): static
     {
         $this->date = $date;
 

@@ -256,7 +256,7 @@ class InvoiceManager
     {
         $shoppingCart = $this->invoicesRepository->findByDocumentAndStatus($user->getDocument(), "shopping-cart");
 
-        if (count($shoppingCart->getProducts()) == 1) {
+        if ($shoppingCart->getProducts()->count() == 1) {
             foreach ($shoppingCart->getProducts() as $product) {
                 $productFind = $this->productRepository->findByCode($code);
                 $productFind->setAmount($product->getAmount() + $productFind->getAmount());
@@ -293,10 +293,8 @@ class InvoiceManager
     /**
      * @throws Exception
      */
-    protected function getDate(): string
+    protected function getDate(): DateTime
     {
-        $fecha = new DateTime('now', new DateTimeZone('America/Bogota'));
-
-        return $fecha->format("Y-m-d H:i:s");
+        return new DateTime('now', new DateTimeZone('America/Bogota'));
     }
 }

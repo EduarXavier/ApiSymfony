@@ -34,7 +34,7 @@
                                     ID: {{ invoice.id }}
                                 </p>
                                 <p class="card-text">
-                                    fecha: {{ invoice.date }}
+                                    fecha: {{ invoice.date|date('Y/m/d H:i:s') }}
                                 </p>
                                 <p class="card-text">
                                     Estado: {{ invoice.status }}

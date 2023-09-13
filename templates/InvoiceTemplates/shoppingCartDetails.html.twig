@@ -24,7 +24,7 @@
                                     ID: {{ shoppingCart.id }}
                                 </p>
                                 <p class="card-text">
-                                    fecha: {{ shoppingCart.date }}
+                                    fecha: {{ shoppingCart.date|date('Y/m/d H:i:s') }}
                                 </p>
                                 <p class="card-text">
                                     Estado: {{ shoppingCart.status }}

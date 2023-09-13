@@ -10,7 +10,7 @@ use Doctrine\ODM\MongoDB\Mapping\Annotations as MongoDB;
 #[EmbeddedDocument]
 class ProductInvoice
 {
-    #[MongoDB\Id(strategy: "UUID")]
+    #[MongoDB\Id]
     protected ?string $id;
 
     #[MongoDB\Field(type: 'string')]
