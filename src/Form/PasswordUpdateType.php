@@ -1,23 +1,27 @@
 <?php
 
-declare(strict_types=1);
-
 namespace App\Form;
 
 use App\Document\User;
 use Symfony\Component\Form\AbstractType;
-use Symfony\Component\Form\Extension\Core\Type\EmailType;
 use Symfony\Component\Form\Extension\Core\Type\PasswordType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
+use Symfony\Component\Validator\Constraints\Length;
 
-class LoginType extends AbstractType
+class PasswordUpdateType extends AbstractType
 {
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $builder
-            ->add('email', EmailType::class, ['label' => 'Email'])
-            ->add('password', PasswordType::class, ['label' => 'Contraseña'])
+            ->add('password', PasswordType::class, [
+                'constraints' => [
+                    new Length([
+                        'min' => 8,
+                        'minMessage' => 'La contraseña debe tener al menos {{ limit }} caracteres.',
+                    ]),
+                ],
+            ])->setRequired(false)
         ;
     }
 

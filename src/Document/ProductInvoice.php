@@ -4,10 +4,11 @@ declare(strict_types=1);
 
 namespace App\Document;
 
+use Doctrine\ODM\MongoDB\Mapping\Annotations\EmbeddedDocument;
 use Doctrine\ODM\MongoDB\Mapping\Annotations as MongoDB;
 
-#[MongoDB\Document]
-class Product
+#[EmbeddedDocument]
+class ProductInvoice
 {
     #[MongoDB\Id(strategy: "UUID")]
     protected ?string $id;
@@ -34,7 +35,7 @@ class Product
         return $this->code;
     }
 
-    public function setCode(string $code): static
+    public function setCode(string $code): ?static
     {
         $this->code = $code;
 

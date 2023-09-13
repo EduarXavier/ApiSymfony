@@ -16,10 +16,10 @@
             <div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-4">
 
                 {% for product in products %}
-                    <a href="/product/details/{{ product.id }}" class="text-decoration-none">
+                    <a href="/product/details/{{ product.code }}" class="text-decoration-none">
                         <div class="col text-dark">
                             <div class="card shadow-lg rounded">
-                                <div class="card-header bg-secondary text-white">
+                                <div class="card-header bg-info text-white">
                                     {{ product.name }}
                                 </div>
                                 <div class="card-body">

@@ -1,18 +1,23 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Repository;
 
 use App\Document\Product;
+use Doctrine\Bundle\MongoDBBundle\Repository\ServiceDocumentRepository;
 use Doctrine\ODM\MongoDB\DocumentManager;
 use Doctrine\ODM\MongoDB\LockException;
 use Doctrine\ODM\MongoDB\Mapping\MappingException;
 use Doctrine\ODM\MongoDB\MongoDBException;
+use Doctrine\Persistence\ManagerRegistry;
 
-class ProductRepository implements ProductRepositoryInterface
+class ProductRepository extends ServiceDocumentRepository
 {
-    public function findAll(DocumentManager $documentManager): ?array
+
+    public function findAll(): array
     {
-        $repository = $documentManager->getRepository(Product::class);
+        $repository = $this->getDocumentManager()->getRepository(Product::class);
 
         return $repository->findBy(["amount" => ['$gt' => 0]], limit: 20);
     }
@@ -21,40 +26,15 @@ class ProductRepository implements ProductRepositoryInterface
      * @throws MappingException
      * @throws LockException
      */
-    public function findById(string $id, DocumentManager $documentManager): ?Product
+    public function findById(string $id): ?Product
     {
-        return $documentManager->getRepository(Product::class)->find($id);
+        return $this->getDocumentManager()->getRepository(Product::class)->find($id);
     }
 
-    /**
-     * @throws MongoDBException
-     */
-    public function addProduct(Product $product, DocumentManager $documentManager): ?string
+    public function findByCode(string $code): ?Product
     {
-        $documentManager->persist($product);
-        $documentManager->flush();
+        $repository = $this->getDocumentManager()->getRepository(Product::class);
 
-        return $product->getId();
-    }
-
-    /**
-     * @throws MongoDBException
-     */
-    public function updateProduct(Product $product, DocumentManager $documentManager): ?string
-    {
-        $documentManager->flush();
-
-        return $product->getId();
-    }
-
-    /**
-     * @throws MongoDBException
-     */
-    public function deleteProduct(Product $product, DocumentManager $documentManager): ?bool
-    {
-        $documentManager->remove($product);
-        $documentManager->flush();
-
-        return true;
+        return $repository->findOneBy(["code" => $code]) ?? null;
     }
 }

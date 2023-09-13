@@ -1,8 +1,11 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Form;
 
-use App\Document\Product;
+use App\Document\ProductInvoice;
+use Symfony\Component\Validator\Constraints as Assert;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\NumberType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
@@ -14,8 +17,12 @@ class ProductShoppingCartType extends AbstractType
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $builder
-            ->add('id', TextType::class)
-            ->add('amount', NumberType::class)
+            ->add('code', TextType::class)
+            ->add('amount', NumberType::class, [
+                'constraints' => [
+                    new Assert\GreaterThan(0, null, "El valor debe ser mayor a 0")
+                ]
+            ])
         ;
     }
 
@@ -23,7 +30,7 @@ class ProductShoppingCartType extends AbstractType
     {
         $resolver->setDefaults([
             'csrf_protection' => false,
-            'data_class' => Product::class
+            'data_class' => ProductInvoice::class
         ]);
     }
 

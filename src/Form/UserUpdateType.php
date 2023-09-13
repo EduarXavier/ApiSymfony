@@ -1,12 +1,16 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Form;
 
 use App\Document\User;
 use Symfony\Component\Form\AbstractType;
+use Symfony\Component\Form\Extension\Core\Type\PasswordType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
+use Symfony\Component\Validator\Constraints\Length;
 
 class UserUpdateType extends AbstractType
 {
@@ -15,8 +19,7 @@ class UserUpdateType extends AbstractType
         $builder
             ->add('address',TextType::class)->setRequired(false)
             ->add('phone',TextType::class)->setRequired(false)
-            ->add('password', TextType::class)->setRequired(false)
-        ;
+            ;
     }
 
     public function configureOptions(OptionsResolver $resolver): void

@@ -34,8 +34,8 @@
             <h2 class="pt-5" style="text-align: center">Detalles del producto</h2>
             <div class="container mt-5">
                 <div class="row justify-content-center">
-                    <div class="col-6 card">
-                        <div class="row col-9">
+                    <div class="col-md-12 col-lg-6 card">
+                        <div class="row col-12">
                             <div class="card-body">
                                 <h5 class="card-title">
                                     Nombre: {{ product.name }}
@@ -50,7 +50,7 @@
                                 </p>
                                 <a
                                         class="btn btn-primary"
-                                        href="/product/update/{{ product.id }}"
+                                        href="/product/update/{{ product.code }}"
                                 >
                                     Actualizar
                                 </a>
@@ -64,7 +64,7 @@
                                 </button>
                                 <a
                                         class="btn btn-danger"
-                                        href="/product/delete/{{ product.id }}"
+                                        href="/product/delete/{{ product.code }}"
                                 >
                                     Eliminar
                                 </a>
@@ -73,42 +73,44 @@
                     </div>
                 </div>
             </div>
+
+            <div class="modal fade" id="addProduct" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="exampleModalLabel">Enviar Producto</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <form action="/invoices/shopping-cart/add-product" method="post">
+                                <div class="mb-3">
+                                    <input
+                                            type="text"
+                                            class="form-control d-none"
+                                            id="code"
+                                            name="code"
+                                            value="{{ product.code }}"
+                                    >
+                                </div>
+                                <div class="mb-3">
+                                    <label for="cantidad" class="form-label">Cantidad</label>
+                                    <input
+                                            type="number"
+                                            class="form-control"
+                                            id="amount"
+                                            name="amount"
+                                            required
+                                    >
+                                </div>
+                                <button type="submit" class="btn btn-primary">Enviar</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
         {% endif %}
     </div>
 
-    <div class="modal fade" id="addProduct" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="exampleModalLabel">Enviar Producto</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <form action="/invoices/shopping-cart/add-product" method="post">
-                        <div class="mb-3">
-                            <input
-                                    type="text"
-                                    class="form-control d-none"
-                                    id="id"
-                                    name="id"
-                                    value="{{ product.id }}"
-                            >
-                        </div>
-                        <div class="mb-3">
-                            <label for="cantidad" class="form-label">Cantidad</label>
-                            <input
-                                    type="number"
-                                    class="form-control"
-                                    id="amount"
-                                    name="amount"
-                                    required
-                            >
-                        </div>
-                        <button type="submit" class="btn btn-primary">Enviar</button>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
 
 {% endblock %}

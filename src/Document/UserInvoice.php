@@ -5,11 +5,10 @@ declare(strict_types=1);
 namespace App\Document;
 
 use Doctrine\ODM\MongoDB\Mapping\Annotations as MongoDB;
-use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
-use Symfony\Component\Security\Core\User\UserInterface;
+use Doctrine\ODM\MongoDB\Mapping\Annotations\EmbeddedDocument;
 
-#[MongoDB\Document]
-class User implements UserInterface, PasswordAuthenticatedUserInterface
+#[EmbeddedDocument]
+class UserInvoice
 {
     #[MongoDB\Id()]
     private string $id;
@@ -21,11 +20,11 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[MongoDB\UniqueIndex(background: true)]
     private string $document;
 
-     #[MongoDB\Field(type:'string')]
-     private string $address;
+    #[MongoDB\Field(type:'string')]
+    private string $address;
 
-     #[MongoDB\Field(type: 'string')]
-     private string $rol;
+    #[MongoDB\Field(type: 'string')]
+    private string $rol;
 
     #[MongoDB\Field(type:'string')]
     private string $phone;
@@ -34,9 +33,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[MongoDB\UniqueIndex(background: true)]
     #[MongoDB\Index(background: true)]
     private string $email;
-
-    #[MongoDB\Field(type:'string')]
-    private string $password;
 
     public function getId(): string
     {
@@ -127,18 +123,15 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
-    public function getRoles(): array
+    public function getRecoveryCode(): string
     {
-        return ['ROLE_USER'];
+        return $this->recoveryCode;
     }
 
-    public function eraseCredentials()
+    public function setRecoveryCode(string $recoveryCode): static
     {
-        // TODO: Implement eraseCredentials() method.
-    }
+        $this->recoveryCode = $recoveryCode;
 
-    public function getUserIdentifier(): string
-    {
-        return $this->email;
+        return $this;
     }
 }

@@ -23,11 +23,11 @@
             <h2 class="pt-5" style="text-align: center">Detalles del pedido</h2>
             <div class="container mt-5">
                 <div class="row justify-content-center">
-                    <div class="col-6 card">
-                        <div class="row col-9">
+                    <div class="col-md-12 col-lg-6 card">
+                        <div class="row col-12">
                             <div class="card-body">
                                 <h5 class="card-title">
-                                    usuario: {{ invoice.userDocument }}
+                                    usuario: {{ invoice.user.name }}
                                 </h5>
                                 <p class="card-text">
                                     ID: {{ invoice.id }}
@@ -44,7 +44,7 @@
                                 <table class="table">
                                     <thead>
                                         <tr>
-                                            <th scope="col">ID</th>
+                                            <th scope="col">Nombre</th>
                                             <th scope="col">Cantidad</th>
                                             {% if invoice.status == "shopping-cart" %}
                                                 <th scope="col">Acción</th>
@@ -56,8 +56,8 @@
                                         {% for product in invoice.products %}
                                             <tr>
                                                 <th scope="row">
-                                                    <a href="/product/details/{{ product.id }}" class="text-decoration-none">
-                                                        {{ product.id }}
+                                                    <a href="/product/details/{{ product.code }}" class="text-decoration-none">
+                                                        {{ product.name }}
                                                     </a>
                                                 </th>
                                                 <td>{{ product.amount }}</td>
@@ -65,7 +65,7 @@
                                                 {% if invoice.status == "shopping-cart" %}
                                                     <td>
                                                         <a
-                                                                href="/invoices/shopping-cart/delete-product/{{ product.id }}"
+                                                                href="/invoices/shopping-cart/delete-product/{{ product.code }}"
                                                                 class="btn btn-primary text-decoration-none"
                                                         >
                                                             Eliminar
@@ -97,8 +97,8 @@
                                 {% elseif invoice.status == "shopping-cart" and invoice.products|length != 0 %}
                                     <form action="/invoices/create/invoice/" method="POST">
                                         <input
-                                                value="{{ invoice.userDocument }}"
-                                                name="userDocument"
+                                                value="{{ invoice.code }}"
+                                                name="code"
                                                 class="d-none"
                                         >
                                         <button

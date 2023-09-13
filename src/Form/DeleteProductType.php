@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Form;
 
 use App\Document\Product;
@@ -13,7 +15,7 @@ class DeleteProductType extends AbstractType
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $builder
-            ->add('id', TextType::class)
+            ->add('code', TextType::class)
         ;
     }
 

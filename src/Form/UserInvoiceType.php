@@ -2,17 +2,19 @@
 
 namespace App\Form;
 
-use App\Document\Invoice;
+use App\Document\User;
+use App\Document\UserInvoice;
 use Symfony\Component\Form\AbstractType;
+use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
-class PayInvoiceType extends AbstractType
+class UserInvoiceType extends AbstractType
 {
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $builder
-            ->add('id')
+            ->add('document', TextType::class)
         ;
     }
 
@@ -20,11 +22,11 @@ class PayInvoiceType extends AbstractType
     {
         $resolver->setDefaults([
             'csrf_protection' => false,
-            'data_class' => Invoice::class
+            'data_class' => UserInvoice::class
         ]);
     }
 
-    public function getBlockPrefix(): string
+        public function getBlockPrefix(): string
     {
         return '';
     }
