@@ -11,7 +11,6 @@ use App\Form\UpdateProductType;
 use App\Repository\ProductRepository;
 use App\Services\ProductService;
 use Doctrine\ODM\MongoDB\LockException;
-use Doctrine\ODM\MongoDB\Mapping\MappingException;
 use Doctrine\ODM\MongoDB\MongoDBException;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;

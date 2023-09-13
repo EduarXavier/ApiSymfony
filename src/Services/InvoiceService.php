@@ -7,7 +7,6 @@ namespace App\Services;
 use App\Document\Invoice;
 use App\Document\Product;
 use App\Document\ProductInvoice;
-use App\Document\User;
 use App\Document\UserInvoice;
 use App\Repository\InvoicesRepository;
 use App\Repository\ProductRepository;
