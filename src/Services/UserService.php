@@ -18,19 +18,15 @@ class UserService
         $this->userRepository = $userRepository;
     }
 
-    public function addUser(User $user): DocumentManager
+    public function addUser(User $user): void
     {
         $this->userRepository->getDocumentManager()->persist($user);
-
-        return $this->userRepository->getDocumentManager();
     }
 
-    public function updateUser(User $user, string | null $method): DocumentManager
+    public function updateUser(User $user, string | null $method): void
     {
         if ($method == 'password') {
             $user->setPassword(password_hash($user->getPassword(), PASSWORD_BCRYPT));
         }
-
-        return $this->userRepository->getDocumentManager();
     }
 }

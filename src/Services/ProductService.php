@@ -18,27 +18,21 @@ class ProductService
         $this->productRepository = $productRepository;
     }
 
-    public function addProduct(Product $product): DocumentManager
+    public function addProduct(Product $product): void
     {
         $product->setCode(str_ireplace(" ", "-", uniqid(). "-" . $product->getName()));
         $this->productRepository->getDocumentManager()->persist($product);
-
-        return $this->productRepository->getDocumentManager();
     }
 
-    public function updateProduct(Product $product): DocumentManager
+    public function updateProduct(Product $product): void
     {
         $productUpdate = $this->productRepository->findByCode($product->getCode());
         $productUpdate->setAmount($product->getAmount());
         $this->productRepository->getDocumentManager()->persist($productUpdate);
-
-        return $this->productRepository->getDocumentManager();
     }
 
-    public function deleteProduct(Product $product): DocumentManager
+    public function deleteProduct(Product $product): void
     {
         $this->productRepository->getDocumentManager()->remove($product);
-
-        return $this->productRepository->getDocumentManager();
     }
 }

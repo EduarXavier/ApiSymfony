@@ -35,6 +35,7 @@ class InvoiceController extends AbstractController
     private InvoicesRepository $invoicesRepository;
     private EmailService $emailService;
     private InvoiceService $invoiceService;
+    private DocumentManager $documentManager;
     private SerializerInterface $serializer;
 
     public function __construct(
@@ -42,13 +43,15 @@ class InvoiceController extends AbstractController
         EmailService $emailService,
         UserRepository $userRepository,
         InvoicesRepository $invoicesRepository,
-        SerializerInterface $serializer
+        SerializerInterface $serializer,
+        DocumentManager $documentManager
     ) {
         $this->invoiceService = $invoicesService;
         $this->emailService = $emailService;
         $this->userRepository = $userRepository;
         $this->invoicesRepository = $invoicesRepository;
         $this->serializer = $serializer;
+        $this->documentManager = $documentManager;
     }
 
     // Endpoints API
@@ -70,17 +73,15 @@ class InvoiceController extends AbstractController
         $user = $this->userRepository->findByDocument($invoices->getUser()->getDocument());
         $userJson = $this->serializer->serialize($user, "json");
         $userInvoive = $this->serializer->deserialize($userJson, UserInvoice::class, "json");
-        $dm = $this->invoiceService->addProductsToShoppingCart(
-            $invoices->getProducts(),
-            $userInvoive
-        );
 
-        if ($dm) {
-            $dm->flush();
-            return new JsonResponse(["mensaje" => "Agregado con éxito"], Response::HTTP_OK);
+
+        if ($this->invoiceService->addProductsToShoppingCart($invoices->getProducts(), $userInvoive)) {
+            return new JsonResponse(["error" => "No se han podido agregar los productos"], Response::HTTP_BAD_REQUEST);
         }
 
-        return new JsonResponse(["error" => "No se han podido agregar los productos"], Response::HTTP_BAD_REQUEST);
+        $this->documentManager->flush();
+
+        return new JsonResponse(["mensaje" => "Agregado con éxito"], Response::HTTP_OK);
     }
 
     /**
@@ -88,7 +89,7 @@ class InvoiceController extends AbstractController
      * @throws \Doctrine\ODM\MongoDB\Mapping\MappingException
      */
     #[Route("/api/update/shopping-cart/", name: "update_shopping_cart", methods: ["POST"])]
-    public function updateShoppingCart(Request $request, DocumentManager $documentManager): ?JsonResponse
+    public function updateShoppingCart(Request $request): ?JsonResponse
     {
         $invoices = new Invoice();
         $form = $this->createForm(ShoppingCartType::class, $invoices);
@@ -105,24 +106,20 @@ class InvoiceController extends AbstractController
             return new JsonResponse(["error" => "No se ha encontrado el carrito"], Response::HTTP_BAD_REQUEST);
         }
 
-        $dm = $this->invoiceService->addToExistingCart(
-            $invoices->getProducts(),
-            $invoice
-        );
-
-        if ($dm) {
-            $dm->flush();
-            return new JsonResponse(["mensaje" => "Agregado con éxito"], Response::HTTP_OK);
+        if (!$this->invoiceService->addToExistingCart($invoices->getProducts(), $invoice)) {
+            return new JsonResponse(["error" => "No se han podido agregar los productos"], Response::HTTP_BAD_REQUEST);
         }
 
-        return new JsonResponse(["error" => "No se han podido agregar los productos"], Response::HTTP_BAD_REQUEST);
+        $this->documentManager->flush();
+
+        return new JsonResponse(["mensaje" => "Agregado con éxito"], Response::HTTP_OK);
     }
 
     /**
      * @throws MongoDBException
      */
     #[Route("/api/create-invoice", name: "create-invoice", methods: ["POST"])]
-    public function createInvoices(Request $request, DocumentManager $documentManager): ?JsonResponse
+    public function createInvoices(Request $request): ?JsonResponse
     {
         $invoice = new Invoice();
         $form = $this->createForm(FactureType::class, $invoice);
@@ -138,8 +135,8 @@ class InvoiceController extends AbstractController
             return new JsonResponse(["error" => "No se ha encontrado la factura"], Response::HTTP_BAD_REQUEST);
         }
 
-        $dm = $this->invoiceService->createInvoice($invoice);
-        $dm->flush();
+        $this->invoiceService->createInvoice($invoice);
+        $this->documentManager->flush();
 
         return new JsonResponse(["mensaje" => "Se ha creado la factura"], Response::HTTP_OK);
     }
@@ -174,8 +171,8 @@ class InvoiceController extends AbstractController
             $this->emailService->sendEmail($invoice->getUser(), "first-shop");
         }
 
-        $dm = $this->invoiceService->payInvoice($invoice);
-        $dm->flush();
+        $this->invoiceService->payInvoice($invoice);
+        $this->documentManager->flush();
 
         return new JsonResponse(["mensaje" => "Se ha pagado"], Response::HTTP_OK);
     }
@@ -307,12 +304,12 @@ class InvoiceController extends AbstractController
 
         $products = new ArrayCollection();
         $products->add($product);
-        $dm = $this->invoiceService->addProductsToShoppingCart(
-            $products,
-            $session->get("user"),
-        );
 
-        $dm->flush();
+        if (!$this->invoiceService->addProductsToShoppingCart($products, $session->get("user"))) {
+            return $this->redirect("/product/details/" . $product->getCode() . "?mnsj=err");
+        }
+
+        $this->documentManager->flush();
 
         return $this->redirect("/product/details/" . $product->getCode() . "?mnsj=ok");
     }
@@ -339,8 +336,8 @@ class InvoiceController extends AbstractController
 
         $invoice = $this->invoicesRepository->findByCode($invoice->getCode());
 
-        $dm = $this->invoiceService->createInvoice($invoice);
-        $dm->flush();
+        $this->invoiceService->createInvoice($invoice);
+        $this->documentManager->flush();
 
         return $this->redirect("/invoices/details/" . $invoice->getId());
     }
@@ -376,8 +373,8 @@ class InvoiceController extends AbstractController
             $this->emailService->sendEmail($user, "first-shop");
         }
 
-        $dm = $this->invoiceService->payInvoice($invoice);
-        $dm->flush();
+        $this->invoiceService->payInvoice($invoice);
+        $this->documentManager->flush();
 
         return $this->redirect("/invoices/details/" . $invoice->getId());
     }
@@ -396,8 +393,13 @@ class InvoiceController extends AbstractController
         }
 
         $invoice = $this->invoicesRepository->findById($id, "invoice");
-        $dm = $this->invoiceService->cancelInvoice($invoice);
-        $dm->flush();
+
+        if (!$this->invoiceService->cancelInvoice($invoice)) {
+            $this->addFlash('error', 'No se ha podido cancelar');
+            $this->redirect("/invoices/details/" . $invoice->getId());
+        }
+
+        $this->documentManager->flush();
 
         return $this->redirect("/invoices/details/" . $invoice->getId());
     }
@@ -419,8 +421,13 @@ class InvoiceController extends AbstractController
             $document,
             "shopping-cart"
         );
-        $dm = $this->invoiceService->deleteShoppingCart($shoppingCart);
-        $dm->flush();
+
+        if (!$this->invoiceService->deleteShoppingCart($shoppingCart)) {
+            $this->addFlash('error', 'No se ha podido eliminar');
+            $this->redirect("/invoices/details/" . $shoppingCart->getId());
+        }
+
+        $this->documentManager->flush();
 
         return $this->redirect("/invoices/details/" . $shoppingCart->getId());
     }
@@ -438,8 +445,8 @@ class InvoiceController extends AbstractController
             return $this->redirectToRoute("login_template");
         }
 
-        $dm = $this->invoiceService->deleteProductToShoppingCart($session->get("user"), $code);
-        $dm->flush();
+        $this->invoiceService->deleteProductToShoppingCart($session->get("user"), $code);
+        $this->documentManager->flush();
 
         return $this->redirect("/invoices/shopping-cart/list");
     }

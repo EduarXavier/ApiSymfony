@@ -14,7 +14,11 @@
                 {{ flash_message }}
             </div>
         {% endfor %}
-
+        {% for flash_message in app.flashes('error') %}
+            <div class="alert alert-danger w-100" role="alert">
+                {{ flash_message }}
+            </div>
+        {% endfor %}
         {% if invoice is empty %}
             <div class="alert alert-info" role="alert">
                 Este pedido no está disponible.

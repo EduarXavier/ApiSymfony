@@ -10,6 +10,7 @@ use App\Form\ProductType;
 use App\Form\UpdateProductType;
 use App\Repository\ProductRepository;
 use App\Services\ProductService;
+use Doctrine\ODM\MongoDB\DocumentManager;
 use Doctrine\ODM\MongoDB\LockException;
 use Doctrine\ODM\MongoDB\MongoDBException;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -24,11 +25,16 @@ class ProductController extends AbstractController
 {
     private ProductRepository $productRepository;
     private ProductService $productService;
+    private DocumentManager $documentManager;
 
-    public function __construct(ProductRepository $productRepository, ProductService $productService)
-    {
+    public function __construct(
+        ProductRepository $productRepository,
+        ProductService $productService,
+        DocumentManager $documentManager
+    ) {
         $this->productRepository = $productRepository;
         $this->productService = $productService;
+        $this->documentManager = $documentManager;
     }
 
     //API
@@ -98,8 +104,8 @@ class ProductController extends AbstractController
 
         if ($form->isSubmitted() && $form->isValid()) {
             $product->setName(ucfirst($product->getName()));
-            $dm = $this->productService->addProduct($product);
-            $dm->flush();
+            $this->productService->addProduct($product);
+            $this->documentManager->flush();
 
             return $this->redirect("/product/details/" . $product->getCode());
         }
@@ -129,8 +135,8 @@ class ProductController extends AbstractController
 
         if ($form->isSubmitted() && $form->isValid()) {
             $product->setName(ucfirst($product->getName()));
-            $dm = $this->productService->updateProduct($product);
-            $dm->flush();
+            $this->productService->updateProduct($product);
+            $this->documentManager->flush();
 
             return $this->redirect("/product/details/$code");
         }
@@ -159,8 +165,8 @@ class ProductController extends AbstractController
         }
 
         if ($form->isSubmitted() && $form->isValid()) {
-            $dm = $this->productService->deleteProduct($product);
-            $dm->flush();
+            $this->productService->deleteProduct($product);
+            $this->documentManager->flush();
 
             return $this->redirect('/product/list-view');
         }

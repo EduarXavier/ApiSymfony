@@ -46,7 +46,7 @@ class InvoiceService
      * @throws MongoDBException
      * @throws Exception
      */
-    public function addProductsToShoppingCart(Collection $products, UserInvoice $user): ?DocumentManager
+    public function addProductsToShoppingCart(Collection $products, UserInvoice $user): bool
     {
         $shoppingCart = $this->invoicesRepository->findByDocumentAndStatus($user->getDocument(), "shopping-cart");
 
@@ -99,7 +99,7 @@ class InvoiceService
      * @throws LockException
      * @throws Exception
      */
-    public function addToExistingCart(Collection $products, Invoice $shoppingCart): DocumentManager|bool
+    public function addToExistingCart(Collection $products, Invoice $shoppingCart): bool
     {
         $productsUser = clone $shoppingCart->getProducts();
 
@@ -137,7 +137,7 @@ class InvoiceService
 
         }
 
-        return $this->invoicesRepository->getDocumentManager();
+        return true;
     }
 
     /**
@@ -145,7 +145,7 @@ class InvoiceService
      * @throws LockException
      * @throws Exception
      */
-    private function createNewCart(Collection $products, UserInvoice $user): ?DocumentManager
+    private function createNewCart(Collection $products, UserInvoice $user): bool
     {
         $invoices = new Invoice();
         $this->invoicesRepository->getDocumentManager()->persist($user);
@@ -159,7 +159,7 @@ class InvoiceService
             $productShop = $this->productRepository->findByCode($product->getCode());
 
             if (!$productShop) {
-                return null;
+                return false;
             }
 
             $productJson = $this->serializer->serialize($productShop, "json");
@@ -170,19 +170,17 @@ class InvoiceService
             $this->updateProductAndCheckAvailability($productShop, $product->getAmount());
         }
 
-        return $this->invoicesRepository->getDocumentManager();
+        return true;
     }
 
     /**
      * @throws MongoDBException
      * @throws Exception
      */
-    public function createInvoice(Invoice $invoice): DocumentManager
+    public function createInvoice(Invoice $invoice): void
     {
         $invoice->setDate($this->getDate());
         $invoice->setStatus("invoice");
-
-        return $this->invoicesRepository->getDocumentManager();
     }
 
     /**
@@ -205,12 +203,10 @@ class InvoiceService
      * @throws MongoDBException
      * @throws Exception
      */
-    public function payInvoice(Invoice $invoice): DocumentManager
+    public function payInvoice(Invoice $invoice): void
     {
         $invoice->setDate($this->getDate());
         $invoice->setStatus("pay");
-
-        return $this->invoicesRepository->getDocumentManager();
     }
 
     /**
@@ -218,7 +214,7 @@ class InvoiceService
      * @throws MappingException
      * @throws Exception
      */
-    public function cancelInvoice(Invoice $invoice): DocumentManager|bool
+    public function cancelInvoice(Invoice $invoice): bool
     {
         if ($invoice->getStatus() == "invoice") {
             $invoice->setDate($this->getDate());
@@ -230,7 +226,7 @@ class InvoiceService
                 $this->productService->updateProduct($productFind);
             }
 
-            return $this->invoicesRepository->getDocumentManager();
+            return true;
         }
 
         return false;
@@ -240,7 +236,7 @@ class InvoiceService
      * @throws MongoDBException
      * @throws MappingException
      */
-    public function deleteShoppingCart(Invoice $shoppingCart): DocumentManager|bool
+    public function deleteShoppingCart(Invoice $shoppingCart): bool
     {
         if ($shoppingCart->getStatus() == "shopping-cart") {
             foreach ($shoppingCart->getProducts() as $product) {
@@ -253,7 +249,7 @@ class InvoiceService
             $invoice = $this->invoicesRepository->findByCode($shoppingCart->getCode());
             $invoice->setProducts(new ArrayCollection());
 
-            return $this->invoicesRepository->getDocumentManager();
+            return true;
         }
 
         return false;
@@ -263,7 +259,7 @@ class InvoiceService
      * @throws MongoDBException
      * @throws MappingException
      */
-    public function deleteProductToShoppingCart(UserInvoice $user, string $code): DocumentManager|bool
+    public function deleteProductToShoppingCart(UserInvoice $user, string $code): bool
     {
         $shoppingCart = $this->invoicesRepository->findByDocumentAndStatus($user->getDocument(), "shopping-cart");
 
@@ -272,8 +268,9 @@ class InvoiceService
                 $productFind = $this->productRepository->findByCode($code);
                 $productFind->setAmount($product->getAmount() + $productFind->getAmount());
                 $this->productService->updateProduct($productFind);
+                $this->deleteInvoice($shoppingCart);
 
-                return $this->deleteInvoice($shoppingCart);
+                return true;
             }
         }
 
@@ -286,19 +283,17 @@ class InvoiceService
                 $productFind->setAmount($product->getAmount() + $productFind->getAmount());
                 $this->productService->updateProduct($productFind);
 
-                return $this->invoicesRepository->getDocumentManager();
+                return true;
             }
         }
 
         return false;
     }
 
-    public function deleteInvoice(Invoice $invoice): DocumentManager
+    public function deleteInvoice(Invoice $invoice): void
     {
         $this->invoicesRepository->getDocumentManager()->persist($invoice);
         $this->invoicesRepository->getDocumentManager()->remove($invoice);
-
-        return $this->invoicesRepository->getDocumentManager();
     }
 
     /**

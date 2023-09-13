@@ -29,15 +29,18 @@ class UserController extends AbstractController
     private UserRepository $userRepository;
     private UserService $userService;
     private EmailService $emailService;
+    private DocumentManager $documentManager;
 
     public function __construct(
         UserRepository $userRepository,
         UserService $userService,
-        EmailService $emailService
+        EmailService $emailService,
+        DocumentManager $documentManager
     ) {
         $this->userRepository = $userRepository;
         $this->userService = $userService;
         $this->emailService = $emailService;
+        $this->documentManager = $documentManager;
     }
 
 
@@ -64,9 +67,16 @@ class UserController extends AbstractController
             $user->getPassword()
         );
         $user->setPassword($hashedPassword);
-        $dm = $this->userService->addUser($user);
+
+        if ($this->userRepository->findByDocument($user->getDocument())) {
+            return $this->json(['Error' => 'Ya existe un usuario con este documento'], Response::HTTP_BAD_REQUEST);
+        } else if ($this->userRepository->findByEmail($user->getEmail())) {
+            return $this->json(['Error' => 'Ya existe un usuario con este Email'], Response::HTTP_BAD_REQUEST);
+        }
+
+        $this->userService->addUser($user);
         $this->emailService->sendEmail($user, 'registro');
-        $dm->flush();
+        $this->documentManager->flush();
 
         return $this->json(['message' => 'Usuario agregado correctamente'], Response::HTTP_OK);
     }
@@ -93,8 +103,8 @@ class UserController extends AbstractController
             return $this->json(['error' => $errors], Response::HTTP_BAD_REQUEST);
         }
 
-        $dm = $this->userService->updateUser($user, null);
-        $dm->flush();
+        $this->userService->updateUser($user, null);
+        $this->documentManager->flush();
 
         return $this->json(['message' => 'Usuario actualizado correctamente'], Response::HTTP_OK);
     }
@@ -104,9 +114,9 @@ class UserController extends AbstractController
      * @throws MappingException
      */
     #[Route('/api/update/password/{id}', name: 'updatePassword', methods: ['POST'])]
-    public function changePassword($id, Request $request, DocumentManager $documentManager): JsonResponse
+    public function changePassword($id, Request $request): JsonResponse
     {
-        $user = $this->userRepository->findById($id, $documentManager);
+        $user = $this->userRepository->findById($id);
 
         if (!$user) {
             return $this->json(['error' => 'Usuario no encontrado'], Response::HTTP_BAD_REQUEST);
@@ -121,8 +131,8 @@ class UserController extends AbstractController
             return $this->json(['error' => $errors], Response::HTTP_BAD_REQUEST);
         }
 
-        $dm = $this->userService->updateUser($user, 'password');
-        $dm->flush();
+        $this->userService->updateUser($user, 'password');
+        $this->documentManager->flush();
 
         return $this->json(['message' => 'Contraseña actualizada correctamente'], Response::HTTP_BAD_REQUEST);
     }
