@@ -6,7 +6,7 @@ namespace App\Tests\Document;
 
 use App\Document\Invoice;
 use App\Document\ProductInvoice;
-use App\Document\UserInvoice;
+use App\Document\User;
 use DateTime;
 use Doctrine\Common\Collections\ArrayCollection;
 use PHPUnit\Framework\MockObject\Exception;
@@ -84,7 +84,7 @@ class InvoiceTest extends TestCase
 
     public function testGetUser(): void
     {
-        $user = (new UserInvoice())->setName('Juan');
+        $user = (new User())->setName('Juan');
         $this->invoice->setUser($user);
 
         self::assertSame($user, $this->invoice->getUser());
@@ -92,7 +92,7 @@ class InvoiceTest extends TestCase
 
     public function testSetUser(): void
     {
-        $user = (new UserInvoice())->setName('Juan');
+        $user = (new User())->setName('Juan');
 
         self::assertSame($this->invoice, $this->invoice->setUser($user));
         self::assertSame($user, $this->invoice->getUser());

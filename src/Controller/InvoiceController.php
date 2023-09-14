@@ -6,7 +6,6 @@ namespace App\Controller;
 
 use App\Document\Invoice;
 use App\Document\ProductInvoice;
-use App\Document\UserInvoice;
 use App\Form\FactureType;
 use App\Form\ProductShoppingCartType;
 use App\Form\ShoppingCartType;
@@ -28,7 +27,6 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
-use Symfony\Component\Serializer\SerializerInterface;
 use Symfony\Contracts\Service\Attribute\Required;
 
 #[Route("/invoices")]
@@ -39,7 +37,6 @@ class InvoiceController extends AbstractController
     private EmailService $emailService;
     private InvoiceManager $invoiceManager;
     private DocumentManager $documentManager;
-    private SerializerInterface $serializer;
     private Security $security;
 
     #[Required]
@@ -73,12 +70,6 @@ class InvoiceController extends AbstractController
     }
 
     #[Required]
-    public function setSerializerInterface(SerializerInterface $serializer): void
-    {
-        $this->serializer = $serializer;
-    }
-
-    #[Required]
     public function setSecurity(Security $security): void
     {
         $this->security = $security;
@@ -101,11 +92,8 @@ class InvoiceController extends AbstractController
         }
 
         $user = $this->userRepository->findByDocument($invoices->getUser()->getDocument());
-        $userJson = $this->serializer->serialize($user, "json");
-        $userInvoive = $this->serializer->deserialize($userJson, UserInvoice::class, "json");
 
-
-        if ($this->invoiceManager->addProductsToShoppingCart($invoices->getProducts(), $userInvoive)) {
+        if ($this->invoiceManager->addProductsToShoppingCart($invoices->getProducts(), $user)) {
             return new JsonResponse(["error" => "No se han podido agregar los productos"], Response::HTTP_BAD_REQUEST);
         }
 
@@ -130,7 +118,7 @@ class InvoiceController extends AbstractController
         }
 
         $user = $this->userRepository->findByDocument($invoices->getUser()->getDocument());
-        $invoice = $this->invoicesRepository->findByDocumentAndStatus($user->getDocument(), "shopping-cart");
+        $invoice = $this->invoicesRepository->findByUserAndStatus($user, "shopping-cart");
 
         if (!$invoice) {
             return new JsonResponse(["error" => "No se ha encontrado el carrito"], Response::HTTP_BAD_REQUEST);
@@ -192,8 +180,8 @@ class InvoiceController extends AbstractController
             return new JsonResponse(["error" => "No se ha encontrado la factura"], Response::HTTP_BAD_REQUEST);
         }
 
-        $invoiceEmail = $this->invoicesRepository->findByDocumentAndStatus(
-            $invoice->getUser()->getDocument(),
+        $invoiceEmail = $this->invoicesRepository->findByUserAndStatus(
+            $invoice->getUser(),
             "pay",
         );
 
@@ -214,10 +202,8 @@ class InvoiceController extends AbstractController
     public function findAllInvoices(): RedirectResponse|Response
     {
         $user = $this->security->getUser();
-        $userJson = $this->serializer->serialize($user, "json");
-        $userInvoice = $this->serializer->deserialize($userJson, UserInvoice::class, "json");
-
-        $invoices = $this->invoicesRepository->findAllByUser($userInvoice);
+        $user = $this->userRepository->findByEmail($user->getUserIdentifier());
+        $invoices = $this->invoicesRepository->findAllByUser($user);
 
         return $this->render("InvoiceTemplates/invoiceList.html.twig", [
             "invoices" => $invoices
@@ -229,9 +215,8 @@ class InvoiceController extends AbstractController
     public function resume(): RedirectResponse|Response
     {
         $user = $this->security->getUser();
-        $userJson = $this->serializer->serialize($user, "json");
-        $userInvoice = $this->serializer->deserialize($userJson, UserInvoice::class, "json");
-        $products = $this->invoiceManager->invoiceResume($userInvoice, null);
+        $user = $this->userRepository->findByEmail($user->getUserIdentifier());
+        $products = $this->invoiceManager->invoiceResume($user, null);
 
         return $this->render("InvoiceTemplates/invoiceResume.html.twig", [
             "products" => $products,
@@ -244,9 +229,8 @@ class InvoiceController extends AbstractController
     public function resumeStatus(string $status): RedirectResponse|Response
     {
         $user = $this->security->getUser();
-        $userJson = $this->serializer->serialize($user, "json");
-        $userInvoice = $this->serializer->deserialize($userJson, UserInvoice::class, "json");
-        $products = $this->invoiceManager->invoiceResume($userInvoice, $status);
+        $user = $this->userRepository->findByEmail($user->getUserIdentifier());
+        $products = $this->invoiceManager->invoiceResume($user, $status);
 
         return $this->render("InvoiceTemplates/invoiceResume.html.twig", [
             "products" => $products,
@@ -259,9 +243,8 @@ class InvoiceController extends AbstractController
     public function findAllInvoicesForStatus(string $status): RedirectResponse|Response
     {
         $user = $this->security->getUser();
-        $userJson = $this->serializer->serialize($user, "json");
-        $userInvoice = $this->serializer->deserialize($userJson, UserInvoice::class, "json");
-        $invoices = $this->invoicesRepository->findAllForStatus($userInvoice, $status);
+        $user = $this->userRepository->findByEmail($user->getUserIdentifier());
+        $invoices = $this->invoicesRepository->findAllForStatus($user, $status);
 
         return $this->render("InvoiceTemplates/invoiceList.html.twig", [
             "invoices" => $invoices
@@ -273,10 +256,9 @@ class InvoiceController extends AbstractController
     public function shoppingCartList(): RedirectResponse|Response
     {
         $user = $this->security->getUser();
-        $userJson = $this->serializer->serialize($user, "json");
-        $userInvoice = $this->serializer->deserialize($userJson, UserInvoice::class, "json");
-        $shoppingCart = $this->invoicesRepository->findByDocumentAndStatus(
-            $userInvoice->getDocument(),
+        $user = $this->userRepository->findByEmail($user->getUserIdentifier());
+        $shoppingCart = $this->invoicesRepository->findByUserAndStatus(
+            $user,
             "shopping-cart"
         );
         $formCreateInvoice = $this->createForm(FactureType::class, $shoppingCart);
@@ -311,8 +293,7 @@ class InvoiceController extends AbstractController
         $form = $this->createForm(ProductShoppingCartType::class, $product);
         $form->handleRequest($request);
         $user = $this->security->getUser();
-        $userJson = $this->serializer->serialize($user, "json");
-        $userInvoice = $this->serializer->deserialize($userJson, UserInvoice::class, "json");
+        $user = $this->userRepository->findByEmail($user->getUserIdentifier());
 
         if (!$form->isSubmitted() || !$form->isValid()) {
             return $this->redirect("/product/details/" . $product->getCode() . "?mnsj=err");
@@ -321,7 +302,7 @@ class InvoiceController extends AbstractController
         $products = new ArrayCollection();
         $products->add($product);
 
-        if (!$this->invoiceManager->addProductsToShoppingCart($products, $userInvoice)) {
+        if (!$this->invoiceManager->addProductsToShoppingCart($products, $user)) {
             return $this->redirect("/product/details/" . $product->getCode() . "?mnsj=err");
         }
 
@@ -412,8 +393,9 @@ class InvoiceController extends AbstractController
     #[Route("/shopping-cart/delete/{document}", name: "delete_shopping_cart_view")]
     public function deleteShoppingCartView(string $document): RedirectResponse
     {
-        $shoppingCart = $this->invoicesRepository->findByDocumentAndStatus(
-            $document,
+        $user = $this->userRepository->findByDocument($document);
+        $shoppingCart = $this->invoicesRepository->findByUserAndStatus(
+            $user,
             "shopping-cart"
         );
 
@@ -436,9 +418,8 @@ class InvoiceController extends AbstractController
     public function deleteProductToShoppingCartView(Request $request, string $code): RedirectResponse
     {
         $user = $this->security->getUser();
-        $userJson = $this->serializer->serialize($user, "json");
-        $userInvoice = $this->serializer->deserialize($userJson, UserInvoice::class, "json");
-        $this->invoiceManager->deleteProductToShoppingCart($userInvoice, $code);
+        $user = $this->userRepository->findByEmail($user->getUserIdentifier());
+        $this->invoiceManager->deleteProductToShoppingCart($user, $code);
         $this->documentManager->flush();
 
         return $this->redirect("/invoices/shopping-cart/list");

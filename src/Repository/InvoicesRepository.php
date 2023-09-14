@@ -5,19 +5,19 @@ declare(strict_types=1);
 namespace App\Repository;
 
 use App\Document\Invoice;
-use App\Document\UserInvoice;
+use App\Document\User;
 use Doctrine\Bundle\MongoDBBundle\Repository\ServiceDocumentRepository;
 
 class InvoicesRepository extends ServiceDocumentRepository
 {
-    public function findAllByUser(UserInvoice $user): array
+    public function findAllByUser(User $user): array
     {
-        return $this->findBy(["user.document" => $user->getDocument()], ['date' => 'DESC'], limit: 20);
+        return $this->findBy(["user.id" => $user->getId()], ['date' => 'DESC'], limit: 20);
     }
 
-    public function findAllForStatus(UserInvoice $user, string $status): array
+    public function findAllForStatus(User $user, string $status): array
     {
-        return $this->findBy(["user.document" => $user->getDocument(), "status" => $status], ['date' => 'DESC'], limit: 20);
+        return $this->findBy(["user.id" => $user->getId(), "status" => $status], ['date' => 'DESC'], limit: 20);
     }
 
     public function findById(string $id, string $status)
@@ -30,9 +30,9 @@ class InvoicesRepository extends ServiceDocumentRepository
         return $this->findOneBy(["code" => $code]);
     }
 
-    public function findByDocumentAndStatus(string $document, string $status): ?Invoice
+    public function findByUserAndStatus(User $user, string $status): ?Invoice
     {
-        return $this->findOneBy(["user.document" => $document, "status" => $status]) ?? null;
+        return $this->findOneBy(["user.id" => $user->getId(), "status" => $status]) ?? null;
     }
 
 }

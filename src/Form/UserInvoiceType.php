@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Form;
 
-use App\Document\UserInvoice;
+use App\Document\User;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
@@ -23,7 +23,7 @@ class UserInvoiceType extends AbstractType
     {
         $resolver->setDefaults([
             'csrf_protection' => false,
-            'data_class' => UserInvoice::class
+            'data_class' => User::class
         ]);
     }
 

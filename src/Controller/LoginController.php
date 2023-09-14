@@ -4,10 +4,6 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
-use App\Document\User;
-use App\Document\UserInvoice;
-use App\Form\LoginType;
-use App\Repository\UserRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -15,26 +11,9 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Component\Security\Http\Authentication\AuthenticationUtils;
-use Symfony\Component\Serializer\SerializerInterface;
-use Symfony\Contracts\Service\Attribute\Required;
 
 class LoginController extends AbstractController
 {
-    private UserRepository $userRepository;
-    private SerializerInterface $serializer;
-
-    #[Required]
-    public function setSerializerInterface(SerializerInterface $serializer): void
-    {
-        $this->serializer = $serializer;
-    }
-
-    #[Required]
-    public function setUserRepository(UserRepository $userRepository): void
-    {
-        $this->userRepository = $userRepository;
-    }
-
     #[Route('/login-view', name: 'login_template')]
     public function loginView(AuthenticationUtils $authenticationUtils): Response
     {

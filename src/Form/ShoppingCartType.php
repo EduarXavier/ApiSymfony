@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Form;
 
 use App\Document\Invoice;
+use App\Document\User;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\CollectionType;
 use Symfony\Component\Form\FormBuilderInterface;
@@ -21,7 +22,7 @@ class ShoppingCartType extends AbstractType
                 'allow_delete' => true,
                 'by_reference' => false,
             ])
-            ->add('user', UserInvoiceType::class)
+            ->add('user', User::class)
         ;
     }
 

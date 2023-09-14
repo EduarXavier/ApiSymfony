@@ -23,8 +23,8 @@ class Invoice
     #[MongoDb\Field(type:'date')]
     private DateTime $date;
 
-    #[MongoDb\EmbedOne(targetDocument : UserInvoice::class)]
-    private UserInvoice $user;
+    #[MongoDb\ReferenceOne(targetDocument : User::class, cascade: 'persist')]
+    private User $user;
 
     #[MongoDb\Field(type:'string')]
     private string $status;
@@ -82,12 +82,12 @@ class Invoice
         return $this->products->removeElement($product);
     }
 
-    public function getUser(): UserInvoice
+    public function getUser(): User
     {
         return $this->user;
     }
 
-    public function setUser(UserInvoice $user): static
+    public function setUser(User $user): static
     {
         $this->user = $user;
 

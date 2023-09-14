@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Document\User;
-use App\Document\UserInvoice;
 use Symfony\Bridge\Twig\Mime\TemplatedEmail;
 use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
 use Symfony\Component\Mailer\MailerInterface;
@@ -25,7 +24,7 @@ class EmailService
     /**
      * @throws TransportExceptionInterface
      */
-    public function sendEmail(User|UserInvoice $user, string $mode): void
+    public function sendEmail(User $user, string $mode): void
     {
         if ($mode == 'registro') {
             $subject = 'Gracias por registrarse';
