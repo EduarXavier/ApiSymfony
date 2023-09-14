@@ -44,8 +44,12 @@
                                 </p>
                                 <p class="card-text">
                                     Precio: {{ product.price }}
-                                </p><p class="card-text">
+                                </p>
+                                <p class="card-text">
                                     Cantidad: {{ product.amount }}
+                                </p>
+                                <p class="card-text">
+                                    Estado: {{ product.status }}
                                 </p>
                                 <a
                                         class="btn btn-primary"
@@ -53,43 +57,46 @@
                                 >
                                     Actualizar
                                 </a>
-                                <button
-                                        type="button"
-                                        class="btn btn-primary"
-                                        data-toggle="modal"
-                                        data-target="#addProduct"
-                                >
-                                    Agregar al carrito
-                                </button>
-                                <a
-                                        class="btn btn-danger"
-                                        href="{{ path('delete_product', {'code': product.code}) }}"
-                                >
-                                    Eliminar
-                                </a>
+                                {%  if product.amount > 0 and product.status != 'expired'%}
+                                    <button
+                                            type="button"
+                                            class="btn btn-primary"
+                                            data-toggle="modal"
+                                            data-target="#addProduct"
+                                    >
+                                        Agregar al carrito
+                                    </button>
+                                    <a
+                                            class="btn btn-danger"
+                                            href="{{ path('delete_product', {'code': product.code}) }}"
+                                    >
+                                        Eliminar
+                                    </a>
+                                {%  endif %}
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-            <div class="modal fade" id="addProduct" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-                <div class="modal-dialog">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title" id="exampleModalLabel">Agregar producto</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                        </div>
-                        <div class="modal-body">
-                            {{ form_start(formAddShoppingCart, {"action" : path('add_product_shopping_cart'), "method" : "POST"}) }}
-                            {{ form_row(formAddShoppingCart.code) }}
-                            {{ form_row(formAddShoppingCart.amount) }}
-                                <button type="submit" class="btn btn-primary">Enviar</button>
-                            {{ form_end(formAddShoppingCart) }}
+            {%  if product.amount > 0 and product.status != 'expired' %}
+                <div class="modal fade" id="addProduct" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="exampleModalLabel">Agregar producto</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                                {{ form_start(formAddShoppingCart, {"action" : path('add_product_shopping_cart'), "method" : "POST"}) }}
+                                {{ form_row(formAddShoppingCart.code) }}
+                                {{ form_row(formAddShoppingCart.amount) }}
+                                    <button type="submit" class="btn btn-primary">Enviar</button>
+                                {{ form_end(formAddShoppingCart) }}
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
-
+            {%  endif %}
         {% endif %}
     </div>
 {% endblock %}

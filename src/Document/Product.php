@@ -25,6 +25,9 @@ class Product
     #[MongoDB\Field(type:'int')]
     private ?int $amount;
 
+    #[MongoDB\Field(type:'string')]
+    private ?string $status;
+
     public function getId(): ?string
     {
         return $this->id;
@@ -74,6 +77,18 @@ class Product
     public function setAmount(int $amount): static
     {
         $this->amount = $amount;
+
+        return $this;
+    }
+
+    public function getStatus(): ?string
+    {
+        return $this->status;
+    }
+
+    public function setStatus(?string $status): static
+    {
+        $this->status = $status;
 
         return $this;
     }

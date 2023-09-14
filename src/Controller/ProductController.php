@@ -80,6 +80,17 @@ class ProductController extends AbstractController
     }
 
     #[IsGranted('ROLE_ADMIN')]
+    #[Route('/expired/list-view', name: 'product_expired_list_view', methods: ['GET'])]
+    public function productExpiredListTemplate(): Response
+    {
+        $products = $this->productRepository->findExpiredProducts();
+
+        return $this->render('ProductTemplates/productList.html.twig', [
+            'products' => $products,
+        ]);
+    }
+
+    #[IsGranted('ROLE_ADMIN')]
     #[Route('/details/{code}', name: 'product_details', methods: ['GET'])]
     public function productDetails(string $code): RedirectResponse|Response
     {

@@ -6,6 +6,7 @@ namespace App\Form;
 
 use App\Document\Product;
 use Symfony\Component\Form\AbstractType;
+use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\NumberType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
@@ -19,7 +20,16 @@ class UpdateProductType extends AbstractType
             ->add('name', TextType::class, ['label' => 'Nombre'])->setRequired(false)
             ->add('price', NumberType::class, ['label' => 'Precio'])->setRequired(false)
             ->add('amount', NumberType::class, ['label' => 'Cantidad'])->setRequired(false)
-        ;
+            ->add('status', ChoiceType::class, [
+                'label' => 'Estado',
+                'choices' => [
+                    'Terminado' => 'expired',
+                    'Disponible' => 'available',
+                ],
+                'attr' => [
+                    'class' => 'form-control mb-4'
+                ]
+            ])->setRequired(false);
     }
     public function configureOptions(OptionsResolver $resolver): void
     {

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Repository;
 
 use App\Document\Invoice;
+use App\Document\Product;
 use App\Document\User;
 use Doctrine\Bundle\MongoDBBundle\Repository\ServiceDocumentRepository;
 
@@ -35,4 +36,8 @@ class InvoicesRepository extends ServiceDocumentRepository
         return $this->findOneBy(["user.id" => $user->getId(), "status" => $status]) ?? null;
     }
 
+    public function findByProduct(Product $product): array
+    {
+        return $this->findBy(["products.code" => $product->getCode()], ['date' => 'DESC'], limit: 20);
+    }
 }
