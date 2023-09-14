@@ -29,7 +29,7 @@ class ProductManager
     public function addProduct(Product $product): void
     {
         $product->setCode(str_ireplace(" ", "-", uniqid(). "-" . $product->getName()));
-        $product->setStatus("Available");
+        $product->setStatus("available");
         $this->productRepository->getDocumentManager()->persist($product);
     }
 

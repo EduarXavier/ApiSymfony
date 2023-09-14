@@ -6,8 +6,6 @@ namespace App\Repository;
 
 use App\Document\Product;
 use Doctrine\Bundle\MongoDBBundle\Repository\ServiceDocumentRepository;
-use Doctrine\ODM\MongoDB\LockException;
-use Doctrine\ODM\MongoDB\Mapping\MappingException;
 
 class ProductRepository extends ServiceDocumentRepository
 {

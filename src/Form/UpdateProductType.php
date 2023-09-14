@@ -11,6 +11,7 @@ use Symfony\Component\Form\Extension\Core\Type\NumberType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
+use Symfony\Component\Validator\Constraints as Assert;
 
 class UpdateProductType extends AbstractType
 {
@@ -19,7 +20,12 @@ class UpdateProductType extends AbstractType
         $builder
             ->add('name', TextType::class, ['label' => 'Nombre'])->setRequired(false)
             ->add('price', NumberType::class, ['label' => 'Precio'])->setRequired(false)
-            ->add('amount', NumberType::class, ['label' => 'Cantidad'])->setRequired(false)
+            ->add('amount', NumberType::class, [
+                'label' => 'Cantidad',
+                'constraints' => [
+                    new Assert\GreaterThan(0, null, "El valor debe ser mayor a 0")
+                    ]
+            ])->setRequired(false)
             ->add('status', ChoiceType::class, [
                 'label' => 'Estado',
                 'choices' => [
