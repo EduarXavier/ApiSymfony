@@ -11,7 +11,7 @@ use Symfony\Component\Security\Core\User\UserInterface;
 #[MongoDB\Document]
 class User implements UserInterface, PasswordAuthenticatedUserInterface
 {
-    #[MongoDB\Id()]
+    #[MongoDB\Id]
     private string $id;
 
     #[MongoDB\Field(type: 'string')]
@@ -32,7 +32,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     #[MongoDB\Field(type:'string')]
     #[MongoDB\UniqueIndex(background: true)]
-    #[MongoDB\Index(background: true)]
     private string $email;
 
     #[MongoDB\Field(type:'string')]
@@ -129,7 +128,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     public function getRoles(): array
     {
-        return ['ROLE_USER'];
+        return [$this->rol];
     }
 
     public function eraseCredentials()

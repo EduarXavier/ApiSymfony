@@ -1,13 +1,29 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Tests\Document;
 
 use App\Document\User;
+use PHPUnit\Framework\MockObject\Exception;
 use PHPUnit\Framework\TestCase;
 
 class UserTest extends TestCase
 {
     private User $user;
+
+    /**
+     * @throws Exception
+     */
+    public function testGetId(): void
+    {
+        $id = uniqid();
+        $this->user = $this->createConfiguredMock(User::class, [
+            "getId" => $id
+        ]);
+
+        self::assertSame($id, $this->user->getId());
+    }
 
     public function testGetName(): void
     {

@@ -4,32 +4,30 @@ declare(strict_types=1);
 
 namespace App\Document;
 
+use DateTime;
 use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ODM\MongoDB\Mapping\Annotations as MongoDB;
-use Doctrine\ODM\MongoDB\Mapping\Annotations\EmbedMany;
-use Doctrine\ODM\MongoDB\Mapping\Annotations\EmbedOne;
-use Doctrine\ODM\MongoDB\Mapping\Annotations\Field;
-use Doctrine\ODM\MongoDB\Mapping\Annotations\Id;
 
 #[MongoDB\Document]
 class Invoice
 {
-    #[Id()]
-    private string $id;
+    #[MongoDb\Id(strategy: 'auto')]
+    protected ?string $id;
 
-    #[Field(type:'string')]
+    #[MongoDb\Field(type:'string')]
     private string $code;
 
-    #[EmbedMany(targetDocument: ProductInvoice::class)]
-    private ArrayCollection $products;
+    #[MongoDb\EmbedMany(targetDocument: ProductInvoice::class)]
+    private Collection $products;
 
-    #[Field(type:'string')]
-    private string $date;
+    #[MongoDb\Field(type:'date')]
+    private DateTime $date;
 
-    #[EmbedOne(targetDocument : UserInvoice::class)]
-    private UserInvoice $user;
+    #[MongoDb\ReferenceOne(targetDocument : User::class, cascade: 'persist')]
+    private User $user;
 
-    #[Field(type:'string')]
+    #[MongoDb\Field(type:'string')]
     private string $status;
 
     public function __construct()
@@ -37,7 +35,7 @@ class Invoice
         $this->products = new ArrayCollection();
     }
 
-    public function getId(): string
+    public function getId(): ?string
     {
         return $this->id;
     }
@@ -54,24 +52,17 @@ class Invoice
         return $this;
     }
 
-    public function getProducts(): ArrayCollection
+    public function getProducts(): Collection
     {
         return $this->products;
     }
 
-    public function setProducts(ArrayCollection $products): static
-    {
-        $this->products = $products;
-
-        return $this;
-    }
-
-    public function getDate(): string
+    public function getDate(): DateTime
     {
         return $this->date;
     }
 
-    public function setDate(string $date): static
+    public function setDate(DateTime $date): static
     {
         $this->date = $date;
 
@@ -92,12 +83,12 @@ class Invoice
         return $this->products->removeElement($product);
     }
 
-    public function getUser(): UserInvoice
+    public function getUser(): User
     {
         return $this->user;
     }
 
-    public function setUser(UserInvoice $user): static
+    public function setUser(User $user): static
     {
         $this->user = $user;
 

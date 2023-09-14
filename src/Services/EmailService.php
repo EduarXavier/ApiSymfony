@@ -5,17 +5,18 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Document\User;
-use App\Document\UserInvoice;
 use Symfony\Bridge\Twig\Mime\TemplatedEmail;
 use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
 use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\Mime\Address;
+use Symfony\Contracts\Service\Attribute\Required;
 
 class EmailService
 {
     private MailerInterface $mailer;
 
-    public function __construct(MailerInterface $mailer)
+    #[Required]
+    public function setMailer(MailerInterface $mailer): void
     {
         $this->mailer = $mailer;
     }
@@ -23,7 +24,7 @@ class EmailService
     /**
      * @throws TransportExceptionInterface
      */
-    public function sendEmail(User|UserInvoice $user, string $mode): void
+    public function sendEmail(User $user, string $mode): void
     {
         if ($mode == 'registro') {
             $subject = 'Gracias por registrarse';

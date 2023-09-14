@@ -8,39 +8,52 @@ use App\Document\User;
 use App\Form\PasswordUpdateType;
 use App\Form\UserType;
 use App\Form\UserUpdateType;
+use App\Managers\UserManager;
 use App\Repository\UserRepository;
 use App\Services\EmailService;
-use App\Services\UserService;
 use Doctrine\ODM\MongoDB\DocumentManager;
 use Doctrine\ODM\MongoDB\Mapping\MappingException;
 use Doctrine\ODM\MongoDB\MongoDBException;
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Annotation\Route;
-use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-
+use Symfony\Contracts\Service\Attribute\Required;
 
 #[Route('/user')]
 class UserController extends AbstractController
 {
     private UserRepository $userRepository;
-    private UserService $userService;
+    private UserManager $userManager;
     private EmailService $emailService;
+    private DocumentManager $documentManager;
 
-
-    public function __construct(
-        UserRepository $userRepository,
-        UserService $userService,
-        EmailService $emailService
-    ) {
+    #[Required]
+    public function setUserRepository(UserRepository $userRepository): void
+    {
         $this->userRepository = $userRepository;
-        $this->userService = $userService;
+    }
+
+    #[Required]
+    public function setUserManager(UserManager $userManager): void
+    {
+        $this->userManager = $userManager;
+    }
+
+    #[Required]
+    public function setEmailService(EmailService $emailService): void
+    {
         $this->emailService = $emailService;
     }
 
+    #[Required]
+    public function setDocumentManager(DocumentManager $documentManager): void
+    {
+        $this->documentManager = $documentManager;
+    }
 
     /**
      * @throws MongoDBException
@@ -65,9 +78,16 @@ class UserController extends AbstractController
             $user->getPassword()
         );
         $user->setPassword($hashedPassword);
-        $dm = $this->userService->addUser($user);
+
+        if ($this->userRepository->findByDocument($user->getDocument())) {
+            return $this->json(['Error' => 'Ya existe un usuario con este documento'], Response::HTTP_BAD_REQUEST);
+        } else if ($this->userRepository->findByEmail($user->getEmail())) {
+            return $this->json(['Error' => 'Ya existe un usuario con este Email'], Response::HTTP_BAD_REQUEST);
+        }
+
+        $this->userManager->addUser($user);
         $this->emailService->sendEmail($user, 'registro');
-        $dm->flush();
+        $this->documentManager->flush();
 
         return $this->json(['message' => 'Usuario agregado correctamente'], Response::HTTP_OK);
     }
@@ -94,8 +114,8 @@ class UserController extends AbstractController
             return $this->json(['error' => $errors], Response::HTTP_BAD_REQUEST);
         }
 
-        $dm = $this->userService->updateUser($user, null);
-        $dm->flush();
+        $this->userManager->updateUser($user, null);
+        $this->documentManager->flush();
 
         return $this->json(['message' => 'Usuario actualizado correctamente'], Response::HTTP_OK);
     }
@@ -105,9 +125,9 @@ class UserController extends AbstractController
      * @throws MappingException
      */
     #[Route('/api/update/password/{id}', name: 'updatePassword', methods: ['POST'])]
-    public function changePassword($id, Request $request, DocumentManager $documentManager): JsonResponse
+    public function changePassword($id, Request $request): JsonResponse
     {
-        $user = $this->userRepository->findById($id, $documentManager);
+        $user = $this->userRepository->findById($id);
 
         if (!$user) {
             return $this->json(['error' => 'Usuario no encontrado'], Response::HTTP_BAD_REQUEST);
@@ -122,8 +142,8 @@ class UserController extends AbstractController
             return $this->json(['error' => $errors], Response::HTTP_BAD_REQUEST);
         }
 
-        $dm = $this->userService->updateUser($user, 'password');
-        $dm->flush();
+        $this->userManager->updateUser($user, 'password');
+        $this->documentManager->flush();
 
         return $this->json(['message' => 'Contraseña actualizada correctamente'], Response::HTTP_BAD_REQUEST);
     }

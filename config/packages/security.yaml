@@ -29,6 +29,15 @@ security:
             json_login:
                 provider: mongodb_users
                 check_path: /api/login
+            form_login:
+                login_path: login_template
+                check_path: login_template
+                enable_csrf: true
+            logout:
+                path: /logout
+                clear_site_data:
+                    - cookies
+                    - storage
 
             # activate different ways to authenticate
             # https://symfony.com/doc/current/security.html#the-firewall

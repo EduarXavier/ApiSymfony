@@ -6,27 +6,28 @@ namespace App\Controller;
 
 use App\Document\Invoice;
 use App\Document\ProductInvoice;
-use App\Document\UserInvoice;
 use App\Form\FactureType;
 use App\Form\ProductShoppingCartType;
 use App\Form\ShoppingCartType;
+use App\Managers\InvoiceManager;
 use App\Repository\InvoicesRepository;
 use App\Repository\UserRepository;
 use App\Services\EmailService;
-use App\Services\InvoiceService;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ODM\MongoDB\DocumentManager;
 use Doctrine\ODM\MongoDB\MongoDBException;
 use Doctrine\Persistence\Mapping\MappingException;
 use Exception;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
 use Symfony\Component\Routing\Annotation\Route;
-use Symfony\Component\Serializer\SerializerInterface;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
+use Symfony\Contracts\Service\Attribute\Required;
 
 #[Route("/invoices")]
 class InvoiceController extends AbstractController
@@ -34,21 +35,44 @@ class InvoiceController extends AbstractController
     private UserRepository $userRepository;
     private InvoicesRepository $invoicesRepository;
     private EmailService $emailService;
-    private InvoiceService $invoiceService;
-    private SerializerInterface $serializer;
+    private InvoiceManager $invoiceManager;
+    private DocumentManager $documentManager;
+    private Security $security;
 
-    public function __construct(
-        InvoiceService $invoicesService,
-        EmailService $emailService,
-        UserRepository $userRepository,
-        InvoicesRepository $invoicesRepository,
-        SerializerInterface $serializer
-    ) {
-        $this->invoiceService = $invoicesService;
-        $this->emailService = $emailService;
+    #[Required]
+    public function setUserRepository(UserRepository $userRepository): void
+    {
         $this->userRepository = $userRepository;
+    }
+
+    #[Required]
+    public function setInvoiceRepository(InvoicesRepository $invoicesRepository): void
+    {
         $this->invoicesRepository = $invoicesRepository;
-        $this->serializer = $serializer;
+    }
+
+    #[Required]
+    public function setEmailService(EmailService $emailService): void
+    {
+        $this->emailService = $emailService;
+    }
+
+    #[Required]
+    public function setInvoiceManager(InvoiceManager $invoiceManager): void
+    {
+        $this->invoiceManager = $invoiceManager;
+    }
+
+    #[Required]
+    public function setDocumentManager(DocumentManager $documentManager): void
+    {
+        $this->documentManager = $documentManager;
+    }
+
+    #[Required]
+    public function setSecurity(Security $security): void
+    {
+        $this->security = $security;
     }
 
     // Endpoints API
@@ -68,19 +92,14 @@ class InvoiceController extends AbstractController
         }
 
         $user = $this->userRepository->findByDocument($invoices->getUser()->getDocument());
-        $userJson = $this->serializer->serialize($user, "json");
-        $userInvoive = $this->serializer->deserialize($userJson, UserInvoice::class, "json");
-        $dm = $this->invoiceService->addProductsToShoppingCart(
-            $invoices->getProducts(),
-            $userInvoive
-        );
 
-        if ($dm) {
-            $dm->flush();
-            return new JsonResponse(["mensaje" => "Agregado con éxito"], Response::HTTP_OK);
+        if ($this->invoiceManager->addProductsToShoppingCart($invoices->getProducts(), $user)) {
+            return new JsonResponse(["error" => "No se han podido agregar los productos"], Response::HTTP_BAD_REQUEST);
         }
 
-        return new JsonResponse(["error" => "No se han podido agregar los productos"], Response::HTTP_BAD_REQUEST);
+        $this->documentManager->flush();
+
+        return new JsonResponse(["mensaje" => "Agregado con éxito"], Response::HTTP_OK);
     }
 
     /**
@@ -88,7 +107,7 @@ class InvoiceController extends AbstractController
      * @throws \Doctrine\ODM\MongoDB\Mapping\MappingException
      */
     #[Route("/api/update/shopping-cart/", name: "update_shopping_cart", methods: ["POST"])]
-    public function updateShoppingCart(Request $request, DocumentManager $documentManager): ?JsonResponse
+    public function updateShoppingCart(Request $request): ?JsonResponse
     {
         $invoices = new Invoice();
         $form = $this->createForm(ShoppingCartType::class, $invoices);
@@ -99,30 +118,26 @@ class InvoiceController extends AbstractController
         }
 
         $user = $this->userRepository->findByDocument($invoices->getUser()->getDocument());
-        $invoice = $this->invoicesRepository->findByDocumentAndStatus($user->getDocument(), "shopping-cart");
+        $invoice = $this->invoicesRepository->findByUserAndStatus($user, "shopping-cart");
 
         if (!$invoice) {
             return new JsonResponse(["error" => "No se ha encontrado el carrito"], Response::HTTP_BAD_REQUEST);
         }
 
-        $dm = $this->invoiceService->addToExistingCart(
-            $invoices->getProducts(),
-            $invoice
-        );
-
-        if ($dm) {
-            $dm->flush();
-            return new JsonResponse(["mensaje" => "Agregado con éxito"], Response::HTTP_OK);
+        if (!$this->invoiceManager->addToExistingCart($invoices->getProducts(), $invoice)) {
+            return new JsonResponse(["error" => "No se han podido agregar los productos"], Response::HTTP_BAD_REQUEST);
         }
 
-        return new JsonResponse(["error" => "No se han podido agregar los productos"], Response::HTTP_BAD_REQUEST);
+        $this->documentManager->flush();
+
+        return new JsonResponse(["mensaje" => "Agregado con éxito"], Response::HTTP_OK);
     }
 
     /**
      * @throws MongoDBException
      */
     #[Route("/api/create-invoice", name: "create-invoice", methods: ["POST"])]
-    public function createInvoices(Request $request, DocumentManager $documentManager): ?JsonResponse
+    public function createInvoices(Request $request): ?JsonResponse
     {
         $invoice = new Invoice();
         $form = $this->createForm(FactureType::class, $invoice);
@@ -138,8 +153,8 @@ class InvoiceController extends AbstractController
             return new JsonResponse(["error" => "No se ha encontrado la factura"], Response::HTTP_BAD_REQUEST);
         }
 
-        $dm = $this->invoiceService->createInvoice($invoice);
-        $dm->flush();
+        $this->invoiceManager->createInvoice($invoice);
+        $this->documentManager->flush();
 
         return new JsonResponse(["mensaje" => "Se ha creado la factura"], Response::HTTP_OK);
     }
@@ -165,8 +180,8 @@ class InvoiceController extends AbstractController
             return new JsonResponse(["error" => "No se ha encontrado la factura"], Response::HTTP_BAD_REQUEST);
         }
 
-        $invoiceEmail = $this->invoicesRepository->findByDocumentAndStatus(
-            $invoice->getUser()->getDocument(),
+        $invoiceEmail = $this->invoicesRepository->findByUserAndStatus(
+            $invoice->getUser(),
             "pay",
         );
 
@@ -174,41 +189,34 @@ class InvoiceController extends AbstractController
             $this->emailService->sendEmail($invoice->getUser(), "first-shop");
         }
 
-        $dm = $this->invoiceService->payInvoice($invoice);
-        $dm->flush();
+        $this->invoiceManager->payInvoice($invoice);
+        $this->documentManager->flush();
 
         return new JsonResponse(["mensaje" => "Se ha pagado"], Response::HTTP_OK);
     }
 
     // Endpoints View
 
+    #[IsGranted('ROLE_ADMIN')]
     #[Route("/list", name: "invoices_list")]
-    public function findAllInvoices(Request $request): RedirectResponse|Response
+    public function findAllInvoices(): RedirectResponse|Response
     {
-        $session = $request->getSession();
-
-        if (empty($session->get("user")) || empty($session->get("rol")) || $session->get("rol") != "ADMIN") {
-            return $this->redirectToRoute("login_template");
-        }
-
-        $invoices = $this->invoicesRepository->findAllByUser($session->get("user"));
+        $user = $this->security->getUser();
+        $user = $this->userRepository->findByEmail($user->getUserIdentifier());
+        $invoices = $this->invoicesRepository->findAllByUser($user);
 
         return $this->render("InvoiceTemplates/invoiceList.html.twig", [
             "invoices" => $invoices
         ]);
     }
 
+    #[IsGranted('ROLE_ADMIN')]
     #[Route("/resume", name: "invoices_resume")]
-    public function resume(Request $request): RedirectResponse|Response
+    public function resume(): RedirectResponse|Response
     {
-        $session = $request->getSession();
-
-        if (empty($session->get("user")) || empty($session->get("rol")) || $session->get("rol") != "ADMIN") {
-            return $this->redirectToRoute("login_template");
-        }
-
-        $user = $session->get("user");
-        $products = $this->invoiceService->invoiceResume($user, null);
+        $user = $this->security->getUser();
+        $user = $this->userRepository->findByEmail($user->getUserIdentifier());
+        $products = $this->invoiceManager->invoiceResume($user, null);
 
         return $this->render("InvoiceTemplates/invoiceResume.html.twig", [
             "products" => $products,
@@ -216,17 +224,13 @@ class InvoiceController extends AbstractController
         ]);
     }
 
+    #[IsGranted('ROLE_ADMIN')]
     #[Route("/resume/{status}", name: "invoices_resume_status")]
-    public function resumeStatus(Request $request, string $status): RedirectResponse|Response
+    public function resumeStatus(string $status): RedirectResponse|Response
     {
-        $session = $request->getSession();
-
-        if (empty($session->get("user")) || empty($session->get("rol")) || $session->get("rol") != "ADMIN") {
-            return $this->redirectToRoute("login_template");
-        }
-
-        $user = $session->get("user");
-        $products = $this->invoiceService->invoiceResume($user, $status);
+        $user = $this->security->getUser();
+        $user = $this->userRepository->findByEmail($user->getUserIdentifier());
+        $products = $this->invoiceManager->invoiceResume($user, $status);
 
         return $this->render("InvoiceTemplates/invoiceResume.html.twig", [
             "products" => $products,
@@ -234,72 +238,62 @@ class InvoiceController extends AbstractController
         ]);
     }
 
+    #[IsGranted('ROLE_ADMIN')]
     #[Route("/list/{status}", name: "invoices_list_status")]
-    public function findAllInvoicesForStatus(Request $request, string $status): RedirectResponse|Response
+    public function findAllInvoicesForStatus(string $status): RedirectResponse|Response
     {
-        $session = $request->getSession();
-
-        if (empty($session->get("user")) || empty($session->get("rol")) || $session->get("rol") != "ADMIN") {
-            return $this->redirectToRoute("login_template");
-        }
-
-        $invoices = $this->invoicesRepository->findAllForStatus($session->get("user"), $status);
+        $user = $this->security->getUser();
+        $user = $this->userRepository->findByEmail($user->getUserIdentifier());
+        $invoices = $this->invoicesRepository->findAllForStatus($user, $status);
 
         return $this->render("InvoiceTemplates/invoiceList.html.twig", [
             "invoices" => $invoices
         ]);
     }
 
+    #[IsGranted('ROLE_ADMIN')]
     #[Route("/shopping-cart/list", name: "shopping_cart_list")]
-    public function shoppingCartList(Request $request): RedirectResponse|Response
+    public function shoppingCartList(): RedirectResponse|Response
     {
-        $session = $request->getSession();
-
-        if (empty($session->get("user")) || empty($session->get("rol")) || $session->get("rol") != "ADMIN") {
-            return $this->redirectToRoute("login_template");
-        }
-
-        $shoppingCart = $this->invoicesRepository->findByDocumentAndStatus(
-            $session->get("document"),
+        $user = $this->security->getUser();
+        $user = $this->userRepository->findByEmail($user->getUserIdentifier());
+        $shoppingCart = $this->invoicesRepository->findByUserAndStatus(
+            $user,
             "shopping-cart"
         );
+        $formCreateInvoice = $this->createForm(FactureType::class, $shoppingCart);
 
         return $this->render("InvoiceTemplates/shoppingCartDetails.html.twig", [
-            "shoppingCart" => $shoppingCart
+            "shoppingCart" => $shoppingCart,
+            "formCreateInvoice" => $formCreateInvoice
         ]);
     }
 
+    #[IsGranted('ROLE_ADMIN')]
     #[Route("/details/{id}", name: "invoices_details")]
-    public function invoiceDetails(Request $request, string $id): RedirectResponse|Response
+    public function invoiceDetails(string $id): RedirectResponse|Response
     {
-        $session = $request->getSession();
-
-        if (empty($session->get("user")) || empty($session->get("rol")) || $session->get("rol") != "ADMIN") {
-            return $this->redirectToRoute("login_template");
-        }
-
         $invoice = $this->invoicesRepository->findById($id, "invoice");
+        $formCreateInvoice = $this->createForm(FactureType::class, $invoice);
 
         return $this->render("InvoiceTemplates/invoiceDetails.html.twig", [
-            "invoice" => $invoice
+            "invoice" => $invoice,
+            "formCreateInvoice" => $formCreateInvoice
         ]);
     }
 
     /**
      * @throws Exception
      */
+    #[IsGranted('ROLE_ADMIN')]
     #[Route("/shopping-cart/add-product", name: "add_product_shopping_cart", methods: ["POST"])]
     public function addProductShoppingCart(Request $request): RedirectResponse
     {
-        $session = $request->getSession();
         $product = new ProductInvoice();
         $form = $this->createForm(ProductShoppingCartType::class, $product);
-
-        if (empty($session->get("user")) || empty($session->get("rol")) || $session->get("rol") != "ADMIN") {
-            return $this->redirectToRoute("login_template");
-        }
-
         $form->handleRequest($request);
+        $user = $this->security->getUser();
+        $user = $this->userRepository->findByEmail($user->getUserIdentifier());
 
         if (!$form->isSubmitted() || !$form->isValid()) {
             return $this->redirect("/product/details/" . $product->getCode() . "?mnsj=err");
@@ -307,12 +301,12 @@ class InvoiceController extends AbstractController
 
         $products = new ArrayCollection();
         $products->add($product);
-        $dm = $this->invoiceService->addProductsToShoppingCart(
-            $products,
-            $session->get("user"),
-        );
 
-        $dm->flush();
+        if (!$this->invoiceManager->addProductsToShoppingCart($products, $user)) {
+            return $this->redirect("/product/details/" . $product->getCode() . "?mnsj=err");
+        }
+
+        $this->documentManager->flush();
 
         return $this->redirect("/product/details/" . $product->getCode() . "?mnsj=ok");
     }
@@ -320,17 +314,12 @@ class InvoiceController extends AbstractController
     /**
      * @throws MongoDBException
      */
+    #[IsGranted('ROLE_ADMIN')]
     #[Route("/create/invoice/", name: "create_invoice_view")]
     public function createInvoice(Request $request): RedirectResponse
     {
-        $session = $request->getSession();
         $invoice = new Invoice();
         $form = $this->createForm(FactureType::class, $invoice);
-
-        if (empty($session->get("user")) || empty($session->get("rol")) || $session->get("rol") != "ADMIN") {
-            return $this->redirectToRoute("login_template");
-        }
-
         $form->handleRequest($request);
 
         if (!$form->isSubmitted() || !$form->isValid()) {
@@ -338,9 +327,8 @@ class InvoiceController extends AbstractController
         }
 
         $invoice = $this->invoicesRepository->findByCode($invoice->getCode());
-
-        $dm = $this->invoiceService->createInvoice($invoice);
-        $dm->flush();
+        $this->invoiceManager->createInvoice($invoice);
+        $this->documentManager->flush();
 
         return $this->redirect("/invoices/details/" . $invoice->getId());
     }
@@ -349,15 +337,10 @@ class InvoiceController extends AbstractController
      * @throws MongoDBException
      * @throws TransportExceptionInterface
      */
+    #[IsGranted('ROLE_ADMIN')]
     #[Route("/pay/{id}", name: "pay_invoice_view")]
-    public function payInvoiceView(Request $request, string $id): RedirectResponse
+    public function payInvoiceView(string $id): RedirectResponse
     {
-        $session = $request->getSession();
-
-        if (empty($session->get("user")) || empty($session->get("rol")) || $session->get("rol") != "ADMIN") {
-            return $this->redirectToRoute("login_template");
-        }
-
         $invoice = $this->invoicesRepository->findById($id, "invoice");
 
         if (!$invoice) {
@@ -376,8 +359,8 @@ class InvoiceController extends AbstractController
             $this->emailService->sendEmail($user, "first-shop");
         }
 
-        $dm = $this->invoiceService->payInvoice($invoice);
-        $dm->flush();
+        $this->invoiceManager->payInvoice($invoice);
+        $this->documentManager->flush();
 
         return $this->redirect("/invoices/details/" . $invoice->getId());
     }
@@ -386,18 +369,18 @@ class InvoiceController extends AbstractController
      * @throws MongoDBException
      * @throws MappingException
      */
+    #[IsGranted('ROLE_ADMIN')]
     #[Route("/delete/invoice/{id}", name: "delete_invoice_view")]
     public function deleteInvoiceView(Request $request, string $id): RedirectResponse
     {
-        $session = $request->getSession();
+        $invoice = $this->invoicesRepository->findById($id, "invoice");
 
-        if (empty($session->get("user")) || empty($session->get("rol")) || $session->get("rol") != "ADMIN") {
-            return $this->redirectToRoute("login_template");
+        if (!$this->invoiceManager->cancelInvoice($invoice)) {
+            $this->addFlash('error', 'No se ha podido cancelar');
+            return $this->redirect("/invoices/details/" . $invoice->getId());
         }
 
-        $invoice = $this->invoicesRepository->findById($id, "invoice");
-        $dm = $this->invoiceService->cancelInvoice($invoice);
-        $dm->flush();
+        $this->documentManager->flush();
 
         return $this->redirect("/invoices/details/" . $invoice->getId());
     }
@@ -406,21 +389,22 @@ class InvoiceController extends AbstractController
      * @throws MongoDBException
      * @throws MappingException
      */
+    #[IsGranted('ROLE_ADMIN')]
     #[Route("/shopping-cart/delete/{document}", name: "delete_shopping_cart_view")]
-    public function deleteShoppingCartView(Request $request, string $document): RedirectResponse
+    public function deleteShoppingCartView(string $document): RedirectResponse
     {
-        $session = $request->getSession();
-
-        if (empty($session->get("user")) || empty($session->get("rol")) || $session->get("rol") != "ADMIN") {
-            return $this->redirectToRoute("login_template");
-        }
-
-        $shoppingCart = $this->invoicesRepository->findByDocumentAndStatus(
-            $document,
+        $user = $this->userRepository->findByDocument($document);
+        $shoppingCart = $this->invoicesRepository->findByUserAndStatus(
+            $user,
             "shopping-cart"
         );
-        $dm = $this->invoiceService->deleteShoppingCart($shoppingCart);
-        $dm->flush();
+
+        if (!$this->invoiceManager->deleteShoppingCart($shoppingCart)) {
+            $this->addFlash('error', 'No se ha podido eliminar');
+            $this->redirect("/invoices/details/" . $shoppingCart->getId());
+        }
+
+        $this->documentManager->flush();
 
         return $this->redirect("/invoices/details/" . $shoppingCart->getId());
     }
@@ -429,17 +413,14 @@ class InvoiceController extends AbstractController
      * @throws \Doctrine\ODM\MongoDB\Mapping\MappingException
      * @throws MongoDBException
      */
+    #[IsGranted('ROLE_ADMIN')]
     #[Route("/shopping-cart/delete-product/{code}", name: "delete_product_to_shopping_cart_view")]
     public function deleteProductToShoppingCartView(Request $request, string $code): RedirectResponse
     {
-        $session = $request->getSession();
-
-        if (empty($session->get("user")) || empty($session->get("rol")) || $session->get("rol") != "ADMIN") {
-            return $this->redirectToRoute("login_template");
-        }
-
-        $dm = $this->invoiceService->deleteProductToShoppingCart($session->get("user"), $code);
-        $dm->flush();
+        $user = $this->security->getUser();
+        $user = $this->userRepository->findByEmail($user->getUserIdentifier());
+        $this->invoiceManager->deleteProductToShoppingCart($user, $code);
+        $this->documentManager->flush();
 
         return $this->redirect("/invoices/shopping-cart/list");
     }

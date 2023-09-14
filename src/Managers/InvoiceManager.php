@@ -2,54 +2,65 @@
 
 declare(strict_types=1);
 
-namespace App\Services;
+namespace App\Managers;
 
 use App\Document\Invoice;
 use App\Document\Product;
 use App\Document\ProductInvoice;
 use App\Document\User;
-use App\Document\UserInvoice;
 use App\Repository\InvoicesRepository;
 use App\Repository\ProductRepository;
 use DateTime;
 use DateTimeZone;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
-use Doctrine\ODM\MongoDB\DocumentManager;
 use Doctrine\ODM\MongoDB\LockException;
 use Doctrine\ODM\MongoDB\Mapping\MappingException;
 use Doctrine\ODM\MongoDB\MongoDBException;
 use Exception;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Serializer\SerializerInterface;
+use Symfony\Contracts\Service\Attribute\Required;
 
 
-class InvoiceService
+class InvoiceManager
 {
     private InvoicesRepository $invoicesRepository;
-    private ProductService $productService;
+    private ProductManager $productManager;
     private SerializerInterface $serializer;
     private ProductRepository $productRepository;
 
-    public function __construct (
-        InvoicesRepository $invoicesRepository,
-        ProductRepository $productRepository,
-        ProductService $productService,
-        SerializerInterface $serializer
-    ) {
+    #[Required]
+    public function setInvoicesRepository(InvoicesRepository $invoicesRepository): void
+    {
         $this->invoicesRepository = $invoicesRepository;
-        $this->productService = $productService;
-        $this->productRepository = $productRepository;
+    }
+
+    #[Required]
+    public function setProductManager(ProductManager $productManager): void
+    {
+        $this->productManager = $productManager;
+    }
+
+    #[Required]
+    public function setSerializerInterface(SerializerInterface $serializer): void
+    {
         $this->serializer = $serializer;
+    }
+
+    #[Required]
+    public function setProductRepository(ProductRepository $productRepository): void
+    {
+        $this->productRepository = $productRepository;
     }
 
     /**
      * @throws MongoDBException
      * @throws Exception
      */
-    public function addProductsToShoppingCart(Collection $products, UserInvoice $user): ?DocumentManager
+    public function addProductsToShoppingCart(Collection $products, User $user): bool
     {
-        $shoppingCart = $this->invoicesRepository->findByDocumentAndStatus($user->getDocument(), "shopping-cart");
+        $shoppingCart = $this->invoicesRepository->findByUserAndStatus($user, "shopping-cart");
 
         if ($shoppingCart) {
             return $this->addToExistingCart($products, $shoppingCart);
@@ -58,7 +69,7 @@ class InvoiceService
         return $this->createNewCart($products, $user);
     }
 
-    public function invoiceResume(UserInvoice $user, ?string $order ): ArrayCollection
+    public function invoiceResume(User $user, ?string $order ): ArrayCollection
     {
         $invoices = $this->invoicesRepository->findAllByUser($user);
         $products = [];
@@ -73,26 +84,17 @@ class InvoiceService
             }
         }
 
-        if ($order == "price") {
-            usort($products, function ($a, $b) {
-                return $b->getPrice() - $a->getPrice();
-            });
-        } else if ($order == "amount") {
-            usort($products, function ($a, $b) {
-                return $b->getAmount() - $a->getAmount();
-            });
-        } else if ($order == "total") {
-            usort($products, function ($a, $b) {
-                return $b->getAmount() * $b->getPrice() - $a->getAmount() * $a->getPrice();
-            });
-        } else {
-            usort($products, function ($a, $b) {
-                return strcmp($a->getName(), $b->getName());
-            });
+        switch ($order) {
+            case "price" : usort($products, fn($a, $b) => $b->getPrice() - $a->getPrice());
+                break;
+            case "amount" : usort($products, fn($a, $b) => $b->getAmount() - $a->getAmount());
+                break;
+            case "total" : usort($products, fn($a, $b) => $b->getAmount() - $a->getAmount());
+                break;
+            default : usort($products, fn($a, $b) => strcmp($a->getName(), $b->getName()));
         }
 
         return new ArrayCollection($products);
-
     }
 
     /**
@@ -100,12 +102,12 @@ class InvoiceService
      * @throws LockException
      * @throws Exception
      */
-    public function addToExistingCart(Collection $products, Invoice $shoppingCart): DocumentManager|bool
+    public function addToExistingCart(Collection $products, Invoice $shoppingCart): bool
     {
-        $productsUser = clone $shoppingCart->getProducts();
+        $productsUser = $shoppingCart->getProducts();
 
         foreach ($products as $product) {
-            $productShop = clone $this->productRepository->findByCode($product->getCode());
+            $productShop = $this->productRepository->findByCode($product->getCode());
 
             if (!$productShop) {
                 break;
@@ -115,11 +117,12 @@ class InvoiceService
 
             foreach ($productsUser as $key => $productUser) {
                 if ($productUser->getCode() === $product->getCode()) {
-                    $productsUser->remove($key);
+                    $shoppingCart->removeProduct($productUser);
+                    $productJson = $this->serializer->serialize($productShop, "json");
+                    $productInvoice = $this->serializer->deserialize($productJson, ProductInvoice::class, "json");
+                    $productInvoice->setAmount($productUser->getAmount() + $product->getAmount());
                     $existingProduct = $productUser;
-                    $productUser->setAmount($productUser->getAmount() + $product->getAmount());
-                    $productsUser->add(clone $productUser);
-
+                    $shoppingCart->addProducts($productInvoice);
                     break;
                 }
             }
@@ -129,16 +132,13 @@ class InvoiceService
                 $productJson = $this->serializer->serialize($productShop, "json");
                 $product = $this->serializer->deserialize($productJson, ProductInvoice::class, "json");
                 $product->setAmount($amount);
-                $productsUser->add($product);
+                $shoppingCart->addProducts($product);
             }
 
-            $shoppingCart->setProducts($productsUser);
-
             $this->updateProductAndCheckAvailability($productShop, $product->getAmount());
-
         }
 
-        return $this->invoicesRepository->getDocumentManager();
+        return true;
     }
 
     /**
@@ -146,13 +146,11 @@ class InvoiceService
      * @throws LockException
      * @throws Exception
      */
-    private function createNewCart(Collection $products, UserInvoice $user): ?DocumentManager
+    private function createNewCart(Collection $products, User $user): bool
     {
-        $fecha = new DateTime('now', new DateTimeZone('America/Bogota'));
         $invoices = new Invoice();
-        $this->invoicesRepository->getDocumentManager()->persist($user);
         $invoices->setUser($user);
-        $invoices->setDate($fecha->format("Y-m-d H:i:s"));
+        $invoices->setDate($this->getDate());
         $invoices->setCode(str_ireplace(" ", "-", uniqid(). "-" . $user->getDocument()));
         $invoices->setStatus("shopping-cart");;
 
@@ -161,7 +159,7 @@ class InvoiceService
             $productShop = $this->productRepository->findByCode($product->getCode());
 
             if (!$productShop) {
-                return null;
+                return false;
             }
 
             $productJson = $this->serializer->serialize($productShop, "json");
@@ -172,20 +170,18 @@ class InvoiceService
             $this->updateProductAndCheckAvailability($productShop, $product->getAmount());
         }
 
-        return $this->invoicesRepository->getDocumentManager();
+        $this->invoicesRepository->getDocumentManager()->persist($invoices);
+        return true;
     }
 
     /**
      * @throws MongoDBException
      * @throws Exception
      */
-    public function createInvoice(Invoice $invoice): DocumentManager
+    public function createInvoice(Invoice $invoice): void
     {
-        $fecha = new DateTime('now', new DateTimeZone('America/Bogota'));
-        $invoice->setDate($fecha->format("Y-m-d H:i:s"));
+        $invoice->setDate($this->getDate());
         $invoice->setStatus("invoice");
-
-        return $this->invoicesRepository->getDocumentManager();
     }
 
     /**
@@ -198,7 +194,7 @@ class InvoiceService
 
         if ($newAmountProduct >= 0) {
             $productShop->setAmount($newAmountProduct);
-            $this->productService->updateProduct($productShop);
+            $this->productManager->updateProduct($productShop);
         } else {
             throw new Exception("No hay tantos productos", Response::HTTP_BAD_REQUEST);
         }
@@ -208,13 +204,10 @@ class InvoiceService
      * @throws MongoDBException
      * @throws Exception
      */
-    public function payInvoice(Invoice $invoice): DocumentManager
+    public function payInvoice(Invoice $invoice): void
     {
-        $fecha = new DateTime('now', new DateTimeZone('America/Bogota'));
-        $invoice->setDate($fecha->format("Y-m-d H:i:s"));
+        $invoice->setDate($this->getDate());
         $invoice->setStatus("pay");
-
-        return $this->invoicesRepository->getDocumentManager();
     }
 
     /**
@@ -222,21 +215,19 @@ class InvoiceService
      * @throws MappingException
      * @throws Exception
      */
-    public function cancelInvoice(Invoice $invoice): DocumentManager|bool
+    public function cancelInvoice(Invoice $invoice): bool
     {
-        $fecha = new DateTime('now', new DateTimeZone('America/Bogota'));
-
         if ($invoice->getStatus() == "invoice") {
-            $invoice->setDate($fecha->format("Y-m-d H:i:s"));
+            $invoice->setDate($this->getDate());
             $invoice->setStatus("cancel");
 
             foreach ($invoice->getProducts() as $product) {
-                $productFind = $this->productRepository->findById($product->getId());
+                $productFind = $this->productRepository->findByCode($product->getCode());
                 $productFind->setAmount($product->getAmount() + $productFind->getAmount());
-                $this->productService->updateProduct($productFind);
+                $this->productManager->updateProduct($productFind);
             }
 
-            return $this->invoicesRepository->getDocumentManager();
+            return true;
         }
 
         return false;
@@ -246,43 +237,33 @@ class InvoiceService
      * @throws MongoDBException
      * @throws MappingException
      */
-    public function deleteShoppingCart(Invoice $shoppingCart): DocumentManager|bool
+    public function deleteShoppingCart(Invoice $shoppingCart): bool
     {
-        if ($shoppingCart->getStatus() == "shopping-cart") {
-            foreach ($shoppingCart->getProducts() as $product) {
-                $productShop = $this->productRepository->findById($product->getId());
-                $newAmount = $productShop->getAmount() + $product->getAmount();
-                $productShop->setAmount($newAmount);
-                $this->productService->updateProduct($productShop);
-            }
-
-            $invoice = $this->invoicesRepository->findByCode($shoppingCart->getCode());
-            $invoice->setProducts(new ArrayCollection());
-
-            return $this->invoicesRepository->getDocumentManager();
+        foreach ($shoppingCart->getProducts() as $product) {
+           $this->deleteProductToShoppingCart($shoppingCart->getUSer(), $product->getCode());
         }
 
-        return false;
+        return true;
     }
 
     /**
      * @throws MongoDBException
      * @throws MappingException
      */
-    public function deleteProductToShoppingCart(UserInvoice $user, string $code): DocumentManager|bool
+    public function deleteProductToShoppingCart(User $user, string $code): bool
     {
-        $shoppingCart = $this->invoicesRepository->findByDocumentAndStatus($user->getDocument(), "shopping-cart");
+        $shoppingCart = $this->invoicesRepository->findByUserAndStatus($user, "shopping-cart");
 
-        if (count($shoppingCart->getProducts()) == 1) {
+        if ($shoppingCart->getProducts()->count() == 1) {
             foreach ($shoppingCart->getProducts() as $product) {
                 $productFind = $this->productRepository->findByCode($code);
                 $productFind->setAmount($product->getAmount() + $productFind->getAmount());
-                $this->productService->updateProduct($productFind);
+                $this->productManager->updateProduct($productFind);
+                $this->deleteInvoice($shoppingCart);
 
-                return $this->deleteInvoice($shoppingCart);
+                return true;
             }
         }
-
 
         foreach ($shoppingCart->getProducts() as $product) {
             if ($product->getCode() == $code) {
@@ -291,21 +272,27 @@ class InvoiceService
 
                 $productFind = $this->productRepository->findByCode($code);
                 $productFind->setAmount($product->getAmount() + $productFind->getAmount());
-                $this->productService->updateProduct($productFind);
+                $this->productManager->updateProduct($productFind);
+                $this->productManager->updateProduct($productFind);
 
-                return $this->invoicesRepository->getDocumentManager();
+                return true;
             }
         }
 
         return false;
     }
 
-    public function deleteInvoice(Invoice $invoice): DocumentManager
+    public function deleteInvoice(Invoice $invoice): void
     {
         $this->invoicesRepository->getDocumentManager()->persist($invoice);
         $this->invoicesRepository->getDocumentManager()->remove($invoice);
-
-        return $this->invoicesRepository->getDocumentManager();
     }
 
+    /**
+     * @throws Exception
+     */
+    protected function getDate(): DateTime
+    {
+        return new DateTime('now', new DateTimeZone('America/Bogota'));
+    }
 }

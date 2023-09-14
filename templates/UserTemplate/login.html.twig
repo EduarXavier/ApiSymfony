@@ -1,23 +1,32 @@
+{# templates/login/index.html.twig #}
 {% extends 'base.html.twig' %}
 
+{# ... #}
+
 {% block body %}
-
-    <div class="d-flex w-100 align-items-center align-middle justify-content-center">
+    <div class="d-flex w-100 align-items-center align-middle justify-content-center mt-4">
         <div class="w-25">
-
-            {% for flash_message in app.flashes('message') %}
-                <div class="alert alert-danger w-100" role="alert">
-                    {{ flash_message }}
-                </div>
-            {% endfor %}
-
-            <h1>Inicio de sesión</h1>
-            {{ form_start(form, {"action" : "", "method" : "POST"}) }}
-            {{ form_widget(form) }}
-            <button type="submit">Iniciar sesión</button>
-            {{ form_end(form) }}
-
+            {% if error %}
+            <div class="alert alert-danger w-100" role="alert">
+                {{ error.messageKey(error.messageData, 'security')|trans }}
+            </div>
+            {% endif %}
         </div>
     </div>
 
+    <div class="d-flex w-100 align-items-center align-middle justify-content-center">
+        <div class="w-25">
+            <form action="{{ path('login_template') }}" method="post">
+                <label for="username">Email:</label>
+                <input type="text" id="username" name="_username" value="{{ last_username }}">
+
+                <label for="password">Contraseña:</label>
+                <input type="password" id="password" name="_password">
+
+                <input type="hidden" name="_csrf_token" value="{{ csrf_token('authenticate') }}">
+
+                <button type="submit" class="btn btn-primary">Iniciar sesión</button>
+            </form>
+        </div>
+    </div>
 {% endblock %}

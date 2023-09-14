@@ -4,17 +4,14 @@
 {% block title %}{{ shoppingCart.id ?? "Not found"}} - details{% endblock %}
 
 {% block body %}
-
     {% include '/layouts/navbar.html.twig' %}
-
     <div class="container mt-5">
-
         {% if shoppingCart is empty or shoppingCart.products|length == 0 %}
             <div class="alert alert-info" role="alert">
                 Este carrito está vacío.
             </div>
         {% else %}
-            <h2 class="pt-5" style="text-align: center">Detalles del pedido</h2>
+            <h2 class="pt-5" style="text-align: center">Detalles del carrito</h2>
             <div class="container mt-5">
                 <div class="row justify-content-center">
                     <div class="col-md-12 col-lg-6 card">
@@ -27,7 +24,7 @@
                                     ID: {{ shoppingCart.id }}
                                 </p>
                                 <p class="card-text">
-                                    fecha: {{ shoppingCart.date }}
+                                    fecha: {{ shoppingCart.date|date('Y/m/d H:i:s') }}
                                 </p>
                                 <p class="card-text">
                                     Estado: {{ shoppingCart.status }}
@@ -44,18 +41,17 @@
                                     </tr>
                                     </thead>
                                     <tbody>
-
                                     {% for product in shoppingCart.products %}
                                         <tr>
                                             <th scope="row">
-                                                <a href="/product/details/{{ product.code ?? null }}" class="text-decoration-none">
-                                                    {{ product.name ?? null }}
+                                                <a href="{{ path('product_details', {'code': product.code}) }}" class="text-decoration-none">
+                                                    {{ product.name }}
                                                 </a>
                                             </th>
-                                            <td>{{ product.amount ?? null }}</td>
+                                            <td>{{ product.amount }}</td>
                                             <td>
                                                 <a
-                                                        href="/invoices/shopping-cart/delete-product/{{ product.code }}"
+                                                        href="{{ path('delete_product_to_shopping_cart_view', {'code': product.code}) }}"
                                                         class="btn btn-primary text-decoration-none"
                                                 >
                                                     Eliminar
@@ -63,36 +59,25 @@
                                             </td>
                                         </tr>
                                     {% endfor %}
-
                                     </tbody>
                                 </table>
-
-                                {% if
-                                    shoppingCart.status == "shopping-cart" and
-                                    shoppingCart.products|length != 0
-                                %}
-                                    <form action="/invoices/create/invoice/" method="POST">
-                                        <input
-                                            value="{{ shoppingCart.code }}"
-                                            name="code"
-                                            class="d-none"
+                                <div class="d-flex w-100">
+                                    {% if
+                                        shoppingCart.status == "shopping-cart" and
+                                        shoppingCart.products|length != 0
+                                    %}
+                                        {{ form_start(formCreateInvoice, {"action" : path('create_invoice_view') , "method" : "POST"}) }}
+                                        {{ form_widget(formCreateInvoice) }}
+                                        <button type="submit" class="btn btn-primary">Generar pedido</button>
+                                        {{ form_end(formCreateInvoice) }}
+                                        <a
+                                                class="btn btn-danger ms-2"
+                                                href="{{ path('delete_shopping_cart_view', {'document': shoppingCart.user.document}) }}"
                                         >
-                                        <button
-                                                class="btn btn-primary"
-                                                type="submit"
-                                        >
-                                            Generar pedido
-                                        </button>
-                                    </form>
-                                {% elseif shoppingCart.products|length != 0%}
-                                    <br>
-                                    <a
-                                            class="btn btn-danger"
-                                            href="/invoices/shopping-cart/delete/{{ shoppingCart.userDocument }}"
-                                    >
-                                        Eliminar
-                                    </a>
-                                {% endif %}
+                                            Eliminar
+                                        </a>
+                                    {% endif %}
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -100,5 +85,4 @@
             </div>
         {% endif %}
     </div>
-
 {% endblock %}

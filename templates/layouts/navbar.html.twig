@@ -10,22 +10,23 @@
                     Productos
                 </a>
                 <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
-                    <a class="dropdown-item" href="/product/add">Añadir poducto</a>
-                    <a class="dropdown-item" href="/product/list-view">Ver productos</a>
+                    <a class="dropdown-item" href="{{ path('add_product') }}">Añadir poducto</a>
+                    <a class="dropdown-item" href="{{ path('product_list_view') }}">Ver productos</a>
+                    <a class="dropdown-item" href="{{ path('product_expired_list_view') }}">No disponibles</a>
                 </div>
             </li>
             <li class="nav-item">
-                <a class="nav-link" href="/invoices/list">Facturas</a>
+                <a class="nav-link" href="{{ path('invoices_list') }}">Facturas</a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" href="/invoices/shopping-cart/list">Carrito</a>
+                <a class="nav-link" href="{{ path('shopping_cart_list') }}">Carrito</a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" href="/invoices/resume">Resumen</a>
+                <a class="nav-link" href="{{ path('invoices_resume') }}">Resumen</a>
             </li>
         </ul>
         <div class="navbar-nav ml-auto">
-            <a class="nav-link" href="/logout">Cerrar sesión</a>
+            <a class="nav-link" href="{{ path('logout') }}">Cerrar sesión</a>
         </div>
     </div>
 </nav>

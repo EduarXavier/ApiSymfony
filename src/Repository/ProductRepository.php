@@ -6,35 +6,27 @@ namespace App\Repository;
 
 use App\Document\Product;
 use Doctrine\Bundle\MongoDBBundle\Repository\ServiceDocumentRepository;
-use Doctrine\ODM\MongoDB\DocumentManager;
-use Doctrine\ODM\MongoDB\LockException;
-use Doctrine\ODM\MongoDB\Mapping\MappingException;
-use Doctrine\ODM\MongoDB\MongoDBException;
-use Doctrine\Persistence\ManagerRegistry;
 
 class ProductRepository extends ServiceDocumentRepository
 {
 
     public function findAll(): array
     {
-        $repository = $this->getDocumentManager()->getRepository(Product::class);
-
-        return $repository->findBy(["amount" => ['$gt' => 0]], limit: 20);
+       return $this->findBy(["amount" => ['$gt' => 0], 'status' => 'available'], limit: 20);
     }
 
-    /**
-     * @throws MappingException
-     * @throws LockException
-     */
-    public function findById(string $id): ?Product
+    public function findByName(string $name): ?Product
     {
-        return $this->getDocumentManager()->getRepository(Product::class)->find($id);
+        return $this->findOneBy(["name" => $name]) ?? null;
     }
 
     public function findByCode(string $code): ?Product
     {
-        $repository = $this->getDocumentManager()->getRepository(Product::class);
+        return $this->findOneBy(["code" => $code]) ?? null;
+    }
 
-        return $repository->findOneBy(["code" => $code]) ?? null;
+    public function findExpiredProducts(): ?array
+    {
+        return $this->findBy(['$or' => [['status' => 'expired'], ['amount' => 0]]]) ?? null;
     }
 }
