@@ -6,6 +6,7 @@ namespace App\Document;
 
 use DateTime;
 use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ODM\MongoDB\Mapping\Annotations as MongoDB;
 
 #[MongoDB\Document]
@@ -18,7 +19,7 @@ class Invoice
     private string $code;
 
     #[MongoDb\EmbedMany(targetDocument: ProductInvoice::class)]
-    private ArrayCollection $products;
+    private Collection $products;
 
     #[MongoDb\Field(type:'date')]
     private DateTime $date;
@@ -51,7 +52,7 @@ class Invoice
         return $this;
     }
 
-    public function getProducts(): ArrayCollection
+    public function getProducts(): Collection
     {
         return $this->products;
     }

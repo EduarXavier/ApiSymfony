@@ -222,7 +222,7 @@ class InvoiceManager
             $invoice->setStatus("cancel");
 
             foreach ($invoice->getProducts() as $product) {
-                $productFind = $this->productRepository->findById($product->getId());
+                $productFind = $this->productRepository->findByCode($product->getCode());
                 $productFind->setAmount($product->getAmount() + $productFind->getAmount());
                 $this->productManager->updateProduct($productFind);
             }

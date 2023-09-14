@@ -32,7 +32,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     #[MongoDB\Field(type:'string')]
     #[MongoDB\UniqueIndex(background: true)]
-    #[MongoDB\Index(background: true)]
     private string $email;
 
     #[MongoDB\Field(type:'string')]

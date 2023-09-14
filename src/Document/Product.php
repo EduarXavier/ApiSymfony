@@ -13,6 +13,7 @@ class Product
     protected ?string $id;
 
     #[MongoDB\Field(type: 'string')]
+    #[MongoDB\UniqueIndex(background: true)]
     private ?string $code;
 
     #[MongoDB\Field(type: 'string')]

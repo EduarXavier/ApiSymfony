@@ -81,6 +81,8 @@
                         </div>
                         <div class="modal-body">
                             {{ form_start(formAddShoppingCart, {"action" : path('add_product_shopping_cart'), "method" : "POST"}) }}
+                            {{ form_row(formAddShoppingCart.code) }}
+                            {{ form_row(formAddShoppingCart.amount) }}
                                 <button type="submit" class="btn btn-primary">Enviar</button>
                             {{ form_end(formAddShoppingCart) }}
                         </div>
