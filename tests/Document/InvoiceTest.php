@@ -9,15 +9,24 @@ use App\Document\ProductInvoice;
 use App\Document\UserInvoice;
 use DateTime;
 use Doctrine\Common\Collections\ArrayCollection;
+use PHPUnit\Framework\MockObject\Exception;
 use PHPUnit\Framework\TestCase;
 
 class InvoiceTest extends TestCase
 {
     private Invoice $invoice;
 
+    /**
+     * @throws Exception
+     */
     public function testGetId(): void
     {
-        self::assertNull($this->invoice->getId());
+        $id = uniqid();
+        $this->invoice = $this->createConfiguredMock(Invoice::class, [
+            "getId" => $id
+        ]);
+
+        self::assertSame($id, $this->invoice->getId());
     }
 
     public function testGetCode(): void

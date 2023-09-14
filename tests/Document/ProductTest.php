@@ -5,11 +5,25 @@ declare(strict_types=1);
 namespace App\Tests\Document;
 
 use App\Document\Product;
+use PHPUnit\Framework\MockObject\Exception;
 use PHPUnit\Framework\TestCase;
 
 class ProductTest extends TestCase
 {
     private Product $product;
+
+    /**
+     * @throws Exception
+     */
+    public function testGetId(): void
+    {
+        $id = uniqid();
+        $this->product = $this->createConfiguredMock(Product::class, [
+            "getId" => $id
+        ]);
+
+        self::assertSame($id, $this->product->getId());
+    }
 
     public function testGetCode(): void
     {
