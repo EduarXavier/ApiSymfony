@@ -90,10 +90,18 @@
                                         Pagar
                                     </a>
                                 {% elseif invoice.status == "shopping-cart" and invoice.products|length != 0 %}
-                                    {{ form_start(formCreateInvoice, {"action" : path('create_invoice_view') , "method" : "POST"}) }}
-                                    {{ form_widget(formCreateInvoice) }}
-                                    <button type="submit" class="btn btn-primary">Generar pedido</button>
-                                    {{ form_end(formCreateInvoice) }}
+                                    <div class="d-flex w-100">
+                                        {{ form_start(formCreateInvoice, {"action" : path('create_invoice_view') , "method" : "POST"}) }}
+                                        {{ form_widget(formCreateInvoice) }}
+                                        <button type="submit" class="btn btn-primary">Generar pedido</button>
+                                        {{ form_end(formCreateInvoice) }}
+                                        <a
+                                                class="btn btn-danger ms-2"
+                                                href="{{ path('delete_shopping_cart_view', {'document': invoice.user.document}) }}"
+                                        >
+                                            Eliminar
+                                        </a>
+                                    </div>
                                 {% endif %}
                             </div>
                         </div>

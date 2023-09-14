@@ -13,6 +13,8 @@ use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
+use Symfony\Component\Security\Http\Authentication\AuthenticationUtils;
 use Symfony\Component\Serializer\SerializerInterface;
 use Symfony\Contracts\Service\Attribute\Required;
 
@@ -34,48 +36,30 @@ class LoginController extends AbstractController
     }
 
     #[Route('/login-view', name: 'login_template')]
-    public function loginView(Request $request): Response
+    public function loginView(AuthenticationUtils $authenticationUtils): Response
     {
-        $user = new User();
-        $form = $this->createForm(LoginType::class, $user);
-        $form->handleRequest($request);
-
-        if (!$form->isSubmitted() || !$form->isValid()) {
-            return $this->render('UserTemplate/login.html.twig', [
-                'form' => $form->createView(),
-            ]);
-        }
-
-        $userFind = $this->userRepository->findByEmail($user->getEmail());
-
-        if ($userFind && password_verify($user->getPassword(), $userFind->getPassword())) {
-            $session = $request->getSession();
-
-            $userJson = $this->serializer->serialize($userFind, "json");
-            $userSession = $this->serializer->deserialize($userJson, UserInvoice::class, "json");
-            $session->set('user', $userSession);
-            $session->set('email', $user->getEmail());
-            $session->set('rol', $userFind->getRol());
-            $session->set('document', $userFind->getDocument());
-            $session->set('shopping-cart', array());
-
-            $this->addFlash('message', 'Bienvenido ' . $session->get('user')->getName());
-            return $this->render('UserTemplate/dashboard.html.twig', []);
-        }
-
-        $this->addFlash('message', 'Credenciales invalidas');
+        $error = $authenticationUtils->getLastAuthenticationError();
+        $lastUsername = $authenticationUtils->getLastUsername();
 
         return $this->render('UserTemplate/login.html.twig', [
-            'form' => $form->createView(),
+            'last_username' => $lastUsername,
+            'error' => $error,
         ]);
+    }
+
+    #[IsGranted('ROLE_ADMIN')]
+    #[Route('/', name: 'app')]
+    public function admin(AuthenticationUtils $authenticationUtils): Response
+    {
+        $lastUsername = $authenticationUtils->getLastUsername();
+
+        $this->addFlash('message', 'Bienvenido ' . $lastUsername);
+        return $this->render('UserTemplate/dashboard.html.twig', []);
     }
 
     #[Route('/logout', name: 'logout')]
     public function logout(Request $request): RedirectResponse
     {
-        $session = $request->getSession();
-        $session->clear();
-
         return $this->redirectToRoute('login_template');
     }
 }

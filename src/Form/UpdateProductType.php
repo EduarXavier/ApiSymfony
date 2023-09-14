@@ -18,6 +18,7 @@ class UpdateProductType extends AbstractType
         $builder
             ->add('name', TextType::class, ['label' => 'Nombre'])->setRequired(false)
             ->add('price', NumberType::class, ['label' => 'Precio'])->setRequired(false)
+            ->add('amount', NumberType::class, ['label' => 'Cantidad'])->setRequired(false)
         ;
     }
     public function configureOptions(OptionsResolver $resolver): void

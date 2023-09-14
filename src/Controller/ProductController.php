@@ -21,6 +21,7 @@ use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Component\Serializer\SerializerInterface;
 use Symfony\Contracts\Service\Attribute\Required;
 
@@ -67,33 +68,24 @@ class ProductController extends AbstractController
     }
 
     //VIEW
-
+    #[IsGranted('ROLE_ADMIN')]
     #[Route('/list-view', name: 'product_list_view', methods: ['GET'])]
-    public function productListTemplate(Request $request): Response
+    public function productListTemplate(): Response
     {
-        $session = $request->getSession();
         $products = $this->productRepository->findAll();
-
-        if (empty($session->get('user')) || empty($session->get('rol')) || $session->get('rol') != 'ADMIN') {
-            return $this->redirectToRoute('login_template');
-        }
 
         return $this->render('ProductTemplates/productList.html.twig', [
             'products' => $products,
         ]);
     }
 
+    #[IsGranted('ROLE_ADMIN')]
     #[Route('/details/{code}', name: 'product_details', methods: ['GET'])]
-    public function productDetails(Request $request, string $code): RedirectResponse|Response
+    public function productDetails(string $code): RedirectResponse|Response
     {
-        $session = $request->getSession();
         $product = $this->productRepository->findByCode($code);
         $action = '';
         $message = '';
-
-        if (empty($session->get('user')) || empty($session->get('rol')) || $session->get('rol') != 'ADMIN') {
-            return $this->redirectToRoute('login_template');
-        }
 
         if (!empty($_GET['mnsj'])) {
             $action = $_GET['mnsj'] == "ok" ? 'exito' : 'error';
@@ -115,17 +107,13 @@ class ProductController extends AbstractController
     /**
      * @throws MongoDBException
      */
+    #[IsGranted('ROLE_ADMIN')]
     #[Route('/add', name: 'add_product')]
     public function addProduct(Request $request): Response
     {
-        $session = $request->getSession();
         $product = new Product();
         $form = $this->createForm(ProductType::class, $product, ['method' => 'POST']);
         $form->handleRequest($request);
-
-        if (empty($session->get('user')) || empty($session->get('rol')) || $session->get('rol') != 'ADMIN') {
-            return $this->redirectToRoute('login_template');
-        }
 
         if ($form->isSubmitted() && $form->isValid()) {
             $product->setName(ucfirst($product->getName()));
@@ -146,17 +134,13 @@ class ProductController extends AbstractController
      * @throws MongoDBException
      * @throws LockException
      */
+    #[IsGranted('ROLE_ADMIN')]
     #[Route('/update/{code}', name: 'update_product')]
     public function updateProduct(string $code, Request $request): Response
     {
-        $session = $request->getSession();
         $product = $this->productRepository->findByCode($code);
         $form = $this->createForm(UpdateProductType::class, $product);
         $form->handleRequest($request);
-
-        if (empty($session->get('user')) || empty($session->get('rol')) || $session->get('rol') != 'ADMIN') {
-            return $this->redirectToRoute('login_template');
-        }
 
         if ($form->isSubmitted() && $form->isValid()) {
             $product->setName(ucfirst($product->getName()));
@@ -177,17 +161,13 @@ class ProductController extends AbstractController
      * @throws MongoDBException
      * @throws LockException
      */
+    #[IsGranted('ROLE_ADMIN')]
     #[Route('/delete/{code}', name: 'delete_product')]
     public function deleteProduct(string $code, Request $request): RedirectResponse|Response
     {
-        $session = $request->getSession();
         $product = $this->productRepository->findByCode($code);
         $form = $this->createForm(DeleteProductType::class, $product);
         $form->handleRequest($request);
-
-        if (empty($session->get('user')) || empty($session->get('rol')) || $session->get('rol') != 'ADMIN') {
-            return $this->redirectToRoute('login_template');
-        }
 
         if ($form->isSubmitted() && $form->isValid()) {
             $this->productManager->deleteProduct($product);
