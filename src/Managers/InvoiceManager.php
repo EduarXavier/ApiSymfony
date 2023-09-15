@@ -60,7 +60,7 @@ class InvoiceManager
      */
     public function addProductsToShoppingCart(Collection $products, User $user): bool
     {
-        $shoppingCart = $this->invoicesRepository->findByUserAndStatus($user, "shopping-cart");
+        $shoppingCart = $this->invoicesRepository->findByUserAndStatus($user, Invoice::SHOPPINGCART);
 
         if ($shoppingCart) {
             return $this->addToExistingCart($products, $shoppingCart);
@@ -85,11 +85,11 @@ class InvoiceManager
         }
 
         switch ($order) {
-            case "price" : usort($products, fn($a, $b) => $b->getPrice() - $a->getPrice());
+            case 'price' : usort($products, fn($a, $b) => $b->getPrice() - $a->getPrice());
                 break;
-            case "amount" : usort($products, fn($a, $b) => $b->getAmount() - $a->getAmount());
+            case 'amount' : usort($products, fn($a, $b) => $b->getAmount() - $a->getAmount());
                 break;
-            case "total" : usort($products, fn($a, $b) => $b->getAmount() - $a->getAmount());
+            case 'total' : usort($products, fn($a, $b) => $b->getAmount() - $a->getAmount());
                 break;
             default : usort($products, fn($a, $b) => strcmp($a->getName(), $b->getName()));
         }
@@ -118,8 +118,8 @@ class InvoiceManager
             foreach ($productsUser as $key => $productUser) {
                 if ($productUser->getCode() === $product->getCode()) {
                     $shoppingCart->removeProduct($productUser);
-                    $productJson = $this->serializer->serialize($productShop, "json");
-                    $productInvoice = $this->serializer->deserialize($productJson, ProductInvoice::class, "json");
+                    $productJson = $this->serializer->serialize($productShop, 'json');
+                    $productInvoice = $this->serializer->deserialize($productJson, ProductInvoice::class, 'json');
                     $productInvoice->setAmount($productUser->getAmount() + $product->getAmount());
                     $existingProduct = $productUser;
                     $shoppingCart->addProducts($productInvoice);
@@ -129,8 +129,8 @@ class InvoiceManager
 
             if ($existingProduct == null) {
                 $amount = $product->getAmount();
-                $productJson = $this->serializer->serialize($productShop, "json");
-                $product = $this->serializer->deserialize($productJson, ProductInvoice::class, "json");
+                $productJson = $this->serializer->serialize($productShop, 'json');
+                $product = $this->serializer->deserialize($productJson, ProductInvoice::class, 'json');
                 $product->setAmount($amount);
                 $shoppingCart->addProducts($product);
             }
@@ -151,8 +151,8 @@ class InvoiceManager
         $invoices = new Invoice();
         $invoices->setUser($user);
         $invoices->setDate($this->getDate());
-        $invoices->setCode(str_ireplace(" ", "-", uniqid(). "-" . $user->getDocument()));
-        $invoices->setStatus("shopping-cart");;
+        $invoices->setCode(str_ireplace(' ', '-', uniqid(). '-' . $user->getDocument()));
+        $invoices->setStatus(Invoice::SHOPPINGCART);;
 
         foreach ($products as $product) {
 
@@ -162,8 +162,8 @@ class InvoiceManager
                 return false;
             }
 
-            $productJson = $this->serializer->serialize($productShop, "json");
-            $productInvoice = $this->serializer->deserialize($productJson, ProductInvoice::class, "json");
+            $productJson = $this->serializer->serialize($productShop, 'json');
+            $productInvoice = $this->serializer->deserialize($productJson, ProductInvoice::class, 'json');
             $productInvoice->setAmount($product->getAmount());
             $invoices->addProducts($productInvoice);
             $this->invoicesRepository->getDocumentManager()->persist($invoices);
@@ -181,7 +181,7 @@ class InvoiceManager
     public function createInvoice(Invoice $invoice): void
     {
         $invoice->setDate($this->getDate());
-        $invoice->setStatus("invoice");
+        $invoice->setStatus(Invoice::INVOICE);
     }
 
     /**
@@ -196,7 +196,7 @@ class InvoiceManager
             $productShop->setAmount($newAmountProduct);
             $this->productManager->updateProduct($productShop);
         } else {
-            throw new Exception("No hay tantos productos", Response::HTTP_BAD_REQUEST);
+            throw new Exception('No hay tantos productos', Response::HTTP_BAD_REQUEST);
         }
     }
 
@@ -207,7 +207,7 @@ class InvoiceManager
     public function payInvoice(Invoice $invoice): void
     {
         $invoice->setDate($this->getDate());
-        $invoice->setStatus("pay");
+        $invoice->setStatus(Invoice::PAY);
     }
 
     /**
@@ -217,9 +217,9 @@ class InvoiceManager
      */
     public function cancelInvoice(Invoice $invoice): bool
     {
-        if ($invoice->getStatus() == "invoice") {
+        if ($invoice->getStatus() == Invoice::INVOICE) {
             $invoice->setDate($this->getDate());
-            $invoice->setStatus("cancel");
+            $invoice->setStatus(Invoice::CANCEL);
 
             foreach ($invoice->getProducts() as $product) {
                 $productFind = $this->productRepository->findByCode($product->getCode());
@@ -252,7 +252,7 @@ class InvoiceManager
      */
     public function deleteProductToShoppingCart(User $user, string $code): bool
     {
-        $shoppingCart = $this->invoicesRepository->findByUserAndStatus($user, "shopping-cart");
+        $shoppingCart = $this->invoicesRepository->findByUserAndStatus($user, Invoice::SHOPPINGCART);
 
         if ($shoppingCart->getProducts()->count() == 1) {
             foreach ($shoppingCart->getProducts() as $product) {

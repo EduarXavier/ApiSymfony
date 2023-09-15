@@ -99,12 +99,12 @@ class ProductController extends AbstractController
         $message = '';
 
         if (!empty($_GET['mnsj'])) {
-            $action = $_GET['mnsj'] == "ok" ? 'exito' : 'error';
-            $message = $_GET['mnsj'] == "ok" ? 'Se ha agregado con éxito' : 'Ha ocurrido un error';
+            $action = $_GET['mnsj'] == 'ok' ? 'exito' : 'error';
+            $message = $_GET['mnsj'] == 'ok' ? 'Se ha agregado con éxito' : 'Ha ocurrido un error';
         }
 
-        $productJson = $this->serializer->serialize($product, "json");
-        $productInvoice = $this->serializer->deserialize($productJson, ProductInvoice::class, "json");
+        $productJson = $this->serializer->serialize($product, 'json');
+        $productInvoice = $this->serializer->deserialize($productJson, ProductInvoice::class, 'json');
         $productInvoice->setAmount(1);
         $formAddShoppingCart = $this->createForm(ProductShoppingCartType::class, $productInvoice);
 
@@ -131,7 +131,7 @@ class ProductController extends AbstractController
             $this->productManager->addProduct($product);
             $this->documentManager->flush();
 
-            return $this->redirect("/product/details/" . $product->getCode());
+            return $this->redirect('/product/details/' . $product->getCode());
         }
 
         return $this->render('ProductTemplates/productForms.html.twig', [
@@ -158,7 +158,7 @@ class ProductController extends AbstractController
             $this->productManager->updateProduct($product);
             $this->documentManager->flush();
 
-            return $this->redirect("/product/details/$code");
+            return $this->redirect('/product/details/' . $code);
         }
 
         return $this->render('ProductTemplates/productForms.html.twig', [

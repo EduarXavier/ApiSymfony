@@ -12,21 +12,21 @@ class ProductRepository extends ServiceDocumentRepository
 
     public function findAll(): array
     {
-       return $this->findBy(["amount" => ['$gt' => 0], 'status' => 'available'], limit: 20);
+       return $this->findBy(['amount' => ['$gt' => 0], 'status' => Product::AVAILABLE], limit: 20);
     }
 
     public function findByName(string $name): ?Product
     {
-        return $this->findOneBy(["name" => $name]) ?? null;
+        return $this->findOneBy(['name' => $name]) ?? null;
     }
 
     public function findByCode(string $code): ?Product
     {
-        return $this->findOneBy(["code" => $code]) ?? null;
+        return $this->findOneBy(['code' => $code]) ?? null;
     }
 
     public function findExpiredProducts(): ?array
     {
-        return $this->findBy(['$or' => [['status' => 'expired'], ['amount' => 0]]]) ?? null;
+        return $this->findBy(['$or' => [['status' => Product::EXPIRED], ['amount' => 0]]]) ?? null;
     }
 }

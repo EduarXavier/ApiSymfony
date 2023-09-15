@@ -28,8 +28,8 @@ class ProductManager
 
     public function addProduct(Product $product): void
     {
-        $product->setCode(str_ireplace(" ", "-", uniqid(). "-" . $product->getName()));
-        $product->setStatus("available");
+        $product->setCode(str_ireplace(' ', '-', uniqid(). '-' . $product->getName()));
+        $product->setStatus(Product::AVAILABLE);
         $this->productRepository->getDocumentManager()->persist($product);
     }
 
@@ -43,7 +43,7 @@ class ProductManager
     {
         $invoices = $this->invoicesRepository->findByProduct($product);
         if ($invoices) {
-            $product->setStatus('expired');
+            $product->setStatus(Product::EXPIRED);
             $this->productRepository->getDocumentManager()->persist($product);
         } else {
             $this->productRepository->getDocumentManager()->remove($product);

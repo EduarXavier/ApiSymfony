@@ -12,6 +12,14 @@ use Doctrine\ODM\MongoDB\Mapping\Annotations as MongoDB;
 #[MongoDB\Document]
 class Invoice
 {
+    public const SHOPPINGCART = 'shopping-cart';
+
+    public const INVOICE = 'invoice';
+
+    public const CANCEL = 'cancel';
+
+    public const PAY = 'pay';
+
     #[MongoDb\Id(strategy: 'auto')]
     protected ?string $id;
 
