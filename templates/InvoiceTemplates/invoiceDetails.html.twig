@@ -47,6 +47,7 @@
                                         <tr>
                                             <th scope="col">Nombre</th>
                                             <th scope="col">Cantidad</th>
+                                            <th scope="col">Precio</th>
                                             {% if invoice.status == "shopping-cart" %}
                                                 <th scope="col">Acción</th>
                                             {% endif %}
@@ -61,6 +62,7 @@
                                                     </a>
                                                 </th>
                                                 <td>{{ product.amount }}</td>
+                                                <td>{{ product.price }}</td>
                                                 {% if invoice.status == "shopping-cart" %}
                                                     <td>
                                                         <a
@@ -73,6 +75,15 @@
                                                 {% endif %}
                                             </tr>
                                         {% endfor %}
+                                        <tr>
+                                            {% if invoice.status == "shopping-cart" %}
+                                                <th scope="col" colspan="3">Total:</th>
+                                                <td>{{ total }}</td>
+                                            {% else %}
+                                                <th scope="col" colspan="2">Total:</th>
+                                                <td>{{ total }}</td>
+                                            {% endif %}
+                                        </tr>
                                     </tbody>
                                 </table>
                                 {% if invoice.status == "invoice" %}

@@ -114,4 +114,14 @@ class Invoice
 
         return $this;
     }
+
+    public function getTotal(): int
+    {
+        $total = 0;
+        foreach ($this->products as $product) {
+            $total += $product->getAmount() * $product->getPrice();
+        }
+
+        return $total;
+    }
 }

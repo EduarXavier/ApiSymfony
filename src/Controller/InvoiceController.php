@@ -265,6 +265,7 @@ class InvoiceController extends AbstractController
 
         return $this->render('InvoiceTemplates/shoppingCartDetails.html.twig', [
             'shoppingCart' => $shoppingCart,
+            'total' => $shoppingCart->getTotal(),
             'formCreateInvoice' => $formCreateInvoice
         ]);
     }
@@ -278,6 +279,7 @@ class InvoiceController extends AbstractController
 
         return $this->render('InvoiceTemplates/invoiceDetails.html.twig', [
             'invoice' => $invoice,
+            'total' => $invoice->getTotal(),
             'formCreateInvoice' => $formCreateInvoice
         ]);
     }
