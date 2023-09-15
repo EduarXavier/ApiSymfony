@@ -71,7 +71,7 @@ class InvoiceManager
 
     public function invoiceResume(User $user, ?string $order ): ArrayCollection
     {
-        $invoices = $this->invoicesRepository->findAllByUser($user);
+        $invoices = $this->invoicesRepository->findNotCancelByUser($user);
         $products = new ArrayCollection();
 
         foreach ($invoices as $invoice) {

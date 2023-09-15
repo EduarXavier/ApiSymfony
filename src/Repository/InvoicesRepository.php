@@ -16,6 +16,11 @@ class InvoicesRepository extends ServiceDocumentRepository
         return $this->findBy(['user.id' => $user->getId()], ['date' => 'DESC'], limit: 20);
     }
 
+    public function findNotCancelByUser(User $user): array
+    {
+        return $this->findBy(['user.id' => $user->getId(), 'status' => ['$ne' => Invoice::CANCEL]], ['date' => 'DESC'], limit: 20);
+    }
+
     public function findAllForStatus(User $user, string $status): array
     {
         return $this->findBy(['user.id' => $user->getId(), 'status' => $status], ['date' => 'DESC'], limit: 20);
