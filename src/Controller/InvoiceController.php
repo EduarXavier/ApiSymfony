@@ -93,7 +93,7 @@ class InvoiceController extends AbstractController
 
         $user = $this->userRepository->findByDocument($invoices->getUser()->getDocument());
 
-        if ($this->invoiceManager->addProductsToShoppingCart($invoices->getProducts(), $user)) {
+        if (!$this->invoiceManager->addProductsToShoppingCart($invoices->getProducts(), $user)) {
             return new JsonResponse(['error' => 'No se han podido agregar los productos'], Response::HTTP_BAD_REQUEST);
         }
 

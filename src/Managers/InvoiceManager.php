@@ -133,7 +133,7 @@ class InvoiceManager
                     $productInvoice = $this->serializer->deserialize($productJson, ProductInvoice::class, 'json');
                     $productInvoice->setAmount($productUser->getAmount() + $product->getAmount());
                     $existingProduct = $productUser;
-                    $shoppingCart->addProducts($productInvoice);
+                    $shoppingCart->addProduct($productInvoice);
                     break;
                 }
             }
@@ -143,7 +143,7 @@ class InvoiceManager
                 $productJson = $this->serializer->serialize($productShop, 'json');
                 $product = $this->serializer->deserialize($productJson, ProductInvoice::class, 'json');
                 $product->setAmount($amount);
-                $shoppingCart->addProducts($product);
+                $shoppingCart->addProduct($product);
             }
 
             $this->updateProductAndCheckAvailability($productShop, $product->getAmount());
@@ -176,7 +176,7 @@ class InvoiceManager
             $productJson = $this->serializer->serialize($productShop, 'json');
             $productInvoice = $this->serializer->deserialize($productJson, ProductInvoice::class, 'json');
             $productInvoice->setAmount($product->getAmount());
-            $invoices->addProducts($productInvoice);
+            $invoices->addProduct($productInvoice);
             $this->invoicesRepository->getDocumentManager()->persist($invoices);
             $this->updateProductAndCheckAvailability($productShop, $product->getAmount());
         }
