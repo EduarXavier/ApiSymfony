@@ -6,6 +6,7 @@ namespace App\Repository;
 
 use App\Document\Invoice;
 use App\Document\Product;
+use App\Document\ProductInvoice;
 use App\Document\User;
 use Doctrine\Bundle\MongoDBBundle\Repository\ServiceDocumentRepository;
 
@@ -26,9 +27,9 @@ class InvoicesRepository extends ServiceDocumentRepository
         return $this->findBy(['user.id' => $user->getId(), 'status' => $status], ['date' => 'DESC'], limit: 20);
     }
 
-    public function findById(string $id, string $status)
+    public function findByIdAndStatus(string $id, string $status): ?Invoice
     {
-        return $status ? $this->findOneBy(['id' => $id]) : $this->findOneBy(['id' => $id, 'status' => $status]);
+        return $this->findOneBy(['id' => $id, 'status' => $status]);
     }
 
     public function findByCode(string $code)
@@ -41,7 +42,7 @@ class InvoicesRepository extends ServiceDocumentRepository
         return $this->findOneBy(['user.id' => $user->getId(), 'status' => $status]) ?? null;
     }
 
-    public function findByProduct(Product $product): array
+    public function findByProduct(ProductInvoice $product): array
     {
         return $this->findBy(['products.code' => $product->getCode()], ['date' => 'DESC'], limit: 20);
     }

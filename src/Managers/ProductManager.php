@@ -5,14 +5,17 @@ declare(strict_types=1);
 namespace App\Managers;
 
 use App\Document\Product;
+use App\Document\ProductInvoice;
 use App\Repository\InvoicesRepository;
 use App\Repository\ProductRepository;
+use Symfony\Component\Serializer\SerializerInterface;
 use Symfony\Contracts\Service\Attribute\Required;
 
 class ProductManager
 {
     private ProductRepository $productRepository;
     private InvoicesRepository $invoicesRepository;
+    private SerializerInterface $serializer;
 
     #[Required]
     public function setProductRepository(ProductRepository $productRepository): void
@@ -24,6 +27,12 @@ class ProductManager
     public function setInvoiceRepository(InvoicesRepository $invoicesRepository): void
     {
         $this->invoicesRepository = $invoicesRepository;
+    }
+
+    #[Required]
+    public function setSerializerInterface(SerializerInterface $serializer): void
+    {
+        $this->serializer = $serializer;
     }
 
     public function addProduct(Product $product): void
@@ -41,7 +50,9 @@ class ProductManager
 
     public function deleteProduct(Product $product): void
     {
-        $invoices = $this->invoicesRepository->findByProduct($product);
+        $productJson = $this->serializer->serialize($product, 'json');
+        $productInvoice = $this->serializer->deserialize($productJson, ProductInvoice::class, 'json');
+        $invoices = $this->invoicesRepository->findByProduct($productInvoice);
         if ($invoices) {
             $product->setStatus(Product::EXPIRED);
             $this->productRepository->getDocumentManager()->persist($product);

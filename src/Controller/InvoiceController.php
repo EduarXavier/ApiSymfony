@@ -274,7 +274,7 @@ class InvoiceController extends AbstractController
     #[Route('/details/{id}', name: 'invoices_details')]
     public function invoiceDetails(string $id): RedirectResponse|Response
     {
-        $invoice = $this->invoicesRepository->findById($id, Invoice::INVOICE);
+        $invoice = $this->invoicesRepository->findByIdAndStatus($id, Invoice::INVOICE);
         $formCreateInvoice = $this->createForm(FactureType::class, $invoice);
 
         return $this->render('InvoiceTemplates/invoiceDetails.html.twig', [
@@ -343,7 +343,7 @@ class InvoiceController extends AbstractController
     #[Route('/pay/{id}', name: 'pay_invoice_view')]
     public function payInvoiceView(string $id): RedirectResponse
     {
-        $invoice = $this->invoicesRepository->findById($id, Invoice::INVOICE);
+        $invoice = $this->invoicesRepository->findByIdAndStatus($id, Invoice::INVOICE);
 
         if (!$invoice) {
             return $this->redirect('/invoices/details/' . $id);
@@ -375,7 +375,7 @@ class InvoiceController extends AbstractController
     #[Route('/delete/invoice/{id}', name: 'delete_invoice_view')]
     public function deleteInvoiceView(Request $request, string $id): RedirectResponse
     {
-        $invoice = $this->invoicesRepository->findById($id, Invoice::INVOICE);
+        $invoice = $this->invoicesRepository->findByIdAndStatus($id, Invoice::INVOICE);
 
         if (!$this->invoiceManager->cancelInvoice($invoice)) {
             $this->addFlash('error', 'No se ha podido cancelar');
