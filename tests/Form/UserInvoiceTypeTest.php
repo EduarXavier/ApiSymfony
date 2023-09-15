@@ -2,47 +2,45 @@
 
 namespace App\Tests\Form;
 
-use App\Document\Product;
-use App\Form\DeleteProductType;
+use App\Document\User;
+use App\Form\UserInvoiceType;
 use Exception;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 use Symfony\Component\Form\FormFactoryInterface;
 
-class DeleteProductTypeTest extends KernelTestCase
+class UserInvoiceTypeTest extends KernelTestCase
 {
-    private array $formData;
-    private Product $product;
+    private User $user;
     private FormFactoryInterface $formFactory;
+    private array $formData;
 
     public function testSubmitValidData(): void
     {
-        $form = $this->formFactory->create(DeleteProductType::class, $this->product);
+        $form = $this->formFactory->create(UserInvoiceType::class, $this->user);
         $form->submit($this->formData);
 
         self::assertTrue($form->isSynchronized());
         self::assertTrue($form->isValid());
-        self::assertEquals($this->product->getCode(), $this->formData['code']);
+        self::assertEquals($this->user->getDocument(), $this->formData['document']);
     }
-
 
     /**
      * @throws Exception
      */
     protected function setUp(): void
     {
-        self::bootKernel();
-        $this->product = new Product();
+        $this->user = new User();
+        $this->formFactory = $this->getContainer()->get('form.factory');
         $this->formData = [
-            'code' => '650478611714d-Jabon'
+            'document' => '100'
         ];
-        $this->formFactory = self::getContainer()->get('form.factory');
     }
 
     protected function tearDown(): void
     {
         unset(
             $this->formData,
-            $this->product,
+            $this->user,
             $this->formFactory
         );
     }

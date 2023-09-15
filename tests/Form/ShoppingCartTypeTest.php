@@ -53,5 +53,7 @@ class ShoppingCartTypeTest extends KernelTestCase
 
         self::assertTrue($form->isSynchronized());
         self::assertTrue($form->isValid());
+        self::assertIsArray($this->invoice->getProducts()->toArray());
+        self::assertInstanceOf(User::class, $this->invoice->getUser());
     }
 }

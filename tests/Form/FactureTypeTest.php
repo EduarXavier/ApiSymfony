@@ -14,6 +14,16 @@ class FactureTypeTest extends KernelTestCase
     private Invoice $invoice;
     private FormFactoryInterface $formFactory;
 
+    public function testSubmitValidData(): void
+    {
+        $form = $this->formFactory->create(FactureType::class, $this->invoice);
+        $form->submit($this->formData);
+
+        self::assertTrue($form->isSynchronized());
+        self::assertTrue($form->isValid());
+        self::assertEquals($this->invoice->getCode(), $this->formData['code']);
+    }
+
     /**
      * @throws Exception
      */
@@ -29,18 +39,10 @@ class FactureTypeTest extends KernelTestCase
 
     protected function tearDown(): void
     {
-        unset($this->formData);
-        unset($this->invoice);
-        unset($this->formFactory);
-    }
-
-    public function testSubmitValidData(): void
-    {
-        $form = $this->formFactory->create(FactureType::class, $this->invoice);
-        $form->submit($this->formData);
-
-        self::assertTrue($form->isSynchronized());
-        self::assertTrue($form->isValid());
-        self::assertEquals($this->invoice->getCode(), $this->formData['code']);
+        unset(
+            $this->formData,
+            $this->invoice,
+            $this->formFactory
+        );
     }
 }

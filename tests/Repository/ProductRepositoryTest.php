@@ -14,34 +14,6 @@ class ProductRepositoryTest extends KernelTestCase
     private DocumentManager $documentManager;
     private Product $product;
 
-    /**
-     * @throws Exception
-     */
-    protected function setUp(): void
-    {
-        self::bootKernel();
-        $this->productRepository = self::getContainer()->get(ProductRepository::class);
-        $this->documentManager = self::getContainer()->get(DocumentManager::class);
-        $this->product = (new Product())
-            ->setName('Jabon')
-            ->setCode('650478611714d-Jabon')
-            ->setAmount(10)
-            ->setStatus(Product::AVAILABLE)
-            ->setPrice(3000)
-        ;
-        $this->documentManager->persist($this->product);
-        $this->documentManager->flush();
-    }
-
-    protected function tearDown(): void
-    {
-        $this->documentManager->getSchemaManager()->dropDatabases();
-
-        unset($this->product);
-        unset($this->productRepository);
-        unset($this->documentManager);
-    }
-
     public function testFindAll(): void
     {
         $products = $this->productRepository->findAll();
@@ -66,4 +38,36 @@ class ProductRepositoryTest extends KernelTestCase
         self::assertIsArray($find);
         self::assertNotContains($this->product, $find);
     }
+
+
+    /**
+     * @throws Exception
+     */
+    protected function setUp(): void
+    {
+        self::bootKernel();
+        $this->productRepository = self::getContainer()->get(ProductRepository::class);
+        $this->documentManager = self::getContainer()->get(DocumentManager::class);
+        $this->product = (new Product())
+            ->setName('Jabon')
+            ->setCode('650478611714d-Jabon')
+            ->setAmount(10)
+            ->setStatus(Product::AVAILABLE)
+            ->setPrice(3000)
+        ;
+        $this->documentManager->persist($this->product);
+        $this->documentManager->flush();
+    }
+
+    protected function tearDown(): void
+    {
+        $this->documentManager->getSchemaManager()->dropDatabases();
+
+        unset(
+            $this->product,
+            $this->productRepository,
+            $this->documentManager
+        );
+    }
+
 }

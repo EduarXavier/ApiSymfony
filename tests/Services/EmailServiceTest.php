@@ -16,22 +16,6 @@ class EmailServiceTest extends KernelTestCase
     private MailerInterface $mailer;
 
     /**
-     * @throws Exception
-     */
-    protected function setUp(): void
-    {
-        $this->mailer = $this->createMock(MailerInterface::class);
-        $this->emailService = new EmailService();
-        $this->emailService->setMailer($this->mailer);
-    }
-
-    protected function tearDown(): void
-    {
-        unset($this->emailService);
-        unset($this->mailer);
-    }
-
-    /**
      * @throws TransportExceptionInterface
      */
     public function testSendEmailRegistro(): void
@@ -73,5 +57,23 @@ class EmailServiceTest extends KernelTestCase
             }));
 
         $this->emailService->sendEmail($user, 'firstShop');
+    }
+
+    /**
+     * @throws Exception
+     */
+    protected function setUp(): void
+    {
+        $this->mailer = $this->createMock(MailerInterface::class);
+        $this->emailService = new EmailService();
+        $this->emailService->setMailer($this->mailer);
+    }
+
+    protected function tearDown(): void
+    {
+        unset(
+            $this->emailService,
+            $this->mailer
+        );
     }
 }

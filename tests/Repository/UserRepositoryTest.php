@@ -16,32 +16,6 @@ class UserRepositoryTest extends KernelTestCase
     private DocumentManager $documentManager;
     private User $user;
 
-    /**
-     * @throws Exception
-     */
-    protected function setUp(): void
-    {
-        self::bootKernel();
-        $this->userRepository = self::getContainer()->get(UserRepository::class);
-        $this->documentManager = self::getContainer()->get(DocumentManager::class);
-        $this->user = (new User())
-            ->setEmail('user@test.com')
-            ->setName('juanito')
-            ->setDocument('1090002')
-        ;
-        $this->documentManager->persist($this->user);
-        $this->documentManager->flush();
-    }
-
-    protected function tearDown(): void
-    {
-        $this->documentManager->getSchemaManager()->dropDatabases();
-
-        unset($this->user);
-        unset($this->userRepository);
-        unset($this->documentManager);
-    }
-
     public function testFindByEmail(): void
     {
         $foundUser = $this->userRepository->findByEmail($this->user->getEmail());
@@ -69,4 +43,33 @@ class UserRepositoryTest extends KernelTestCase
         $this->assertInstanceOf(User::class, $foundUser);
         $this->assertEquals($this->user->getId(), $foundUser->getId());
     }
+
+    /**
+     * @throws Exception
+     */
+    protected function setUp(): void
+    {
+        self::bootKernel();
+        $this->userRepository = self::getContainer()->get(UserRepository::class);
+        $this->documentManager = self::getContainer()->get(DocumentManager::class);
+        $this->user = (new User())
+            ->setEmail('user@test.com')
+            ->setName('juanito')
+            ->setDocument('1090002')
+        ;
+        $this->documentManager->persist($this->user);
+        $this->documentManager->flush();
+    }
+
+    protected function tearDown(): void
+    {
+        $this->documentManager->getSchemaManager()->dropDatabases();
+
+        unset(
+            $this->user,
+            $this->userRepository,
+            $this->documentManager
+        );
+    }
+
 }

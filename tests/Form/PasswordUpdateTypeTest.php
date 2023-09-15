@@ -14,6 +14,16 @@ class PasswordUpdateTypeTest extends KernelTestCase
     private User $user;
     private FormFactoryInterface $formFactory;
 
+    public function testSubmitValidData(): void
+    {
+        $form = $this->formFactory->create(PasswordUpdateType::class, $this->user);
+        $form->submit($this->formData);
+
+        self::assertTrue($form->isSynchronized());
+        self::assertTrue($form->isValid());
+        self::assertEquals($this->user->getPassword(), $this->formData['password']);
+    }
+
     /**
      * @throws Exception
      */
@@ -29,18 +39,11 @@ class PasswordUpdateTypeTest extends KernelTestCase
 
     protected function tearDown(): void
     {
-        unset($this->formData);
-        unset($this->invoice);
-        unset($this->formFactory);
+        unset(
+            $this->formData,
+            $this->invoice,
+            $this->formFactory
+        );
     }
 
-    public function testSubmitValidData(): void
-    {
-        $form = $this->formFactory->create(PasswordUpdateType::class, $this->user);
-        $form->submit($this->formData);
-
-        self::assertTrue($form->isSynchronized());
-        self::assertTrue($form->isValid());
-        self::assertEquals($this->user->getPassword(), $this->formData['password']);
-    }
 }

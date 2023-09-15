@@ -14,6 +14,17 @@ class ProductShoppingCartTypeTest extends KernelTestCase
     private ProductInvoice $productInvoice;
     private FormFactoryInterface $formFactory;
 
+    public function testSubmitValidData(): void
+    {
+        $form = $this->formFactory->create(ProductShoppingCartType::class, $this->productInvoice);
+        $form->submit($this->formData);
+
+        self::assertTrue($form->isSynchronized());
+        self::assertTrue($form->isValid());
+        self::assertEquals($this->productInvoice->getCode(), $this->formData['code']);
+        self::assertEquals($this->productInvoice->getAmount(), $this->formData['amount']);
+    }
+
     /**
      * @throws Exception
      */
@@ -30,19 +41,10 @@ class ProductShoppingCartTypeTest extends KernelTestCase
 
     protected function tearDown(): void
     {
-        unset($this->formData);
-        unset($this->productInvoice);
-        unset($this->formFactory);
-    }
-
-    public function testSubmitValidData(): void
-    {
-        $form = $this->formFactory->create(ProductShoppingCartType::class, $this->productInvoice);
-        $form->submit($this->formData);
-
-        self::assertTrue($form->isSynchronized());
-        self::assertTrue($form->isValid());
-        self::assertEquals($this->productInvoice->getCode(), $this->formData['code']);
-        self::assertEquals($this->productInvoice->getAmount(), $this->formData['amount']);
+        unset(
+            $this->formData,
+            $this->productInvoice,
+            $this->formFactory
+        );
     }
 }
