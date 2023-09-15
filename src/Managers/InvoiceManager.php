@@ -72,17 +72,28 @@ class InvoiceManager
     public function invoiceResume(User $user, ?string $order ): ArrayCollection
     {
         $invoices = $this->invoicesRepository->findAllByUser($user);
-        $products = [];
+        $products = new ArrayCollection();
 
         foreach ($invoices as $invoice) {
             foreach ($invoice->getProducts() as $product) {
-                if (isset($products[$product->getId()])) {
-                    $products[$product->getId()]->setAmount($products[$product->getId()]->getAmount() + $product->getAmount());
-                } else {
-                    $products[$product->getId()] = $product;
+                $found = false;
+
+                foreach ($products as $key => $productArray) {
+                    if ($product->getCode() == $productArray->getCode()) {
+                        $productArray->setAmount($product->getAmount() + $productArray->getAmount());
+                        $products->set($key, $productArray);
+                        $found = true;
+                        break;
+                    }
+                }
+
+                if (!$found) {
+                    $products->add($product);
                 }
             }
         }
+
+        $products = $products->toArray();
 
         switch ($order) {
             case 'price' : usort($products, fn($a, $b) => $b->getPrice() - $a->getPrice());

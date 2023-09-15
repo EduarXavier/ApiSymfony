@@ -29,7 +29,7 @@ class UpdateProductType extends AbstractType
             ->add('status', ChoiceType::class, [
                 'label' => 'Estado',
                 'choices' => [
-                    'Terminado' => 'expired',
+                    'No disponible' => 'expired',
                     'Disponible' => 'available',
                 ],
                 'attr' => [
