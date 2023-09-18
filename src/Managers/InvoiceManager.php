@@ -182,6 +182,7 @@ class InvoiceManager
         }
 
         $this->invoicesRepository->getDocumentManager()->persist($invoices);
+
         return true;
     }
 
@@ -193,22 +194,6 @@ class InvoiceManager
     {
         $invoice->setDate($this->getDate());
         $invoice->setStatus(Invoice::INVOICE);
-    }
-
-    /**
-     * @throws MongoDBException
-     * @throws Exception
-     */
-    private function updateProductAndCheckAvailability(Product $productShop, int $amount): void
-    {
-        $newAmountProduct = $productShop->getAmount() - $amount;
-
-        if ($newAmountProduct >= 0) {
-            $productShop->setAmount($newAmountProduct);
-            $this->productManager->updateProduct($productShop);
-        } else {
-            throw new Exception('No hay tantos productos', Response::HTTP_BAD_REQUEST);
-        }
     }
 
     /**
@@ -302,8 +287,24 @@ class InvoiceManager
     /**
      * @throws Exception
      */
-    protected function getDate(): DateTime
+    private function getDate(): DateTime
     {
         return new DateTime('now', new DateTimeZone('America/Bogota'));
+    }
+
+    /**
+     * @throws MongoDBException
+     * @throws Exception
+     */
+    private function updateProductAndCheckAvailability(Product $productShop, int $amount): void
+    {
+        $newAmountProduct = $productShop->getAmount() - $amount;
+
+        if ($newAmountProduct >= 0) {
+            $productShop->setAmount($newAmountProduct);
+            $this->productManager->updateProduct($productShop);
+        } else {
+            throw new Exception('No hay tantos productos', Response::HTTP_BAD_REQUEST);
+        }
     }
 }

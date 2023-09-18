@@ -39,7 +39,7 @@ class InvoicesRepository extends ServiceDocumentRepository
 
     public function findByUserAndStatus(User $user, string $status): ?Invoice
     {
-        return $this->findOneBy(['user.id' => $user->getId(), 'status' => $status]) ?? null;
+        return $this->findOneBy(['user.id' => $user->getId(), 'status' => $status]);
     }
 
     public function findByProduct(ProductInvoice $product): array
