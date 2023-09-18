@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Tests\Repository;
 
 use App\Document\Invoice;
@@ -90,15 +92,15 @@ class InvoiceRepositoryTest extends KernelTestCase
     {
         self::bootKernel();
         $this->invoicesRepository = self::getContainer()->get(InvoicesRepository::class);
-        $this->documentManager = self::getContainer()->get(DocumentManager::class);
-
-        $this->user = (new User())->setName('userTest');
-        $this->documentManager->persist($this->user);
-        $this->documentManager->flush();
-
+        $this->documentManager = $this->invoicesRepository->getDocumentManager();
+        $this->user = (new User())
+            ->setName('userTest')
+        ;
         $this->product = (new ProductInvoice())
             ->setName('Jabon')
             ->setCode('65047fae8ff348-Jabon');
+        $this->documentManager->persist($this->user);
+        $this->documentManager->flush();
         $this->invoice = (new Invoice())
             ->setUser($this->user)
             ->setCode('65047fae8ff28-1094045112')

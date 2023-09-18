@@ -1,13 +1,12 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Tests\Form;
 
 use App\Document\Invoice;
-use App\Document\ProductInvoice;
 use App\Document\User;
-use App\Form\ProductShoppingCartType;
 use App\Form\ShoppingCartType;
-use App\Form\UserShoppingCartType;
 use Exception;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 use Symfony\Component\Form\FormFactoryInterface;

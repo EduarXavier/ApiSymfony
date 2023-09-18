@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Tests\Repository;
 
 use App\Document\User;
@@ -13,23 +15,22 @@ use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 class UserRepositoryTest extends KernelTestCase
 {
     private UserRepository $userRepository;
-    private DocumentManager $documentManager;
     private User $user;
 
     public function testFindByEmail(): void
     {
         $foundUser = $this->userRepository->findByEmail($this->user->getEmail());
 
-        $this->assertInstanceOf(User::class, $foundUser);
-        $this->assertEquals($this->user->getEmail(), $foundUser->getEmail());
+        self::assertInstanceOf(User::class, $foundUser);
+        self::assertEquals($this->user->getEmail(), $foundUser->getEmail());
     }
 
     public function testFindByDocument(): void
     {
         $foundUser = $this->userRepository->findByDocument($this->user->getDocument());
 
-        $this->assertInstanceOf(User::class, $foundUser);
-        $this->assertEquals($this->user->getDocument(), $foundUser->getDocument());
+        self::assertInstanceOf(User::class, $foundUser);
+        self::assertEquals($this->user->getDocument(), $foundUser->getDocument());
     }
 
     /**
@@ -40,8 +41,8 @@ class UserRepositoryTest extends KernelTestCase
     {
         $foundUser = $this->userRepository->findById($this->user->getId());
 
-        $this->assertInstanceOf(User::class, $foundUser);
-        $this->assertEquals($this->user->getId(), $foundUser->getId());
+        self::assertInstanceOf(User::class, $foundUser);
+        self::assertEquals($this->user->getId(), $foundUser->getId());
     }
 
     /**
@@ -51,19 +52,18 @@ class UserRepositoryTest extends KernelTestCase
     {
         self::bootKernel();
         $this->userRepository = self::getContainer()->get(UserRepository::class);
-        $this->documentManager = self::getContainer()->get(DocumentManager::class);
         $this->user = (new User())
             ->setEmail('user@test.com')
             ->setName('juanito')
             ->setDocument('1090002')
         ;
-        $this->documentManager->persist($this->user);
-        $this->documentManager->flush();
+        $this->userRepository->getDocumentManager()->persist($this->user);
+        $this->userRepository->getDocumentManager()->flush();
     }
 
     protected function tearDown(): void
     {
-        $this->documentManager->getSchemaManager()->dropDatabases();
+        $this->userRepository->getDocumentManager()->getSchemaManager()->dropDatabases();
 
         unset(
             $this->user,
