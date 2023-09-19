@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Tests\Form;
 
 use App\Document\User;
-use App\Form\UserType;
+use App\Form\UserUpdateType;
 use Exception;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 use Symfony\Component\Form\FormFactoryInterface;
@@ -18,7 +18,7 @@ class UserUpdateTypeTest extends KernelTestCase
 
     public function testSubmitValidData(): void
     {
-        $form = $this->formFactory->create(UserType::class, $this->user);
+        $form = $this->formFactory->create(UserUpdateType::class, $this->user);
         $form->submit($this->formData);
 
         self::assertTrue($form->isSynchronized());
