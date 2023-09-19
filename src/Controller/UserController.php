@@ -30,6 +30,7 @@ class UserController extends AbstractController
     private UserManager $userManager;
     private EmailService $emailService;
     private DocumentManager $documentManager;
+    private UserPasswordHasherInterface $passwordHasher;
 
     #[Required]
     public function setUserRepository(UserRepository $userRepository): void
@@ -55,12 +56,18 @@ class UserController extends AbstractController
         $this->documentManager = $documentManager;
     }
 
+    #[Required]
+    public function setPasswordHasher(UserPasswordHasherInterface $passwordHasher): void
+    {
+        $this->passwordHasher = $passwordHasher;
+    }
+
     /**
      * @throws MongoDBException
      * @throws TransportExceptionInterface
      */
     #[Route('/api/add', name: 'addUser', methods: ['POST'])]
-    public function addUser(Request $request, UserPasswordHasherInterface $passwordHasher): ?JsonResponse
+    public function addUser(Request $request): ?JsonResponse
     {
         $user = new User();
         $form = $this->createForm(UserType::class, $user, ['method' => 'POST']);
@@ -73,23 +80,26 @@ class UserController extends AbstractController
         }
 
         $user->setName(ucfirst($user->getName()));
-        $hashedPassword = $passwordHasher->hashPassword(
+        $hashedPassword = $this->passwordHasher->hashPassword(
             $user,
             $user->getPassword()
         );
         $user->setPassword($hashedPassword);
 
         if ($this->userRepository->findByDocument($user->getDocument())) {
-            return $this->json(['Error' => 'Ya existe un usuario con este documento'], Response::HTTP_BAD_REQUEST);
+            return $this->json(['error' => 'Ya existe un usuario con este documento'], Response::HTTP_BAD_REQUEST);
         } else if ($this->userRepository->findByEmail($user->getEmail())) {
-            return $this->json(['Error' => 'Ya existe un usuario con este Email'], Response::HTTP_BAD_REQUEST);
+            return $this->json(['error' => 'Ya existe un usuario con este Email'], Response::HTTP_BAD_REQUEST);
         }
 
         $this->userManager->addUser($user);
         $this->emailService->sendEmail($user, 'registro');
         $this->documentManager->flush();
 
-        return $this->json(['message' => 'Usuario agregado correctamente'], Response::HTTP_OK);
+        return $this->json([
+            'message' => 'Usuario agregado correctamente',
+            'user' => $user
+        ], Response::HTTP_OK);
     }
 
     /**
@@ -145,6 +155,6 @@ class UserController extends AbstractController
         $this->userManager->updateUser($user, 'password');
         $this->documentManager->flush();
 
-        return $this->json(['message' => 'Contraseña actualizada correctamente'], Response::HTTP_BAD_REQUEST);
+        return $this->json(['message' => 'Contraseña actualizada correctamente'], Response::HTTP_OK);
     }
 }

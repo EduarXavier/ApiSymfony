@@ -16,7 +16,8 @@
 
     <div class="d-flex w-100 align-items-center align-middle justify-content-center">
         <div class="w-25">
-            <form action="{{ path('login_template') }}" method="post">
+            <h2>Login</h2>
+            <form action="{{ path('login_template') }}" method="POST">
                 <label for="username">Email:</label>
                 <input type="text" id="username" name="_username" value="{{ last_username }}">
 
@@ -25,7 +26,7 @@
 
                 <input type="hidden" name="_csrf_token" value="{{ csrf_token('authenticate') }}">
 
-                <button type="submit" class="btn btn-primary">Iniciar sesión</button>
+                <button type="submit" id="login" class="btn btn-primary">Iniciar sesión</button>
             </form>
         </div>
     </div>
