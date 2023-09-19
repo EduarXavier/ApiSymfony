@@ -105,6 +105,7 @@ class LoginControllerTest extends WebTestCase
      */
     public static function tearDownAfterClass(): void
     {
+        self::$kernel->shutdown();
         self::getContainer()->get(DocumentManager::class)->getSchemaManager()->dropDatabases();
     }
 }

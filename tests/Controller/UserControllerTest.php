@@ -17,11 +17,11 @@ class UserControllerTest extends WebTestCase
     {
         $content = [
             'name' => 'Persona falsa AddUser',
-            'document' => '100090',
+            'document' => '1005545421',
             'rol' => 'ROLE_ADMIN',
             'address' => 'calle falsa',
             'phone' => '3000',
-            'email' => 'personaFalsa@gmail.com',
+            'email' => 'personaFalsaAddUser@gmail.com',
             'password' => 'claveSegura'
         ];
 
@@ -309,5 +309,6 @@ class UserControllerTest extends WebTestCase
     public static function tearDownAfterClass(): void
     {
         self::getContainer()->get(DocumentManager::class)->getSchemaManager()->dropDatabases();
+        self::$kernel->shutdown();
     }
 }
