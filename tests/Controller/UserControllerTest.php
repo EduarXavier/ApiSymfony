@@ -10,8 +10,8 @@ use Symfony\Component\HttpFoundation\Response;
 
 class UserControllerTest extends WebTestCase
 {
-    private static string $token;
-    private static ?KernelBrowser $client;
+    private string $token;
+    private ?KernelBrowser $client;
 
     public function testAddUser(): void
     {
@@ -25,13 +25,13 @@ class UserControllerTest extends WebTestCase
             'password' => 'claveSegura'
         ];
 
-        self::$client->request(
+        $this->client->request(
             'POST',
             '/user/api/add',
             $content
         );
 
-        $response = self::$client->getResponse();
+        $response = $this->client->getResponse();
         $user = (array) json_decode($response->getContent())->user;
 
         self::assertInstanceOf(Response::class, $response);
@@ -42,7 +42,7 @@ class UserControllerTest extends WebTestCase
 
     public function testAddUserWithIncompleteData(): void
     {
-        self::$client->request(
+        $this->client->request(
             'POST',
             '/user/api/add',
             [
@@ -53,8 +53,8 @@ class UserControllerTest extends WebTestCase
             ]
         );
 
-        $response = self::$client->getResponse();
-        $contentRequest = json_decode(self::$client->getResponse()->getContent());
+        $response = $this->client->getResponse();
+        $contentRequest = json_decode($this->client->getResponse()->getContent());
 
         self::assertInstanceOf(Response::class, $response);
         self::assertEquals(Response::HTTP_BAD_REQUEST, $response->getStatusCode());
@@ -63,7 +63,7 @@ class UserControllerTest extends WebTestCase
 
     public function testAddUserWithAnExistingEmail(): void
     {
-        self::$client->request(
+        $this->client->request(
             'POST',
             '/user/api/add',
             [
@@ -76,7 +76,7 @@ class UserControllerTest extends WebTestCase
                 'password' => 'claveSegura'
             ]
         );
-        self::$client->request(
+        $this->client->request(
             'POST',
             '/user/api/add',
             [
@@ -89,8 +89,8 @@ class UserControllerTest extends WebTestCase
                 'password' => 'claveSegura'
             ]
         );
-        $response = self::$client->getResponse();
-        $contentRequest = json_decode(self::$client->getResponse()->getContent());
+        $response = $this->client->getResponse();
+        $contentRequest = json_decode($this->client->getResponse()->getContent());
 
         self::assertInstanceOf(Response::class, $response);
         self::assertEquals(Response::HTTP_BAD_REQUEST, $response->getStatusCode());
@@ -99,7 +99,7 @@ class UserControllerTest extends WebTestCase
 
     public function testAddUserWithAnExistingDocument(): void
     {
-        self::$client->request(
+        $this->client->request(
             'POST',
             '/user/api/add',
             [
@@ -112,7 +112,7 @@ class UserControllerTest extends WebTestCase
                 'password' => 'claveSegura'
             ]
         );
-        self::$client->request(
+        $this->client->request(
             'POST',
             '/user/api/add',
             [
@@ -125,8 +125,8 @@ class UserControllerTest extends WebTestCase
                 'password' => 'claveSegura'
             ]
         );
-        $response = self::$client->getResponse();
-        $contentRequest = json_decode(self::$client->getResponse()->getContent());
+        $response = $this->client->getResponse();
+        $contentRequest = json_decode($this->client->getResponse()->getContent());
 
         self::assertInstanceOf(Response::class, $response);
         self::assertEquals(Response::HTTP_BAD_REQUEST, $response->getStatusCode());
@@ -135,7 +135,7 @@ class UserControllerTest extends WebTestCase
 
     public function testUpdateUser(): void
     {
-        self::$client->request(
+        $this->client->request(
             'POST',
             'http://gasolapp/user/api/add',
             [
@@ -148,8 +148,8 @@ class UserControllerTest extends WebTestCase
                 'password' => 'claveSegura'
             ]
         );
-        $user = json_decode(self::$client->getResponse()->getContent())->user;
-        self::$client->request(
+        $user = json_decode($this->client->getResponse()->getContent())->user;
+        $this->client->request(
             'POST',
             'http://gasolapp/user/api/update/'.$user->id,
             [
@@ -159,10 +159,10 @@ class UserControllerTest extends WebTestCase
             [],
             [
                 'HTTP_CONTENT_TYPE' => 'application/json',
-                'HTTP_Authorization' => 'Bearer '.self::$token
+                'HTTP_Authorization' => 'Bearer '.$this->token
             ]
         );
-        $response = self::$client->getResponse();
+        $response = $this->client->getResponse();
 
         self::assertInstanceOf(Response::class, $response);
         self::assertEquals(Response::HTTP_OK, $response->getStatusCode());
@@ -171,7 +171,7 @@ class UserControllerTest extends WebTestCase
 
     public function testUpdateUserNotToken(): void
     {
-        self::$client->request(
+        $this->client->request(
             'POST',
             'http://gasolapp/user/api/update/6500881c739319887c0003c5',
             [
@@ -183,7 +183,7 @@ class UserControllerTest extends WebTestCase
                 'HTTP_CONTENT_TYPE' => 'application/json',
             ]
         );
-        $response = self::$client->getResponse();
+        $response = $this->client->getResponse();
 
         self::assertInstanceOf(Response::class, $response);
         self::assertEquals(Response::HTTP_UNAUTHORIZED, $response->getStatusCode());
@@ -192,7 +192,7 @@ class UserControllerTest extends WebTestCase
 
     public function testUpdateUserNotFound(): void
     {
-        self::$client->request(
+        $this->client->request(
             'POST',
             'http://gasolapp/user/api/update/6500881c739319887c0003c5',
             [
@@ -202,10 +202,10 @@ class UserControllerTest extends WebTestCase
             [],
             [
                 'HTTP_CONTENT_TYPE' => 'application/json',
-                'HTTP_Authorization' => 'Bearer '.self::$token
+                'HTTP_Authorization' => 'Bearer '.$this->token
             ]
         );
-        $response = self::$client->getResponse();
+        $response = $this->client->getResponse();
 
         self::assertInstanceOf(Response::class, $response);
         self::assertEquals(Response::HTTP_BAD_REQUEST, $response->getStatusCode());
@@ -214,7 +214,7 @@ class UserControllerTest extends WebTestCase
 
     public function testUpdatePasswordUser(): void
     {
-        self::$client->request(
+        $this->client->request(
             'POST',
             'http://gasolapp/user/api/add',
             [
@@ -227,8 +227,8 @@ class UserControllerTest extends WebTestCase
                 'password' => 'claveSegura'
             ]
         );
-        $user = json_decode(self::$client->getResponse()->getContent())->user;
-        self::$client->request(
+        $user = json_decode($this->client->getResponse()->getContent())->user;
+        $this->client->request(
             'POST',
             'http://gasolapp/user/api/update/password/'.$user->id,
             [
@@ -237,10 +237,10 @@ class UserControllerTest extends WebTestCase
             [],
             [
                 'HTTP_CONTENT_TYPE' => 'application/json',
-                'HTTP_Authorization' => 'Bearer '.self::$token
+                'HTTP_Authorization' => 'Bearer '.$this->token
             ]
         );
-        $response = self::$client->getResponse();
+        $response = $this->client->getResponse();
 
         self::assertInstanceOf(Response::class, $response);
         self::assertEquals(Response::HTTP_OK, $response->getStatusCode());
@@ -249,7 +249,7 @@ class UserControllerTest extends WebTestCase
 
     public function testUpdatePasswordUserNotfound(): void
     {
-        self::$client->request(
+        $this->client->request(
             'POST',
             'http://gasolapp/user/api/update/password/6500881c739319887c0003c5',
             [
@@ -258,10 +258,10 @@ class UserControllerTest extends WebTestCase
             [],
             [
                 'HTTP_CONTENT_TYPE' => 'application/json',
-                'HTTP_Authorization' => 'Bearer '.self::$token
+                'HTTP_Authorization' => 'Bearer '.$this->token
             ]
         );
-        $response = self::$client->getResponse();
+        $response = $this->client->getResponse();
 
         self::assertInstanceOf(Response::class, $response);
         self::assertEquals(Response::HTTP_BAD_REQUEST, $response->getStatusCode());
@@ -273,9 +273,9 @@ class UserControllerTest extends WebTestCase
      */
     protected function setUp(): void
     {
-        static::$client = self::createClient();
-        self::$client->followRedirects();
-        self::$client->request(
+        $this->client = self::createClient();
+        $this->client->followRedirects();
+        $this->client->request(
             'POST',
             'http://gasolapp/user/api/add',
             [
@@ -292,7 +292,7 @@ class UserControllerTest extends WebTestCase
             "username" => "userTest@gmail.com",
             "password" => "claveSegura"
         ]);
-        self::$client->request(
+        $this->client->request(
             'POST',
             'http://gasolapp/api/login',
             [],
@@ -300,7 +300,7 @@ class UserControllerTest extends WebTestCase
             ['CONTENT_TYPE' => 'application/json'],
             $jsonData
         );
-        self::$token = json_decode(self::$client->getResponse()->getContent())->token;
+        $this->token = json_decode($this->client->getResponse()->getContent())->token;
     }
 
     /**
