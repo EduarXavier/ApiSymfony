@@ -13,6 +13,7 @@ class InvoiceControllerTest extends WebTestCase
     private static ?object $documentManager;
     private ?KernelBrowser $client;
     private string $token;
+    private array $header;
     private string $codeProduct;
 
     public function testShoppingCart(): void
@@ -32,10 +33,7 @@ class InvoiceControllerTest extends WebTestCase
                 ]
             ],
             [],
-            [
-                'HTTP_CONTENT_TYPE' => 'application/json',
-                'HTTP_Authorization' => 'Bearer '.$this->token
-            ]
+            $this->header
         );
         $response = $this->client->getResponse();
         $content = json_decode($response->getContent());
@@ -63,10 +61,7 @@ class InvoiceControllerTest extends WebTestCase
                 ]
             ],
             [],
-            [
-                'HTTP_CONTENT_TYPE' => 'application/json',
-                'HTTP_Authorization' => 'Bearer '.$this->token
-            ]
+            $this->header
         );
         $response = $this->client->getResponse();
         $content = json_decode($response->getContent());
@@ -94,10 +89,7 @@ class InvoiceControllerTest extends WebTestCase
                 ]
             ],
             [],
-            [
-                'HTTP_CONTENT_TYPE' => 'application/json',
-                'HTTP_Authorization' => 'Bearer '.$this->token
-            ]
+            $this->header
         );
         $response = $this->client->getResponse();
         $content = json_decode($response->getContent());
@@ -154,10 +146,7 @@ class InvoiceControllerTest extends WebTestCase
                 ]
             ],
             [],
-            [
-                'HTTP_CONTENT_TYPE' => 'application/json',
-                'HTTP_Authorization' => 'Bearer '.$this->token
-            ]
+            $this->header
         );
         $this->client->request(
             'POST',
@@ -174,10 +163,7 @@ class InvoiceControllerTest extends WebTestCase
                 ]
             ],
             [],
-            [
-                'HTTP_CONTENT_TYPE' => 'application/json',
-                'HTTP_Authorization' => 'Bearer '.$this->token
-            ]
+            $this->header
         );
         $response = $this->client->getResponse();
         $content = json_decode($response->getContent());
@@ -206,10 +192,7 @@ class InvoiceControllerTest extends WebTestCase
                 ]
             ],
             [],
-            [
-                'HTTP_CONTENT_TYPE' => 'application/json',
-                'HTTP_Authorization' => 'Bearer '.$this->token
-            ]
+            $this->header
         );
         $response = $this->client->getResponse();
         $content = json_decode($response->getContent());
@@ -237,10 +220,7 @@ class InvoiceControllerTest extends WebTestCase
                 ]
             ],
             [],
-            [
-                'HTTP_CONTENT_TYPE' => 'application/json',
-                'HTTP_Authorization' => 'Bearer '.$this->token
-            ]
+            $this->header
         );
         $response = $this->client->getResponse();
         $content = json_decode($response->getContent());
@@ -268,10 +248,7 @@ class InvoiceControllerTest extends WebTestCase
                 ]
             ],
             [],
-            [
-                'HTTP_CONTENT_TYPE' => 'application/json',
-                'HTTP_Authorization' => 'Bearer '.$this->token
-            ]
+            $this->header
         );
         $this->client->request(
             'POST',
@@ -288,10 +265,7 @@ class InvoiceControllerTest extends WebTestCase
                 ]
             ],
             [],
-            [
-                'HTTP_CONTENT_TYPE' => 'application/json',
-                'HTTP_Authorization' => 'Bearer '.$this->token
-            ]
+            $this->header
         );
         $response = $this->client->getResponse();
         $content = json_decode($response->getContent());
@@ -312,10 +286,7 @@ class InvoiceControllerTest extends WebTestCase
                 "code" => '650b1468f3368-1009090'
             ],
             [],
-            [
-                'HTTP_CONTENT_TYPE' => 'application/json',
-                'HTTP_Authorization' => 'Bearer '.$this->token
-            ]
+            $this->header
         );
         $response = $this->client->getResponse();
         $content = json_decode($response->getContent());
@@ -343,10 +314,7 @@ class InvoiceControllerTest extends WebTestCase
                 ]
             ],
             [],
-            [
-                'HTTP_CONTENT_TYPE' => 'application/json',
-                'HTTP_Authorization' => 'Bearer '.$this->token
-            ]
+            $this->header
         );
         $code = json_decode($this->client->getResponse()->getContent())->code;
         $this->client->request(
@@ -356,10 +324,7 @@ class InvoiceControllerTest extends WebTestCase
                 "code" => $code
             ],
             [],
-            [
-                'HTTP_CONTENT_TYPE' => 'application/json',
-                'HTTP_Authorization' => 'Bearer '.$this->token
-            ]
+            $this->header
         );
         $response = $this->client->getResponse();
         $content = json_decode($response->getContent());
@@ -387,10 +352,7 @@ class InvoiceControllerTest extends WebTestCase
                 ]
             ],
             [],
-            [
-                'HTTP_CONTENT_TYPE' => 'application/json',
-                'HTTP_Authorization' => 'Bearer '.$this->token
-            ]
+            $this->header
         );
         $code = json_decode($this->client->getResponse()->getContent())->code;
         $this->client->request(
@@ -400,10 +362,7 @@ class InvoiceControllerTest extends WebTestCase
                 "code" => $code
             ],
             [],
-            [
-                'HTTP_CONTENT_TYPE' => 'application/json',
-                'HTTP_Authorization' => 'Bearer '.$this->token
-            ]
+            $this->header
         );
         $this->client->request(
             'POST',
@@ -412,10 +371,7 @@ class InvoiceControllerTest extends WebTestCase
                 "code" => $code
             ],
             [],
-            [
-                'HTTP_CONTENT_TYPE' => 'application/json',
-                'HTTP_Authorization' => 'Bearer '.$this->token
-            ]
+            $this->header
         );
         $response = $this->client->getResponse();
         $content = json_decode($response->getContent());
@@ -435,10 +391,7 @@ class InvoiceControllerTest extends WebTestCase
                 "code" => '650b1468f3368-1009090'
             ],
             [],
-            [
-                'HTTP_CONTENT_TYPE' => 'application/json',
-                'HTTP_Authorization' => 'Bearer '.$this->token
-            ]
+            $this->header
         );
         $response = $this->client->getResponse();
         $content = json_decode($response->getContent());
@@ -501,10 +454,7 @@ class InvoiceControllerTest extends WebTestCase
                 ]
             ],
             [],
-            [
-                'HTTP_CONTENT_TYPE' => 'application/json',
-                'HTTP_Authorization' => 'Bearer '.$this->token
-            ]
+            $this->header
         );
         $crawler = $this->client->request(
             'GET',
@@ -555,10 +505,7 @@ class InvoiceControllerTest extends WebTestCase
                 ]
             ],
             [],
-            [
-                'HTTP_CONTENT_TYPE' => 'application/json',
-                'HTTP_Authorization' => 'Bearer '.$this->token
-            ]
+            $this->header
         );
         $crawler = $this->client->request(
             'GET',
@@ -747,6 +694,10 @@ class InvoiceControllerTest extends WebTestCase
         $this->client->followRedirects();
         $this->token();
         $this->addProduct();
+        $this->header = [
+            'HTTP_CONTENT_TYPE' => 'application/json',
+            'HTTP_Authorization' => 'Bearer '.$this->token
+        ];
     }
 
     private function token(): void

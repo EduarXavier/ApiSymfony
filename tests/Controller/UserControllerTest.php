@@ -11,6 +11,7 @@ use Symfony\Component\HttpFoundation\Response;
 class UserControllerTest extends WebTestCase
 {
     private string $token;
+    private array $header;
     private ?KernelBrowser $client;
     private static ?object $documentManager;
 
@@ -158,10 +159,7 @@ class UserControllerTest extends WebTestCase
                 'phone' => '4000',
             ],
             [],
-            [
-                'HTTP_CONTENT_TYPE' => 'application/json',
-                'HTTP_Authorization' => 'Bearer '.$this->token
-            ]
+            $this->header
         );
         $response = $this->client->getResponse();
 
@@ -201,10 +199,7 @@ class UserControllerTest extends WebTestCase
                 'phone' => '4000',
             ],
             [],
-            [
-                'HTTP_CONTENT_TYPE' => 'application/json',
-                'HTTP_Authorization' => 'Bearer '.$this->token
-            ]
+            $this->header
         );
         $response = $this->client->getResponse();
 
@@ -236,10 +231,7 @@ class UserControllerTest extends WebTestCase
                 'password' => 'Clave segura 2'
             ],
             [],
-            [
-                'HTTP_CONTENT_TYPE' => 'application/json',
-                'HTTP_Authorization' => 'Bearer '.$this->token
-            ]
+            $this->header
         );
         $response = $this->client->getResponse();
 
@@ -257,10 +249,7 @@ class UserControllerTest extends WebTestCase
                 'password' => 'Clave segura 2'
             ],
             [],
-            [
-                'HTTP_CONTENT_TYPE' => 'application/json',
-                'HTTP_Authorization' => 'Bearer '.$this->token
-            ]
+            $this->header            
         );
         $response = $this->client->getResponse();
 
@@ -286,6 +275,10 @@ class UserControllerTest extends WebTestCase
         self::$documentManager = $this->client->getContainer()->get(DocumentManager::class);
         $this->client->followRedirects();
         $this->token();
+        $this->header = [
+            'HTTP_CONTENT_TYPE' => 'application/json',
+            'HTTP_Authorization' => 'Bearer '.$this->token
+        ];
     }
 
     private function token(): void
