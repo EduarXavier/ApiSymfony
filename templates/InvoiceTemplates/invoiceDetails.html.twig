@@ -31,12 +31,12 @@
                                     usuario: {{ invoice.user.name }}
                                 </h5>
                                 <p class="card-text">
-                                    ID: {{ invoice.id }}
+                                    Code: {{ invoice.code }}
                                 </p>
                                 <p class="card-text">
                                     fecha: {{ invoice.date|date('Y/m/d H:i:s', 'America/Bogota') }}
                                 </p>
-                                <p class="card-text">
+                                <p class="card-text" id="status">
                                     Estado: {{ invoice.status }}
                                 </p>
                                 <p class="card-text">
@@ -110,7 +110,7 @@
                                                 class="btn btn-danger ms-2"
                                                 href="{{ path('delete_shopping_cart_view', {'document': invoice.user.document}) }}"
                                         >
-                                            Eliminar
+                                            Eliminar carrito
                                         </a>
                                     </div>
                                 {% endif %}
