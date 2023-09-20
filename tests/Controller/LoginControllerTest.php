@@ -13,6 +13,50 @@ class LoginControllerTest extends WebTestCase
     private ?KernelBrowser $client;
     private static ?object $documentManager;
 
+    public function testLoginApi(): void
+    {
+        $jsonData = json_encode([
+            "username" => "personaFalsa@gmail.com",
+            "password" => "claveSegura"
+        ]);
+        $this->client->request(
+            'POST',
+            'http://gasolapp/api/login',
+            [],
+            [],
+            ['CONTENT_TYPE' => 'application/json'],
+            $jsonData
+        );
+        $response = $this->client->getResponse();
+        $token = json_decode($response->getContent())->token;
+
+        self::assertInstanceOf(Response::class, $response);
+        self::assertEquals(Response::HTTP_OK, $response->getStatusCode());
+        self::assertNotNull($token);
+    }
+
+    public function testLoginApiWithBadCredentials(): void
+    {
+        $jsonData = json_encode([
+            "username" => "personaNoFalsa@gmail.com",
+            "password" => "claveSegura"
+        ]);
+        $this->client->request(
+            'POST',
+            'http://gasolapp/api/login',
+            [],
+            [],
+            ['CONTENT_TYPE' => 'application/json'],
+            $jsonData
+        );
+        $response = $this->client->getResponse();
+        $message = json_decode($response->getContent())->message;
+
+        self::assertInstanceOf(Response::class, $response);
+        self::assertEquals(Response::HTTP_UNAUTHORIZED, $response->getStatusCode());
+        self::assertNotNull($message, 'Invalid credentials.');
+    }
+
     public function testLoginView(): void
     {
         $this->client->request(
