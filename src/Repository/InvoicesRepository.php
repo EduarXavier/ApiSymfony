@@ -32,6 +32,11 @@ class InvoicesRepository extends ServiceDocumentRepository
         return $this->findOneBy(['id' => $id, 'status' => $status]);
     }
 
+    public function findById(string $id): ?Invoice
+    {
+        return $this->findOneBy(['id' => $id]);
+    }
+
     public function findByCode(string $code)
     {
         return $this->findOneBy(['code' => $code]);

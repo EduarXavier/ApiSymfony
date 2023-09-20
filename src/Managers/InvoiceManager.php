@@ -58,7 +58,7 @@ class InvoiceManager
      * @throws MongoDBException
      * @throws Exception
      */
-    public function addProductsToShoppingCart(Collection $products, User $user): bool
+    public function addProductsToShoppingCart(Collection $products, User $user): bool|Invoice
     {
         $shoppingCart = $this->invoicesRepository->findByUserAndStatus($user, Invoice::SHOPPINGCART);
 
@@ -113,7 +113,7 @@ class InvoiceManager
      * @throws LockException
      * @throws Exception
      */
-    public function addToExistingCart(Collection $products, Invoice $shoppingCart): bool
+    public function addToExistingCart(Collection $products, Invoice $shoppingCart): bool|Invoice
     {
         $productsUser = $shoppingCart->getProducts();
 
@@ -121,7 +121,7 @@ class InvoiceManager
             $productShop = $this->productRepository->findByCode($product->getCode());
 
             if (!$productShop) {
-                break;
+                return false;
             }
 
             $existingProduct = null;
@@ -149,7 +149,7 @@ class InvoiceManager
             $this->updateProductAndCheckAvailability($productShop, $product->getAmount());
         }
 
-        return true;
+        return $shoppingCart;
     }
 
     /**
@@ -157,7 +157,7 @@ class InvoiceManager
      * @throws LockException
      * @throws Exception
      */
-    private function createNewCart(Collection $products, User $user): bool
+    private function createNewCart(Collection $products, User $user): bool|Invoice
     {
         $invoices = new Invoice();
         $invoices->setUser($user);
@@ -183,7 +183,7 @@ class InvoiceManager
 
         $this->invoicesRepository->getDocumentManager()->persist($invoices);
 
-        return true;
+        return $invoices;
     }
 
     /**

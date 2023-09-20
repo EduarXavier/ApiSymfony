@@ -93,13 +93,25 @@ class InvoiceController extends AbstractController
 
         $user = $this->userRepository->findByDocument($invoices->getUser()->getDocument());
 
-        if (!$this->invoiceManager->addProductsToShoppingCart($invoices->getProducts(), $user)) {
+        if (!$user) {
+            return new JsonResponse(['error' => 'Usuario no encontrado'], Response::HTTP_BAD_REQUEST);
+        }
+
+        $invoice = $this->invoiceManager->addProductsToShoppingCart($invoices->getProducts(), $user);
+
+        if (!$invoice) {
             return new JsonResponse(['error' => 'No se han podido agregar los productos'], Response::HTTP_BAD_REQUEST);
         }
 
         $this->documentManager->flush();
 
-        return new JsonResponse(['mensaje' => 'Agregado con éxito'], Response::HTTP_OK);
+        return new JsonResponse(
+            [
+                'mensaje' => 'Agregado con éxito',
+                'code' => $invoice->getCode()
+            ],
+            Response::HTTP_OK
+        );
     }
 
     /**
@@ -118,6 +130,11 @@ class InvoiceController extends AbstractController
         }
 
         $user = $this->userRepository->findByDocument($invoices->getUser()->getDocument());
+
+        if (!$user) {
+            return new JsonResponse(['error' => 'Usuario no encontrado'], Response::HTTP_BAD_REQUEST);
+        }
+
         $invoice = $this->invoicesRepository->findByUserAndStatus($user, Invoice::SHOPPINGCART);
 
         if (!$invoice) {
@@ -274,7 +291,7 @@ class InvoiceController extends AbstractController
     #[Route('/details/{id}', name: 'invoices_details')]
     public function invoiceDetails(string $id): RedirectResponse|Response
     {
-        $invoice = $this->invoicesRepository->findByIdAndStatus($id, Invoice::INVOICE);
+        $invoice = $this->invoicesRepository->findById($id);
         $formCreateInvoice = $this->createForm(FactureType::class, $invoice);
 
         return $this->render('InvoiceTemplates/invoiceDetails.html.twig', [
@@ -318,7 +335,7 @@ class InvoiceController extends AbstractController
      */
     #[IsGranted('ROLE_ADMIN')]
     #[Route('/create/invoice/', name: 'create_invoice_view')]
-    public function createInvoice(Request $request): RedirectResponse
+    public function createInvoiceView(Request $request): RedirectResponse
     {
         $invoice = new Invoice();
         $form = $this->createForm(FactureType::class, $invoice);
