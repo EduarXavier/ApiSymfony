@@ -23,13 +23,13 @@ class UpdateProductType extends AbstractType
             ->add('amount', NumberType::class, [
                 'label' => 'Cantidad',
                 'constraints' => [
-                    new Assert\GreaterThan(0, null, "El valor debe ser mayor a 0")
+                    new Assert\GreaterThan(0, null, 'El valor debe ser mayor a 0')
                     ]
             ])->setRequired(false)
             ->add('status', ChoiceType::class, [
                 'label' => 'Estado',
                 'choices' => [
-                    'Terminado' => 'expired',
+                    'No disponible' => 'expired',
                     'Disponible' => 'available',
                 ],
                 'attr' => [

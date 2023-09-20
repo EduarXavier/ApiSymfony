@@ -31,12 +31,12 @@
                                     usuario: {{ invoice.user.name }}
                                 </h5>
                                 <p class="card-text">
-                                    ID: {{ invoice.id }}
+                                    Code: {{ invoice.code }}
                                 </p>
                                 <p class="card-text">
-                                    fecha: {{ invoice.date|date('Y/m/d H:i:s') }}
+                                    fecha: {{ invoice.date|date('Y/m/d H:i:s', 'America/Bogota') }}
                                 </p>
-                                <p class="card-text">
+                                <p class="card-text" id="status">
                                     Estado: {{ invoice.status }}
                                 </p>
                                 <p class="card-text">
@@ -47,6 +47,7 @@
                                         <tr>
                                             <th scope="col">Nombre</th>
                                             <th scope="col">Cantidad</th>
+                                            <th scope="col">Precio</th>
                                             {% if invoice.status == "shopping-cart" %}
                                                 <th scope="col">Acción</th>
                                             {% endif %}
@@ -61,6 +62,7 @@
                                                     </a>
                                                 </th>
                                                 <td>{{ product.amount }}</td>
+                                                <td>{{ product.price }}</td>
                                                 {% if invoice.status == "shopping-cart" %}
                                                     <td>
                                                         <a
@@ -73,6 +75,15 @@
                                                 {% endif %}
                                             </tr>
                                         {% endfor %}
+                                        <tr>
+                                            {% if invoice.status == "shopping-cart" %}
+                                                <th scope="col" colspan="3">Total:</th>
+                                                <td>{{ total }}</td>
+                                            {% else %}
+                                                <th scope="col" colspan="2">Total:</th>
+                                                <td>{{ total }}</td>
+                                            {% endif %}
+                                        </tr>
                                     </tbody>
                                 </table>
                                 {% if invoice.status == "invoice" %}
@@ -99,7 +110,7 @@
                                                 class="btn btn-danger ms-2"
                                                 href="{{ path('delete_shopping_cart_view', {'document': invoice.user.document}) }}"
                                         >
-                                            Eliminar
+                                            Eliminar carrito
                                         </a>
                                     </div>
                                 {% endif %}

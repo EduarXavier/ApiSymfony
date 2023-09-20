@@ -21,12 +21,12 @@
                                     usuario: {{ shoppingCart.user.email }}
                                 </h5>
                                 <p class="card-text">
-                                    ID: {{ shoppingCart.id }}
+                                    Code: {{ shoppingCart.code }}
                                 </p>
                                 <p class="card-text">
-                                    fecha: {{ shoppingCart.date|date('Y/m/d H:i:s') }}
+                                    fecha: {{ shoppingCart.date|date('Y/m/d H:i:s', 'America/Bogota') }}
                                 </p>
-                                <p class="card-text">
+                                <p class="card-text" id="status">
                                     Estado: {{ shoppingCart.status }}
                                 </p>
                                 <p class="card-text">
@@ -37,6 +37,7 @@
                                     <tr>
                                         <th scope="col">Nombre</th>
                                         <th scope="col">Cantidad</th>
+                                        <th scope="col">Precio</th>
                                         <th scope="col">Acción</th>
                                     </tr>
                                     </thead>
@@ -49,16 +50,21 @@
                                                 </a>
                                             </th>
                                             <td>{{ product.amount }}</td>
+                                            <td>{{ product.price }}</td>
                                             <td>
                                                 <a
                                                         href="{{ path('delete_product_to_shopping_cart_view', {'code': product.code}) }}"
                                                         class="btn btn-primary text-decoration-none"
                                                 >
-                                                    Eliminar
+                                                    Eliminar carrito
                                                 </a>
                                             </td>
                                         </tr>
                                     {% endfor %}
+                                    <tr>
+                                        <th scope="col" colspan="3">Total:</th>
+                                        <td>{{ total }}</td>
+                                    </tr>
                                     </tbody>
                                 </table>
                                 <div class="d-flex w-100">

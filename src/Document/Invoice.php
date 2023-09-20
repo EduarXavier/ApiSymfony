@@ -12,6 +12,14 @@ use Doctrine\ODM\MongoDB\Mapping\Annotations as MongoDB;
 #[MongoDB\Document]
 class Invoice
 {
+    public const SHOPPINGCART = 'shopping-cart';
+
+    public const INVOICE = 'invoice';
+
+    public const CANCEL = 'cancel';
+
+    public const PAY = 'pay';
+
     #[MongoDb\Id(strategy: 'auto')]
     protected ?string $id;
 
@@ -69,7 +77,7 @@ class Invoice
         return $this;
     }
 
-    public function addProducts(ProductInvoice $product): static
+    public function addProduct(ProductInvoice $product): static
     {
         if (!$this->products->contains($product)) {
             $this->products->add($product);
@@ -105,5 +113,15 @@ class Invoice
         $this->status = $status;
 
         return $this;
+    }
+
+    public function getTotal(): int
+    {
+        $total = 0;
+        foreach ($this->products as $product) {
+            $total += $product->getAmount() * $product->getPrice();
+        }
+
+        return $total;
     }
 }

@@ -69,14 +69,14 @@ class InvoiceTest extends TestCase
     {
         $product = (new ProductInvoice())->setName('Jabon');
 
-        self::assertSame($this->invoice, $this->invoice->addProducts($product));
+        self::assertSame($this->invoice, $this->invoice->addProduct($product));
         self::assertTrue($this->invoice->getProducts()->contains($product));
     }
 
     public function testRemoveProduct(): void
     {
         $product = (new ProductInvoice())->setName('Jabon');
-        $this->invoice->addProducts($product);
+        $this->invoice->addProduct($product);
 
         self::assertTrue($this->invoice->removeProduct($product));
         self::assertNotContains($product, $this->invoice->getProducts());

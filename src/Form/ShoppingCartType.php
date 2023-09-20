@@ -22,7 +22,7 @@ class ShoppingCartType extends AbstractType
                 'allow_delete' => true,
                 'by_reference' => false,
             ])
-            ->add('user', User::class)
+            ->add('user', UserInvoiceType::class)
         ;
     }
 

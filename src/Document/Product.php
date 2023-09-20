@@ -9,6 +9,10 @@ use Doctrine\ODM\MongoDB\Mapping\Annotations as MongoDB;
 #[MongoDB\Document]
 class Product
 {
+    public const AVAILABLE = 'available';
+
+    public const EXPIRED = 'expired';
+
     #[MongoDB\Id]
     protected ?string $id;
 

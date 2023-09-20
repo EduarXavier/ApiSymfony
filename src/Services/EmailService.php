@@ -33,7 +33,7 @@ class EmailService
         } else {
             $subject = 'Gracias por su primera compra';
             $text = 'Estamos felices de que empieces tus compras con nosotros';
-            $html = "EmailTemplates/firstShop.html.twig";
+            $html = 'EmailTemplates/firstShop.html.twig';
         }
 
         $user->setName($user->getName());
@@ -43,7 +43,7 @@ class EmailService
             ->subject($subject)
             ->text($text)
             ->htmlTemplate($html)
-            ->context(["user" => $user])
+            ->context(['user' => $user])
             ;
 
         $this->mailer->send($email);

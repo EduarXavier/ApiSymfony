@@ -54,7 +54,7 @@
                                         <strong>Productos:</strong> {{ invoice.products|length }}
                                     </p>
                                     <p>
-                                        <strong>Fecha:</strong> {{ invoice.date|date('Y/m/d H:i:s') }}
+                                        <strong>Fecha:</strong> {{ invoice.date|date('Y/m/d h:i:s', 'America/Bogota') }}
                                     </p>
                                 </div>
                             </div>

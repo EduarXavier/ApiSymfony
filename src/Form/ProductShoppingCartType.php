@@ -19,14 +19,14 @@ class ProductShoppingCartType extends AbstractType
         $builder
             ->add('code', TextType::class, [
                 'label' => false,
-                "attr" => [
+                'attr' => [
                     'class' => 'd-none'
                 ]
             ])
             ->add('amount', NumberType::class, [
                 'label' => 'Cantidad',
                 'constraints' => [
-                    new Assert\GreaterThan(0, null, "El valor debe ser mayor a 0")
+                    new Assert\GreaterThan(0, null, 'El valor debe ser mayor a 0')
                 ]
             ])
         ;

@@ -14,6 +14,7 @@ security:
              pattern: ^/api/login
              stateless: true
              json_login:
+                 provider: mongodb_users
                  check_path: jwt_auth
                  success_handler: lexik_jwt_authentication.handler.authentication_success
                  failure_handler: lexik_jwt_authentication.handler.authentication_failure
