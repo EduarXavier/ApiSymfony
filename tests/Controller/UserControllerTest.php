@@ -272,11 +272,24 @@ class UserControllerTest extends WebTestCase
     /**
      * @throws Exception
      */
+    public static function tearDownAfterClass(): void
+    {
+        self::$documentManager->getSchemaManager()->dropDatabases();
+    }
+
+    /**
+     * @throws Exception
+     */
     protected function setUp(): void
     {
         $this->client = self::createClient();
         self::$documentManager = $this->client->getContainer()->get(DocumentManager::class);
         $this->client->followRedirects();
+        $this->token();
+    }
+
+    private function token(): void
+    {
         $this->client->request(
             'POST',
             'http://gasolapp/user/api/add',
@@ -303,13 +316,5 @@ class UserControllerTest extends WebTestCase
             $jsonData
         );
         $this->token = json_decode($this->client->getResponse()->getContent())->token;
-    }
-
-    /**
-     * @throws Exception
-     */
-    public static function tearDownAfterClass(): void
-    {
-        self::$documentManager->getSchemaManager()->dropDatabases();
     }
 }

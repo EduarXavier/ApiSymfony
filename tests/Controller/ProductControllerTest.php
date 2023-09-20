@@ -2,7 +2,6 @@
 
 namespace App\Tests\Controller;
 
-use App\Document\User;
 use Doctrine\ODM\MongoDB\DocumentManager;
 use Exception;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
@@ -12,6 +11,7 @@ use Symfony\Component\HttpFoundation\Response;
 class ProductControllerTest extends WebTestCase
 {
     private ?KernelBrowser $client;
+    private static ?object $documentManager;
 
     public function testProductList(): void
     {
@@ -53,14 +53,14 @@ class ProductControllerTest extends WebTestCase
         self::assertPageTitleSame('Lista de productos');
     }
 
-    public function testProductDetails(): void
+    public function testProductDetailsWhenProductNotFound(): void
     {
         $crawler = $this->client->request(
             'GET',
             'http://gasolapp/product/details/650478611714d-Producto-falso',
         );
         $response = $this->client->getResponse();
-        $alertInfoElement = $crawler->filter('div.alert.alert-info[role="alert"]');
+        $alertInfoElement = $crawler->filter('div.alert.alert-info');
 
         self::assertInstanceOf(Response::class, $response);
         self::assertEquals(Response::HTTP_OK, $response->getStatusCode());
@@ -70,10 +70,123 @@ class ProductControllerTest extends WebTestCase
         self::assertEquals('Este producto no está disponible.', trim($alertInfoElement->text()));
     }
 
+    public function testAddProduct(): void
+    {
+        $this->client->request(
+            'GET',
+            'http://gasolapp/product/add',
+            [
+                'name' => 'False product',
+                'amount' => 100,
+                'price' => 1500
+            ]
+        );
+        $crawler = $this->client->submitForm(
+            'btnSubmit',
+            [
+                'name' => 'False product',
+                'amount' => 100,
+                'price' => 1500
+            ]
+        );
+        $response = $this->client->getResponse();
+        $titleInfo = $crawler->filter('h5.card-title');
+        $textInfo = $crawler->filter('p.card-text');
+
+        self::assertInstanceOf(Response::class, $response);
+        self::assertEquals(Response::HTTP_OK, $response->getStatusCode());
+        self::assertSelectorExists('nav');
+        self::assertEquals('Nombre: False product', trim($titleInfo->text()));
+        self::assertPageTitleSame('False product - details');
+        self::assertEquals(1, $titleInfo->count());
+        self::assertEquals(4, $textInfo->count());
+    }
+
+    public function testUpdateProduct(): void
+    {
+        $this->client->request(
+            'GET',
+            'http://gasolapp/product/add',
+            [
+                'name' => 'False product',
+                'amount' => 100,
+                'price' => 1500
+            ]
+        );
+        $this->client->submitForm(
+            'btnSubmit',
+            [
+                'name' => 'False product',
+                'amount' => 100,
+                'price' => 1500
+            ]
+        );
+        $this->client->clickLink('Actualizar');
+        $crawler = $this->client->submitForm(
+            'btnSubmit',
+            [
+                'name' => 'False product update',
+                'amount' => 10,
+                'price' => 150
+            ]
+        );
+        $response = $this->client->getResponse();
+        $titleInfo = $crawler->filter('h5.card-title');
+
+        self::assertInstanceOf(Response::class, $response);
+        self::assertEquals(Response::HTTP_OK, $response->getStatusCode());
+        self::assertSelectorExists('nav');
+        self::assertPageTitleSame('False product update - details');
+        self::assertEquals('Nombre: False product update', trim($titleInfo->text()));
+    }
+
+    public function testDeleteProduct(): void
+    {
+        $this->client->request(
+            'GET',
+            'http://gasolapp/product/add',
+            [
+                'name' => 'False product',
+                'amount' => 100,
+                'price' => 1500
+            ]
+        );
+        $this->client->submitForm(
+            'btnSubmit',
+            [
+                'name' => 'False product',
+                'amount' => 100,
+                'price' => 1500
+            ]
+        );
+        $this->client->clickLink('Eliminar');
+        $this->client->submitForm('btnSubmit');
+        $response = $this->client->getResponse();
+
+        self::assertInstanceOf(Response::class, $response);
+        self::assertEquals(Response::HTTP_OK, $response->getStatusCode());
+        self::assertSelectorExists('nav');
+        self::assertPageTitleSame('Lista de productos');
+    }
+
+    /**
+     * @throws Exception
+     */
+    public static function tearDownAfterClass(): void
+    {
+        self::$documentManager->getSchemaManager()->dropDatabases();
+    }
+
     protected function setUp(): void
     {
         $this->client = self::createClient();
+        self::$documentManager = $this->client->getContainer()->get(DocumentManager::class);
         $this->client->followRedirects();
+        $this->authenticate();
+    }
+
+    private function authenticate(): void
+    {
         $this->client->request(
             'POST',
             'http://gasolapp/user/api/add',
@@ -99,14 +212,5 @@ class ProductControllerTest extends WebTestCase
             '_username' => 'viewProducts@gmail.com',
             '_password' => 'claveSegura',
         ]);
-    }
-
-    /**
-     * @throws Exception
-     */
-    public static function tearDownAfterClass(): void
-    {
-        self::$kernel->shutdown();
-        self::getContainer()->get(DocumentManager::class)->getSchemaManager()->dropDatabases();
     }
 }
