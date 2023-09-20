@@ -12,6 +12,7 @@ class UserControllerTest extends WebTestCase
 {
     private string $token;
     private ?KernelBrowser $client;
+    private static ?object $documentManager;
 
     public function testAddUser(): void
     {
@@ -274,6 +275,7 @@ class UserControllerTest extends WebTestCase
     protected function setUp(): void
     {
         $this->client = self::createClient();
+        self::$documentManager = $this->client->getContainer()->get(DocumentManager::class);
         $this->client->followRedirects();
         $this->client->request(
             'POST',
@@ -308,7 +310,6 @@ class UserControllerTest extends WebTestCase
      */
     public static function tearDownAfterClass(): void
     {
-        self::getContainer()->get(DocumentManager::class)->getSchemaManager()->dropDatabases();
-        self::$kernel->shutdown();
+        self::$documentManager->getSchemaManager()->dropDatabases();
     }
 }

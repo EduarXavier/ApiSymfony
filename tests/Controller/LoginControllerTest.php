@@ -11,6 +11,7 @@ use Symfony\Component\HttpFoundation\Response;
 class LoginControllerTest extends WebTestCase
 {
     private ?KernelBrowser $client;
+    private static ?object $documentManager;
 
     public function testLoginView(): void
     {
@@ -84,6 +85,7 @@ class LoginControllerTest extends WebTestCase
     protected function setUp(): void
     {
         $this->client = static::createClient();
+        self::$documentManager = $this->client->getContainer()->get(DocumentManager::class);
         $this->client->followRedirects();
         $this->client->request(
             'POST',
@@ -105,7 +107,6 @@ class LoginControllerTest extends WebTestCase
      */
     public static function tearDownAfterClass(): void
     {
-        self::$kernel->shutdown();
-        self::getContainer()->get(DocumentManager::class)->getSchemaManager()->dropDatabases();
+        self::$documentManager->getSchemaManager()->dropDatabases();
     }
 }
