@@ -17,6 +17,17 @@ class ShoppingCartTypeTest extends KernelTestCase
     private Invoice $invoice;
     private FormFactoryInterface $formFactory;
 
+    public function testSubmitValidData(): void
+    {
+        $form = $this->formFactory->create(ShoppingCartType::class, $this->invoice);
+        $form->submit($this->formData);
+
+        self::assertTrue($form->isSynchronized());
+        self::assertTrue($form->isValid());
+        self::assertIsArray($this->invoice->getProducts()->toArray());
+        self::assertInstanceOf(User::class, $this->invoice->getUser());
+    }
+
     /**
      * @throws Exception
      */
@@ -43,16 +54,5 @@ class ShoppingCartTypeTest extends KernelTestCase
         unset($this->formData);
         unset($this->invoice);
         unset($this->formFactory);
-    }
-
-    public function testSubmitValidData(): void
-    {
-        $form = $this->formFactory->create(ShoppingCartType::class, $this->invoice);
-        $form->submit($this->formData);
-
-        self::assertTrue($form->isSynchronized());
-        self::assertTrue($form->isValid());
-        self::assertIsArray($this->invoice->getProducts()->toArray());
-        self::assertInstanceOf(User::class, $this->invoice->getUser());
     }
 }

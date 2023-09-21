@@ -12,35 +12,33 @@ class UserControllerTest extends WebTestCase
 {
     private static bool $create = false;
     private static array $header;
+    private static object $user;
     private ?KernelBrowser $client;
     private static ?object $documentManager;
     private const BASE_URL = 'http://gasolapp';
 
     public function testAddUser(): void
     {
-        $content = [
-            'name' => 'Persona falsa AddUser',
-            'document' => '1005545421',
-            'rol' => 'ROLE_ADMIN',
-            'address' => 'calle falsa',
-            'phone' => '3000',
-            'email' => 'personaFalsaAddUser@gmail.com',
-            'password' => 'claveSegura'
-        ];
-
         $this->client->request(
             'POST',
             '/user/api/add',
-            $content
+            [
+                'name' => 'Persona falsa AddUser',
+                'document' => '1005545421',
+                'rol' => 'ROLE_ADMIN',
+                'address' => 'calle falsa',
+                'phone' => '3000',
+                'email' => 'personaFalsaAddUser@gmail.com',
+                'password' => 'claveSegura'
+            ]
         );
-
         $response = $this->client->getResponse();
-        $user = (array) json_decode($response->getContent())->user;
+        $user = json_decode($response->getContent())->user;
 
         self::assertInstanceOf(Response::class, $response);
         self::assertEquals(Response::HTTP_OK, $response->getStatusCode());
-        self::assertEquals($content['name'], $user['name']);
-        self::assertNotEquals($content['password'], $user['password']);
+        self::assertEquals('Persona falsa AddUser', $user->name);
+        self::assertNotEquals('claveSegura', $user->password);
     }
 
     public function testAddUserWithIncompleteData(): void
@@ -70,25 +68,12 @@ class UserControllerTest extends WebTestCase
             'POST',
             '/user/api/add',
             [
-                'name' => 'Persona falsa',
-                'document' => '100090',
-                'rol' => 'ROLE_ADMIN',
-                'address' => 'calle falsa',
-                'phone' => '3000',
-                'email' => 'personaFalsa@gmail.com',
-                'password' => 'claveSegura'
-            ]
-        );
-        $this->client->request(
-            'POST',
-            '/user/api/add',
-            [
                 'name' => 'Persona menos falsa',
                 'document' => '1009878',
                 'rol' => 'ROLE_ADMIN',
                 'address' => 'calle falsa',
                 'phone' => '3001',
-                'email' => 'personaFalsa@gmail.com',
+                'email' => 'userTest@gmail.com',
                 'password' => 'claveSegura'
             ]
         );
@@ -106,21 +91,8 @@ class UserControllerTest extends WebTestCase
             'POST',
             '/user/api/add',
             [
-                'name' => 'Persona falsa',
-                'document' => '100090',
-                'rol' => 'ROLE_ADMIN',
-                'address' => 'calle falsa',
-                'phone' => '3000',
-                'email' => 'personaFalsa@gmail.com',
-                'password' => 'claveSegura'
-            ]
-        );
-        $this->client->request(
-            'POST',
-            '/user/api/add',
-            [
                 'name' => 'Persona menos falsa',
-                'document' => '100090',
+                'document' => '1009090',
                 'rol' => 'ROLE_ADMIN',
                 'address' => 'calle falsa',
                 'phone' => '3001',
@@ -140,21 +112,7 @@ class UserControllerTest extends WebTestCase
     {
         $this->client->request(
             'POST',
-            self::BASE_URL.'/user/api/add',
-            [
-                'name' => 'Persona update',
-                'document' => '109283',
-                'rol' => 'ROLE_ADMIN',
-                'address' => 'calle falsa',
-                'phone' => '3000',
-                'email' => 'personaUpdate@gmail.com',
-                'password' => 'claveSegura'
-            ]
-        );
-        $user = json_decode($this->client->getResponse()->getContent())->user;
-        $this->client->request(
-            'POST',
-            self::BASE_URL.'/user/api/update/'.$user->id,
+            self::BASE_URL.'/user/api/update/'.self::$user->id,
             [
                 'address' => 'Calle falsa 2',
                 'phone' => '4000',
@@ -213,21 +171,7 @@ class UserControllerTest extends WebTestCase
     {
         $this->client->request(
             'POST',
-            self::BASE_URL.'/user/api/add',
-            [
-                'name' => 'Person update',
-                'document' => '1034265',
-                'rol' => 'ROLE_ADMIN',
-                'address' => 'calle falsa',
-                'phone' => '3000',
-                'email' => 'personUpdate@gmail.com',
-                'password' => 'claveSegura'
-            ]
-        );
-        $user = json_decode($this->client->getResponse()->getContent())->user;
-        $this->client->request(
-            'POST',
-            self::BASE_URL.'/user/api/update/password/'.$user->id,
+            self::BASE_URL.'/user/api/update/password/'.self::$user->id,
             [
                 'password' => 'Clave segura 2'
             ],
@@ -296,6 +240,7 @@ class UserControllerTest extends WebTestCase
                 'password' => 'claveSegura'
             ]
         );
+        self::$user = json_decode($this->client->getResponse()->getContent())->user;
         $jsonData = json_encode([
             "username" => "userTest@gmail.com",
             "password" => "claveSegura"

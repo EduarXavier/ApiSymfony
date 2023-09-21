@@ -180,12 +180,11 @@ class InvoiceManagerTest extends KernelTestCase
             ->setAmount(100)
         ;
         $this->products = new ArrayCollection();
-        $productInvoice = (new ProductInvoice())
+        $this->products->add((new ProductInvoice())
             ->setName('Jabon')
             ->setCode('65047fae8ff348-Jabon')
             ->setAmount(10)
-        ;
-        $this->products->add($productInvoice);
+        );
         $this->invoicesRepository->getDocumentManager()->persist($this->user);
         $this->invoicesRepository->getDocumentManager()->persist($product);
         $this->invoicesRepository->getDocumentManager()->flush();
