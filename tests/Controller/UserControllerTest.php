@@ -10,10 +10,11 @@ use Symfony\Component\HttpFoundation\Response;
 
 class UserControllerTest extends WebTestCase
 {
-    private string $token;
-    private array $header;
+    private static bool $create = false;
+    private static array $header;
     private ?KernelBrowser $client;
     private static ?object $documentManager;
+    private const BASE_URL = 'http://gasolapp';
 
     public function testAddUser(): void
     {
@@ -139,7 +140,7 @@ class UserControllerTest extends WebTestCase
     {
         $this->client->request(
             'POST',
-            'http://gasolapp/user/api/add',
+            self::BASE_URL.'/user/api/add',
             [
                 'name' => 'Persona update',
                 'document' => '109283',
@@ -153,13 +154,13 @@ class UserControllerTest extends WebTestCase
         $user = json_decode($this->client->getResponse()->getContent())->user;
         $this->client->request(
             'POST',
-            'http://gasolapp/user/api/update/'.$user->id,
+            self::BASE_URL.'/user/api/update/'.$user->id,
             [
                 'address' => 'Calle falsa 2',
                 'phone' => '4000',
             ],
             [],
-            $this->header
+            self::$header
         );
         $response = $this->client->getResponse();
 
@@ -172,7 +173,7 @@ class UserControllerTest extends WebTestCase
     {
         $this->client->request(
             'POST',
-            'http://gasolapp/user/api/update/6500881c739319887c0003c5',
+            self::BASE_URL.'/user/api/update/6500881c739319887c0003c5',
             [
                 'address' => 'Calle falsa 2',
                 'phone' => '4000',
@@ -193,13 +194,13 @@ class UserControllerTest extends WebTestCase
     {
         $this->client->request(
             'POST',
-            'http://gasolapp/user/api/update/6500881c739319887c0003c5',
+            self::BASE_URL.'/user/api/update/6500881c739319887c0003c5',
             [
                 'address' => 'Calle falsa 2',
                 'phone' => '4000',
             ],
             [],
-            $this->header
+            self::$header
         );
         $response = $this->client->getResponse();
 
@@ -212,7 +213,7 @@ class UserControllerTest extends WebTestCase
     {
         $this->client->request(
             'POST',
-            'http://gasolapp/user/api/add',
+            self::BASE_URL.'/user/api/add',
             [
                 'name' => 'Person update',
                 'document' => '1034265',
@@ -226,12 +227,12 @@ class UserControllerTest extends WebTestCase
         $user = json_decode($this->client->getResponse()->getContent())->user;
         $this->client->request(
             'POST',
-            'http://gasolapp/user/api/update/password/'.$user->id,
+            self::BASE_URL.'/user/api/update/password/'.$user->id,
             [
                 'password' => 'Clave segura 2'
             ],
             [],
-            $this->header
+            self::$header
         );
         $response = $this->client->getResponse();
 
@@ -244,12 +245,12 @@ class UserControllerTest extends WebTestCase
     {
         $this->client->request(
             'POST',
-            'http://gasolapp/user/api/update/password/6500881c739319887c0003c5',
+            self::BASE_URL.'/user/api/update/password/6500881c739319887c0003c5',
             [
                 'password' => 'Clave segura 2'
             ],
             [],
-            $this->header            
+            self::$header            
         );
         $response = $this->client->getResponse();
 
@@ -274,18 +275,17 @@ class UserControllerTest extends WebTestCase
         $this->client = self::createClient();
         self::$documentManager = $this->client->getContainer()->get(DocumentManager::class);
         $this->client->followRedirects();
-        $this->token();
-        $this->header = [
-            'HTTP_CONTENT_TYPE' => 'application/json',
-            'HTTP_Authorization' => 'Bearer '.$this->token
-        ];
+        if (!self::$create) {
+            $this->token();
+            self::$create = true;
+        }
     }
 
     private function token(): void
     {
         $this->client->request(
             'POST',
-            'http://gasolapp/user/api/add',
+            self::BASE_URL.'/user/api/add',
             [
                 'name' => 'User test',
                 'document' => '1009090',
@@ -302,12 +302,16 @@ class UserControllerTest extends WebTestCase
         ]);
         $this->client->request(
             'POST',
-            'http://gasolapp/api/login',
+            self::BASE_URL.'/api/login',
             [],
             [],
             ['CONTENT_TYPE' => 'application/json'],
             $jsonData
         );
-        $this->token = json_decode($this->client->getResponse()->getContent())->token;
+        $token = json_decode($this->client->getResponse()->getContent())->token;
+        self::$header = [
+            'HTTP_CONTENT_TYPE' => 'application/json',
+            'HTTP_Authorization' => 'Bearer '.$token
+        ];
     }
 }

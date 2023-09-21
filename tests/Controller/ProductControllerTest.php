@@ -12,12 +12,14 @@ class ProductControllerTest extends WebTestCase
 {
     private ?KernelBrowser $client;
     private static ?object $documentManager;
+    private static bool $create = false;
+    private const BASE_URL = 'http://gasolapp';
 
     public function testProductList(): void
     {
         $this->client->request(
             'GET',
-            'http://gasolapp/product/api/list',
+            self::BASE_URL.'/product/api/list',
         );
         $response = $this->client->getResponse();
 
@@ -29,7 +31,7 @@ class ProductControllerTest extends WebTestCase
     {
         $this->client->request(
             'GET',
-            'http://gasolapp/product/list-view',
+            self::BASE_URL.'/product/list-view',
         );
         $response = $this->client->getResponse();
 
@@ -43,7 +45,7 @@ class ProductControllerTest extends WebTestCase
     {
         $this->client->request(
             'GET',
-            'http://gasolapp/product/expired/list-view',
+            self::BASE_URL.'/product/expired/list-view',
         );
         $response = $this->client->getResponse();
 
@@ -57,7 +59,7 @@ class ProductControllerTest extends WebTestCase
     {
         $crawler = $this->client->request(
             'GET',
-            'http://gasolapp/product/details/650478611714d-Producto-falso',
+            self::BASE_URL.'/product/details/650478611714d-Producto-falso',
         );
         $response = $this->client->getResponse();
         $alertInfoElement = $crawler->filter('div.alert.alert-info');
@@ -74,7 +76,7 @@ class ProductControllerTest extends WebTestCase
     {
         $this->client->request(
             'GET',
-            'http://gasolapp/product/add',
+            self::BASE_URL.'/product/add',
             [
                 'name' => 'False product',
                 'amount' => 100,
@@ -106,7 +108,7 @@ class ProductControllerTest extends WebTestCase
     {
         $this->client->request(
             'GET',
-            'http://gasolapp/product/add',
+            self::BASE_URL.'/product/add',
             [
                 'name' => 'False product',
                 'amount' => 100,
@@ -144,7 +146,7 @@ class ProductControllerTest extends WebTestCase
     {
         $this->client->request(
             'GET',
-            'http://gasolapp/product/add',
+            self::BASE_URL.'/product/add',
             [
                 'name' => 'False product',
                 'amount' => 100,
@@ -182,14 +184,18 @@ class ProductControllerTest extends WebTestCase
         $this->client = self::createClient();
         self::$documentManager = $this->client->getContainer()->get(DocumentManager::class);
         $this->client->followRedirects();
+        if (!self::$create) {
+            $this->createUser();
+            self::$create = true;
+        }
         $this->authenticate();
     }
 
-    private function authenticate(): void
+    private function createUser(): void
     {
         $this->client->request(
             'POST',
-            'http://gasolapp/user/api/add',
+            self::BASE_URL.'/user/api/add',
             [
                 'name' => 'Persona viewProducts',
                 'document' => '1004523',
@@ -200,9 +206,13 @@ class ProductControllerTest extends WebTestCase
                 'password' => 'claveSegura'
             ]
         );
+    }
+
+    private function authenticate(): void
+    {
         $this->client->request(
             'GET',
-            'http://gasolapp/login-view',
+            self::BASE_URL.'/login-view',
             [
                 '_username' => '',
                 '_password' => ''

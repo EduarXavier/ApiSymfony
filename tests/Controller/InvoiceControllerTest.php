@@ -12,28 +12,29 @@ class InvoiceControllerTest extends WebTestCase
 {
     private static ?object $documentManager;
     private ?KernelBrowser $client;
-    private string $token;
-    private array $header;
-    private string $codeProduct;
+    private static array $header;
+    private static bool $creation = false;
+    private static string $codeProduct;
+    private const BASE_URL = 'http://gasolapp';
 
     public function testShoppingCart(): void
     {
         $this->client->request(
             'POST',
-            'http://gasolapp/invoices/api/shopping-cart',
+            self::BASE_URL.'/invoices/api/shopping-cart',
             [
                 "user" => [
                     "document" => "1009090"
                 ],
                 "products" => [
                     [
-                        "code" => $this->codeProduct,
+                        "code" => self::$codeProduct,
                         "amount" => 1
                     ]
                 ]
             ],
             [],
-            $this->header
+            self::$header
         );
         $response = $this->client->getResponse();
         $content = json_decode($response->getContent());
@@ -48,20 +49,20 @@ class InvoiceControllerTest extends WebTestCase
     {
         $this->client->request(
             'POST',
-            'http://gasolapp/invoices/api/shopping-cart',
+            self::BASE_URL.'/invoices/api/shopping-cart',
             [
                 "user" => [
                     "document" => "1000"
                 ],
                 "products" => [
                     [
-                        "code" => $this->codeProduct,
+                        "code" => self::$codeProduct,
                         "amount" => 1
                     ]
                 ]
             ],
             [],
-            $this->header
+            self::$header
         );
         $response = $this->client->getResponse();
         $content = json_decode($response->getContent());
@@ -76,7 +77,7 @@ class InvoiceControllerTest extends WebTestCase
     {
         $this->client->request(
             'POST',
-            'http://gasolapp/invoices/api/shopping-cart',
+            self::BASE_URL.'/invoices/api/shopping-cart',
             [
                 "user" => [
                     "document" => "1009090"
@@ -89,7 +90,7 @@ class InvoiceControllerTest extends WebTestCase
                 ]
             ],
             [],
-            $this->header
+            self::$header
         );
         $response = $this->client->getResponse();
         $content = json_decode($response->getContent());
@@ -104,14 +105,14 @@ class InvoiceControllerTest extends WebTestCase
     {
         $this->client->request(
             'POST',
-            'http://gasolapp/invoices/api/shopping-cart',
+            self::BASE_URL.'/invoices/api/shopping-cart',
             [
                 "user" => [
                     "document" => "1009090"
                 ],
                 "products" => [
                     [
-                        "code" => $this->codeProduct,
+                        "code" => self::$codeProduct,
                         "amount" => 1
                     ]
                 ]
@@ -133,37 +134,37 @@ class InvoiceControllerTest extends WebTestCase
     {
         $this->client->request(
             'POST',
-            'http://gasolapp/invoices/api/shopping-cart',
+            self::BASE_URL.'/invoices/api/shopping-cart',
             [
                 "user" => [
                     "document" => "1009090"
                 ],
                 "products" => [
                     [
-                        "code" => $this->codeProduct,
+                        "code" => self::$codeProduct,
                         "amount" => 1
                     ]
                 ]
             ],
             [],
-            $this->header
+            self::$header
         );
         $this->client->request(
             'POST',
-            'http://gasolapp/invoices/api/update/shopping-cart/',
+            self::BASE_URL.'/invoices/api/update/shopping-cart/',
             [
                 "user" => [
                     "document" => "1009090"
                 ],
                 "products" => [
                     [
-                        "code" => $this->codeProduct,
+                        "code" => self::$codeProduct,
                         "amount" => 1
                     ]
                 ]
             ],
             [],
-            $this->header
+            self::$header
         );
         $response = $this->client->getResponse();
         $content = json_decode($response->getContent());
@@ -176,23 +177,22 @@ class InvoiceControllerTest extends WebTestCase
 
     public function testUpdateShoppingCartNotFound(): void
     {
-        self::$documentManager->getSchemaManager()->dropDocumentCollection(Invoice::class);
         $this->client->request(
             'POST',
-            'http://gasolapp/invoices/api/update/shopping-cart/',
+            self::BASE_URL.'/invoices/api/update/shopping-cart/',
             [
                 "user" => [
                     "document" => "1009090"
                 ],
                 "products" => [
                     [
-                        "code" => $this->codeProduct,
+                        "code" => self::$codeProduct,
                         "amount" => 1
                     ]
                 ]
             ],
             [],
-            $this->header
+            self::$header
         );
         $response = $this->client->getResponse();
         $content = json_decode($response->getContent());
@@ -207,20 +207,20 @@ class InvoiceControllerTest extends WebTestCase
     {
         $this->client->request(
             'POST',
-            'http://gasolapp/invoices/api/update/shopping-cart/',
+            self::BASE_URL.'/invoices/api/update/shopping-cart/',
             [
                 "user" => [
                     "document" => "6002531"
                 ],
                 "products" => [
                     [
-                        "code" => $this->codeProduct,
+                        "code" => self::$codeProduct,
                         "amount" => 1
                     ]
                 ]
             ],
             [],
-            $this->header
+            self::$header
         );
         $response = $this->client->getResponse();
         $content = json_decode($response->getContent());
@@ -235,24 +235,24 @@ class InvoiceControllerTest extends WebTestCase
     {
         $this->client->request(
             'POST',
-            'http://gasolapp/invoices/api/shopping-cart',
+            self::BASE_URL.'/invoices/api/shopping-cart',
             [
                 "user" => [
                     "document" => "1009090"
                 ],
                 "products" => [
                     [
-                        "code" => $this->codeProduct,
+                        "code" => self::$codeProduct,
                         "amount" => 1
                     ]
                 ]
             ],
             [],
-            $this->header
+            self::$header
         );
         $this->client->request(
             'POST',
-            'http://gasolapp/invoices/api/update/shopping-cart/',
+            self::BASE_URL.'/invoices/api/update/shopping-cart/',
             [
                 "user" => [
                     "document" => "1009090"
@@ -265,7 +265,7 @@ class InvoiceControllerTest extends WebTestCase
                 ]
             ],
             [],
-            $this->header
+            self::$header
         );
         $response = $this->client->getResponse();
         $content = json_decode($response->getContent());
@@ -278,15 +278,14 @@ class InvoiceControllerTest extends WebTestCase
 
     public function testCreateInvoicesNotFound(): void
     {
-        self::$documentManager->getSchemaManager()->dropDocumentCollection(Invoice::class);
         $this->client->request(
             'POST',
-            'http://gasolapp/invoices/api/create-invoice',
+            self::BASE_URL.'/invoices/api/create-invoice',
             [
                 "code" => '650b1468f3368-1009090'
             ],
             [],
-            $this->header
+            self::$header
         );
         $response = $this->client->getResponse();
         $content = json_decode($response->getContent());
@@ -301,30 +300,30 @@ class InvoiceControllerTest extends WebTestCase
     {
         $this->client->request(
             'POST',
-            'http://gasolapp/invoices/api/shopping-cart',
+            self::BASE_URL.'/invoices/api/shopping-cart',
             [
                 "user" => [
                     "document" => "1009090"
                 ],
                 "products" => [
                     [
-                        "code" => $this->codeProduct,
+                        "code" => self::$codeProduct,
                         "amount" => 1
                     ]
                 ]
             ],
             [],
-            $this->header
+            self::$header
         );
         $code = json_decode($this->client->getResponse()->getContent())->code;
         $this->client->request(
             'POST',
-            'http://gasolapp/invoices/api/create-invoice',
+            self::BASE_URL.'/invoices/api/create-invoice',
             [
                 "code" => $code
             ],
             [],
-            $this->header
+            self::$header
         );
         $response = $this->client->getResponse();
         $content = json_decode($response->getContent());
@@ -339,39 +338,39 @@ class InvoiceControllerTest extends WebTestCase
     {
         $this->client->request(
             'POST',
-            'http://gasolapp/invoices/api/shopping-cart',
+            self::BASE_URL.'/invoices/api/shopping-cart',
             [
                 "user" => [
                     "document" => "1009090"
                 ],
                 "products" => [
                     [
-                        "code" => $this->codeProduct,
+                        "code" => self::$codeProduct,
                         "amount" => 1
                     ]
                 ]
             ],
             [],
-            $this->header
+            self::$header
         );
         $code = json_decode($this->client->getResponse()->getContent())->code;
         $this->client->request(
             'POST',
-            'http://gasolapp/invoices/api/create-invoice',
+            self::BASE_URL.'/invoices/api/create-invoice',
             [
                 "code" => $code
             ],
             [],
-            $this->header
+            self::$header
         );
         $this->client->request(
             'POST',
-            'http://gasolapp/invoices/api/pay-invoice',
+            self::BASE_URL.'/invoices/api/pay-invoice',
             [
                 "code" => $code
             ],
             [],
-            $this->header
+            self::$header
         );
         $response = $this->client->getResponse();
         $content = json_decode($response->getContent());
@@ -386,12 +385,12 @@ class InvoiceControllerTest extends WebTestCase
     {
         $this->client->request(
             'POST',
-            'http://gasolapp/invoices/api/pay-invoice',
+            self::BASE_URL.'/invoices/api/pay-invoice',
             [
                 "code" => '650b1468f3368-1009090'
             ],
             [],
-            $this->header
+            self::$header
         );
         $response = $this->client->getResponse();
         $content = json_decode($response->getContent());
@@ -404,10 +403,9 @@ class InvoiceControllerTest extends WebTestCase
 
     public function testFindAllInvoices(): void
     {
-        self::$documentManager->getSchemaManager()->dropDocumentCollection(Invoice::class);
         $crawler = $this->client->request(
             'GET',
-            'http://gasolapp/invoices/list',
+            self::BASE_URL.'/invoices/list',
         );
         $response = $this->client->getResponse();
         $alert = $crawler->filter('div.alert.alert-info');
@@ -421,10 +419,9 @@ class InvoiceControllerTest extends WebTestCase
 
     public function testResume(): void
     {
-        self::$documentManager->getSchemaManager()->dropDocumentCollection(Invoice::class);
         $crawler = $this->client->request(
             'GET',
-            'http://gasolapp/invoices/resume',
+            self::BASE_URL.'/invoices/resume',
         );
         $response = $this->client->getResponse();
         $alert = $crawler->filter('div.alert.alert-info');
@@ -438,27 +435,26 @@ class InvoiceControllerTest extends WebTestCase
 
     public function testResumeStatus(): void
     {
-        self::$documentManager->getSchemaManager()->dropDocumentCollection(Invoice::class);
         $this->client->request(
             'POST',
-            'http://gasolapp/invoices/api/shopping-cart',
+            self::BASE_URL.'/invoices/api/shopping-cart',
             [
                 "user" => [
                     "document" => "1009090"
                 ],
                 "products" => [
                     [
-                        "code" => $this->codeProduct,
+                        "code" => self::$codeProduct,
                         "amount" => 1
                     ]
                 ]
             ],
             [],
-            $this->header
+            self::$header
         );
         $crawler = $this->client->request(
             'GET',
-            'http://gasolapp/invoices/resume/amount',
+            self::BASE_URL.'/invoices/resume/amount',
         );
         $response = $this->client->getResponse();
         $table= $crawler->filter('table.table.w-100');
@@ -473,10 +469,9 @@ class InvoiceControllerTest extends WebTestCase
 
     public function testFindAllInvoicesForStatus(): void
     {
-        self::$documentManager->getSchemaManager()->dropDocumentCollection(Invoice::class);
         $crawler = $this->client->request(
             'GET',
-            'http://gasolapp/invoices/list/invoice',
+            self::BASE_URL.'/invoices/list/invoice',
         );
         $response = $this->client->getResponse();
         $alert = $crawler->filter('div.alert.alert-info');
@@ -492,24 +487,24 @@ class InvoiceControllerTest extends WebTestCase
     {
         $this->client->request(
             'POST',
-            'http://gasolapp/invoices/api/shopping-cart',
+            self::BASE_URL.'/invoices/api/shopping-cart',
             [
                 "user" => [
                     "document" => "1009090"
                 ],
                 "products" => [
                     [
-                        "code" => $this->codeProduct,
+                        "code" => self::$codeProduct,
                         "amount" => 1
                     ]
                 ]
             ],
             [],
-            $this->header
+            self::$header
         );
         $crawler = $this->client->request(
             'GET',
-            'http://gasolapp/invoices/shopping-cart/list',
+            self::BASE_URL.'/invoices/shopping-cart/list',
         );
         $response = $this->client->getResponse();
         $tittle = $crawler->filter('h2.pt-5');
@@ -527,9 +522,9 @@ class InvoiceControllerTest extends WebTestCase
     {
         $this->client->request(
             'POST',
-            'http://gasolapp/invoices/shopping-cart/add-product',
+            self::BASE_URL.'/invoices/shopping-cart/add-product',
             [
-                'code' => $this->codeProduct,
+                'code' => self::$codeProduct,
                 'amount' => 1
             ]
         );
@@ -537,14 +532,14 @@ class InvoiceControllerTest extends WebTestCase
         $response = $this->client->getResponse();
 
         self::assertEquals(Response::HTTP_OK, $response->getStatusCode());
-        self::assertEquals('http://gasolapp/product/details/'.$this->codeProduct.'?mnsj=ok', $this->client->getCrawler()->getUri());
+        self::assertEquals(self::BASE_URL.'/product/details/'.self::$codeProduct.'?mnsj=ok', $this->client->getCrawler()->getUri());
     }
 
     public function testAddProductNotExistingToShoppingCart(): void
     {
         $this->client->request(
             'POST',
-            'http://gasolapp/invoices/shopping-cart/add-product',
+            self::BASE_URL.'/invoices/shopping-cart/add-product',
             [
                 'code' => '65035c6f3b747-Product-Not-Existing',
                 'amount' => 1
@@ -554,23 +549,22 @@ class InvoiceControllerTest extends WebTestCase
         $response = $this->client->getResponse();
 
         self::assertEquals(Response::HTTP_OK, $response->getStatusCode());
-        self::assertEquals('http://gasolapp/product/details/65035c6f3b747-Product-Not-Existing?mnsj=err', $this->client->getCrawler()->getUri());
+        self::assertEquals(self::BASE_URL.'/product/details/65035c6f3b747-Product-Not-Existing?mnsj=err', $this->client->getCrawler()->getUri());
     }
 
     public function testCreateInvoiceView(): void
     {
-        self::$documentManager->getSchemaManager()->dropDocumentCollection(Invoice::class);
         $this->client->request(
             'POST',
-            'http://gasolapp/invoices/shopping-cart/add-product',
+            self::BASE_URL.'/invoices/shopping-cart/add-product',
             [
-                'code' => $this->codeProduct,
+                'code' => self::$codeProduct,
                 'amount' => 1
             ]
         );
         $this->client->request(
             'GET',
-            'http://gasolapp/invoices/shopping-cart/list'
+            self::BASE_URL.'/invoices/shopping-cart/list'
         );
         $crawler = $this->client->submitForm('Generar pedido');
         $response = $this->client->getResponse();
@@ -584,18 +578,17 @@ class InvoiceControllerTest extends WebTestCase
 
     public function testPayInvoiceView(): void
     {
-        self::$documentManager->getSchemaManager()->dropDocumentCollection(Invoice::class);
         $this->client->request(
             'POST',
-            'http://gasolapp/invoices/shopping-cart/add-product',
+            self::BASE_URL.'/invoices/shopping-cart/add-product',
             [
-                'code' => $this->codeProduct,
+                'code' => self::$codeProduct,
                 'amount' => 1
             ]
         );
         $this->client->request(
             'GET',
-            'http://gasolapp/invoices/shopping-cart/list'
+            self::BASE_URL.'/invoices/shopping-cart/list'
         );
         $this->client->submitForm('Generar pedido');
         $crawler = $this->client->clickLink('Pagar');
@@ -610,18 +603,17 @@ class InvoiceControllerTest extends WebTestCase
 
     public function testDeleteInvoiceView(): void
     {
-        self::$documentManager->getSchemaManager()->dropDocumentCollection(Invoice::class);
         $this->client->request(
             'POST',
-            'http://gasolapp/invoices/shopping-cart/add-product',
+            self::BASE_URL.'/invoices/shopping-cart/add-product',
             [
-                'code' => $this->codeProduct,
+                'code' => self::$codeProduct,
                 'amount' => 1
             ]
         );
         $this->client->request(
             'GET',
-            'http://gasolapp/invoices/shopping-cart/list'
+            self::BASE_URL.'/invoices/shopping-cart/list'
         );
         $this->client->submitForm('Generar pedido');
         $crawler = $this->client->clickLink('Cancelar');
@@ -636,18 +628,17 @@ class InvoiceControllerTest extends WebTestCase
 
     public function testDeleteShoppingCartView(): void
     {
-        self::$documentManager->getSchemaManager()->dropDocumentCollection(Invoice::class);
         $this->client->request(
             'POST',
-            'http://gasolapp/invoices/shopping-cart/add-product',
+            self::BASE_URL.'/invoices/shopping-cart/add-product',
             [
-                'code' => $this->codeProduct,
+                'code' => self::$codeProduct,
                 'amount' => 1
             ]
         );
         $this->client->request(
             'GET',
-            'http://gasolapp/invoices/shopping-cart/list'
+            self::BASE_URL.'/invoices/shopping-cart/list'
         );
         $crawler = $this->client->clickLink('Eliminar carrito');
         $response = $this->client->getResponse();
@@ -660,18 +651,17 @@ class InvoiceControllerTest extends WebTestCase
 
     public function testDeleteProductToShoppingCartView(): void
     {
-        self::$documentManager->getSchemaManager()->dropDocumentCollection(Invoice::class);
         $this->client->request(
             'POST',
-            'http://gasolapp/invoices/shopping-cart/add-product',
+            self::BASE_URL.'/invoices/shopping-cart/add-product',
             [
-                'code' => $this->codeProduct,
+                'code' => self::$codeProduct,
                 'amount' => 1
             ]
         );
         $this->client->request(
             'GET',
-            'http://gasolapp/invoices/shopping-cart/list'
+            self::BASE_URL.'/invoices/shopping-cart/list'
         );
         $crawler = $this->client->clickLink('Eliminar');
         $response = $this->client->getResponse();
@@ -692,19 +682,26 @@ class InvoiceControllerTest extends WebTestCase
         $this->client = self::createClient();
         self::$documentManager = $this->client->getContainer()->get(DocumentManager::class);
         $this->client->followRedirects();
-        $this->token();
-        $this->addProduct();
-        $this->header = [
-            'HTTP_CONTENT_TYPE' => 'application/json',
-            'HTTP_Authorization' => 'Bearer '.$this->token
-        ];
+        $this->loginWeb();
+        $this->cleanData();
+        if (!self::$creation)
+        {
+            $this->token();
+            $this->addProduct();
+            self::$creation = true;
+        }
+    }
+
+    private function cleanData(): void
+    {
+        self::$documentManager->getSchemaManager()->dropDocumentCollection(Invoice::class);
     }
 
     private function token(): void
     {
         $this->client->request(
             'POST',
-            'http://gasolapp/user/api/add',
+            self::BASE_URL.'/user/api/add',
             [
                 'name' => 'User test',
                 'document' => '1009090',
@@ -721,20 +718,24 @@ class InvoiceControllerTest extends WebTestCase
         ]);
         $this->client->request(
             'POST',
-            'http://gasolapp/api/login',
+            self::BASE_URL.'/api/login',
             [],
             [],
             ['CONTENT_TYPE' => 'application/json'],
             $jsonData
         );
-        $this->token = json_decode($this->client->getResponse()->getContent())->token;
+        $token = json_decode($this->client->getResponse()->getContent())->token;
+        self::$header = [
+            'HTTP_CONTENT_TYPE' => 'application/json',
+            'HTTP_Authorization' => 'Bearer '.$token
+        ];
     }
 
-    private function addProduct(): void
+    private function loginWeb(): void
     {
         $this->client->request(
             'GET',
-            'http://gasolapp/login-view',
+            self::BASE_URL.'/login-view',
             [
                 '_username' => '',
                 '_password' => ''
@@ -744,9 +745,14 @@ class InvoiceControllerTest extends WebTestCase
             '_username' => 'userTest@gmail.com',
             '_password' => 'claveSegura',
         ]);
+    }
+
+    private function addProduct(): void
+    {
+        $this->loginWeb();
         $this->client->request(
             'GET',
-            'http://gasolapp/product/add',
+            self::BASE_URL.'/product/add',
             [
                 'name' => '',
                 'amount' => 0,
@@ -763,6 +769,6 @@ class InvoiceControllerTest extends WebTestCase
         );
         $codeFilter = $crawler->filter('#codeProduct')->text();
 
-        $this->codeProduct = str_replace('Code: ', '', $codeFilter);
+        self::$codeProduct = str_replace('Code: ', '', $codeFilter);
     }
 }
