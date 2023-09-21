@@ -60,7 +60,7 @@ class InvoiceManager
      */
     public function addProductsToShoppingCart(Collection $products, User $user): bool|Invoice
     {
-        $shoppingCart = $this->invoicesRepository->findByUserAndStatus($user, Invoice::SHOPPINGCART);
+        $shoppingCart = $this->invoicesRepository->findByUserAndStatus($user, invoice::SHOPPING_CART);
 
         if ($shoppingCart) {
             return $this->addToExistingCart($products, $shoppingCart);
@@ -163,7 +163,7 @@ class InvoiceManager
         $invoices->setUser($user);
         $invoices->setDate($this->getDate());
         $invoices->setCode(str_ireplace(' ', '-', uniqid(). '-' . $user->getDocument()));
-        $invoices->setStatus(Invoice::SHOPPINGCART);;
+        $invoices->setStatus(invoice::SHOPPING_CART);;
 
         foreach ($products as $product) {
 
@@ -248,7 +248,7 @@ class InvoiceManager
      */
     public function deleteProductToShoppingCart(User $user, string $code): bool
     {
-        $shoppingCart = $this->invoicesRepository->findByUserAndStatus($user, Invoice::SHOPPINGCART);
+        $shoppingCart = $this->invoicesRepository->findByUserAndStatus($user, invoice::SHOPPING_CART);
 
         if ($shoppingCart->getProducts()->count() == 1) {
             foreach ($shoppingCart->getProducts() as $product) {

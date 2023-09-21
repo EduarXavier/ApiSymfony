@@ -29,7 +29,7 @@ class InvoiceManagerTest extends KernelTestCase
     {
         $this->invoiceManager->addProductsToShoppingCart($this->products, $this->user);
         $this->invoicesRepository->getDocumentManager()->flush();
-        $invoiceFind = $this->invoicesRepository->findByUserAndStatus($this->user, Invoice::SHOPPINGCART);
+        $invoiceFind = $this->invoicesRepository->findByUserAndStatus($this->user, invoice::SHOPPING_CART);
 
         self::assertInstanceOf(Invoice::class, $invoiceFind);
         self::assertIsArray($invoiceFind->getProducts()->toArray());
@@ -56,7 +56,7 @@ class InvoiceManagerTest extends KernelTestCase
     {
         $this->invoiceManager->addProductsToShoppingCart($this->products, $this->user);
         $this->invoicesRepository->getDocumentManager()->flush();
-        $invoiceFind = $this->invoicesRepository->findByUserAndStatus($this->user, Invoice::SHOPPINGCART);
+        $invoiceFind = $this->invoicesRepository->findByUserAndStatus($this->user, invoice::SHOPPING_CART);
         $this->products->clear();
         $productInvoice = (new ProductInvoice())
             ->setName('Jabon')
@@ -79,7 +79,7 @@ class InvoiceManagerTest extends KernelTestCase
     {
         $this->invoiceManager->addProductsToShoppingCart($this->products, $this->user);
         $this->invoicesRepository->getDocumentManager()->flush();
-        $invoiceFind = $this->invoicesRepository->findByUserAndStatus($this->user, Invoice::SHOPPINGCART);
+        $invoiceFind = $this->invoicesRepository->findByUserAndStatus($this->user, invoice::SHOPPING_CART);
         $this->invoiceManager->createInvoice($invoiceFind);
         $this->invoicesRepository->getDocumentManager()->flush();
 
@@ -93,7 +93,7 @@ class InvoiceManagerTest extends KernelTestCase
     {
         $this->invoiceManager->addProductsToShoppingCart($this->products, $this->user);
         $this->invoicesRepository->getDocumentManager()->flush();
-        $invoiceFind = $this->invoicesRepository->findByUserAndStatus($this->user, Invoice::SHOPPINGCART);
+        $invoiceFind = $this->invoicesRepository->findByUserAndStatus($this->user, invoice::SHOPPING_CART);
         $this->invoiceManager->payInvoice($invoiceFind);
         $this->invoicesRepository->getDocumentManager()->flush();
 
@@ -108,7 +108,7 @@ class InvoiceManagerTest extends KernelTestCase
     {
         $this->invoiceManager->addProductsToShoppingCart($this->products, $this->user);
         $this->invoicesRepository->getDocumentManager()->flush();
-        $invoiceFind = $this->invoicesRepository->findByUserAndStatus($this->user, Invoice::SHOPPINGCART);
+        $invoiceFind = $this->invoicesRepository->findByUserAndStatus($this->user, invoice::SHOPPING_CART);
         $this->invoiceManager->createInvoice($invoiceFind);
         $this->invoiceManager->cancelInvoice($invoiceFind);
         $this->invoicesRepository->getDocumentManager()->flush();
@@ -124,10 +124,10 @@ class InvoiceManagerTest extends KernelTestCase
     {
         $this->invoiceManager->addProductsToShoppingCart($this->products, $this->user);
         $this->invoicesRepository->getDocumentManager()->flush();
-        $invoiceFind = $this->invoicesRepository->findByUserAndStatus($this->user, Invoice::SHOPPINGCART);
+        $invoiceFind = $this->invoicesRepository->findByUserAndStatus($this->user, invoice::SHOPPING_CART);
         $this->invoiceManager->deleteShoppingCart($invoiceFind);
         $this->invoicesRepository->getDocumentManager()->flush();
-        $invoiceFind = $this->invoicesRepository->findByUserAndStatus($this->user, Invoice::SHOPPINGCART);
+        $invoiceFind = $this->invoicesRepository->findByUserAndStatus($this->user, invoice::SHOPPING_CART);
 
         self::assertNull($invoiceFind);
     }
@@ -142,7 +142,7 @@ class InvoiceManagerTest extends KernelTestCase
         $this->invoicesRepository->getDocumentManager()->flush();
         $this->invoiceManager->deleteProductToShoppingCart($this->user, '65047fae8ff348-Jabon');
         $this->invoicesRepository->getDocumentManager()->flush();
-        $invoiceFind = $this->invoicesRepository->findByUserAndStatus($this->user, Invoice::SHOPPINGCART);
+        $invoiceFind = $this->invoicesRepository->findByUserAndStatus($this->user, invoice::SHOPPING_CART);
 
         self::assertNull($invoiceFind);
     }
@@ -154,7 +154,7 @@ class InvoiceManagerTest extends KernelTestCase
     {
         $this->invoiceManager->addProductsToShoppingCart($this->products, $this->user);
         $this->invoicesRepository->getDocumentManager()->flush();
-        $invoiceFind = $this->invoicesRepository->findByUserAndStatus($this->user, Invoice::SHOPPINGCART);
+        $invoiceFind = $this->invoicesRepository->findByUserAndStatus($this->user, invoice::SHOPPING_CART);
         $this->invoiceManager->createInvoice($invoiceFind);
         $this->invoiceManager->deleteInvoice($invoiceFind);
         $this->invoicesRepository->getDocumentManager()->flush();

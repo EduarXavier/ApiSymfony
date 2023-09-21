@@ -515,7 +515,7 @@ class InvoiceControllerTest extends WebTestCase
         self::assertSelectorExists('nav');
         self::assertEquals('Detalles del carrito', trim($tittle->text()));
         self::assertEquals(1, $tittle->count());
-        self::assertEquals(Invoice::SHOPPINGCART, $status);
+        self::assertEquals(invoice::SHOPPING_CART, $status);
     }
 
     public function testAddProductShoppingCart(): void

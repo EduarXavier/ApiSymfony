@@ -12,7 +12,7 @@ use Doctrine\ODM\MongoDB\Mapping\Annotations as MongoDB;
 #[MongoDB\Document]
 class Invoice
 {
-    public const SHOPPINGCART = 'shopping-cart';
+    public const SHOPPING_CART = 'shopping-cart';
 
     public const INVOICE = 'invoice';
 

@@ -135,7 +135,7 @@ class InvoiceController extends AbstractController
             return new JsonResponse(['error' => 'Usuario no encontrado'], Response::HTTP_BAD_REQUEST);
         }
 
-        $invoice = $this->invoicesRepository->findByUserAndStatus($user, Invoice::SHOPPINGCART);
+        $invoice = $this->invoicesRepository->findByUserAndStatus($user, invoice::SHOPPING_CART);
 
         if (!$invoice) {
             return new JsonResponse(['error' => 'No se ha encontrado el carrito'], Response::HTTP_BAD_REQUEST);
@@ -279,7 +279,7 @@ class InvoiceController extends AbstractController
         $user = $this->userRepository->findByEmail($user->getUserIdentifier());
         $shoppingCart = $this->invoicesRepository->findByUserAndStatus(
             $user,
-            Invoice::SHOPPINGCART
+            invoice::SHOPPING_CART
         );
         $formCreateInvoice = $this->createForm(FactureType::class, $shoppingCart);
 
@@ -418,7 +418,7 @@ class InvoiceController extends AbstractController
         $user = $this->userRepository->findByDocument($document);
         $shoppingCart = $this->invoicesRepository->findByUserAndStatus(
             $user,
-            Invoice::SHOPPINGCART
+            invoice::SHOPPING_CART
         );
 
         if (!$this->invoiceManager->deleteShoppingCart($shoppingCart)) {
