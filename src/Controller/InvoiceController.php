@@ -223,7 +223,8 @@ class InvoiceController extends AbstractController
         $invoices = $this->invoicesRepository->findAllByUser($user);
 
         return $this->render('InvoiceTemplates/invoiceList.html.twig', [
-            'invoices' => $invoices
+            'invoices' => $invoices,
+            'route' => 'invoices_list'
         ]);
     }
 
@@ -264,7 +265,9 @@ class InvoiceController extends AbstractController
         $invoices = $this->invoicesRepository->findAllForStatus($user, $status);
 
         return $this->render('InvoiceTemplates/invoiceList.html.twig', [
-            'invoices' => $invoices
+            'invoices' => $invoices,
+            'route' => 'invoices_list_status',
+            'status' => $status
         ]);
     }
 

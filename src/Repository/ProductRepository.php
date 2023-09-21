@@ -12,7 +12,7 @@ class ProductRepository extends ServiceDocumentRepository
 
     public function findAll(): array
     {
-       return $this->findBy(['amount' => ['$gt' => 0], 'status' => Product::AVAILABLE], limit: 20);
+       return $this->findBy(['amount' => ['$gt' => 0], 'status' => Product::AVAILABLE], ['name' => 1]);
     }
 
     public function findByCode(string $code): ?Product

@@ -75,7 +75,7 @@ class ProductController extends AbstractController
         $products = $this->productRepository->findAll();
 
         return $this->render('ProductTemplates/productList.html.twig', [
-            'products' => $products,
+            'allProducts' => $products,
         ]);
     }
 
@@ -86,7 +86,7 @@ class ProductController extends AbstractController
         $products = $this->productRepository->findExpiredProducts();
 
         return $this->render('ProductTemplates/productList.html.twig', [
-            'products' => $products,
+            'allProducts' => $products,
         ]);
     }
 
