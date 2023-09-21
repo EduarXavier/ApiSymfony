@@ -12,9 +12,11 @@ use Doctrine\Bundle\MongoDBBundle\Repository\ServiceDocumentRepository;
 
 class InvoicesRepository extends ServiceDocumentRepository
 {
-    public function findAllByUser(User $user): array
+    public const CANT_MAX_INVOICE = 8;
+
+    public function findAllByUser(User $user, int $offset): array
     {
-        return $this->findBy(['user.id' => $user->getId()], ['date' => 'DESC']);
+        return $this->findBy(['user.id' => $user->getId()], ['date' => 'DESC'], self::CANT_MAX_INVOICE, $offset);
     }
 
     public function findNotCancelByUser(User $user): array
@@ -22,9 +24,9 @@ class InvoicesRepository extends ServiceDocumentRepository
         return $this->findBy(['user.id' => $user->getId(), 'status' => ['$ne' => Invoice::CANCEL]], ['date' => 'DESC']);
     }
 
-    public function findAllForStatus(User $user, string $status): array
+    public function findAllForStatus(User $user, string $status, int $offset): array
     {
-        return $this->findBy(['user.id' => $user->getId(), 'status' => $status], ['date' => 'DESC']);
+        return $this->findBy(['user.id' => $user->getId(), 'status' => $status], ['date' => 'DESC'], self::CANT_MAX_INVOICE, $offset);
     }
 
     public function findByIdAndStatus(string $id, string $status): ?Invoice

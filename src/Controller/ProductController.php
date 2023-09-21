@@ -70,23 +70,31 @@ class ProductController extends AbstractController
     //VIEW
     #[IsGranted('ROLE_ADMIN')]
     #[Route('/list-view', name: 'product_list_view', methods: ['GET'])]
-    public function productListTemplate(): Response
+    public function productListTemplate(Request $request): Response
     {
-        $products = $this->productRepository->findAll();
+        $offset = max(0, $request->query->getInt('offset'));
+        $products = $this->productRepository->findAllPaginator($offset);
 
         return $this->render('ProductTemplates/productList.html.twig', [
-            'allProducts' => $products,
+            'products' => $products,
+            'previous' => $offset - ProductRepository::CANT_MAX_PRODUCTS,
+            'next' =>  $offset + ProductRepository::CANT_MAX_PRODUCTS,
+            'cantMaxima' => ProductRepository::CANT_MAX_PRODUCTS
         ]);
     }
 
     #[IsGranted('ROLE_ADMIN')]
     #[Route('/expired/list-view', name: 'product_expired_list_view', methods: ['GET'])]
-    public function productExpiredListTemplate(): Response
+    public function productExpiredListTemplate(Request $request): Response
     {
-        $products = $this->productRepository->findExpiredProducts();
+        $offset = max(0, $request->query->getInt('offset'));
+        $products = $this->productRepository->findExpiredProducts($offset);
 
         return $this->render('ProductTemplates/productList.html.twig', [
-            'allProducts' => $products,
+            'products' => $products,
+            'previous' => $offset - ProductRepository::CANT_MAX_PRODUCTS,
+            'next' =>  $offset + ProductRepository::CANT_MAX_PRODUCTS,
+            'cantMaxima' => ProductRepository::CANT_MAX_PRODUCTS
         ]);
     }
 

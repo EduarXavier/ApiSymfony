@@ -4,13 +4,6 @@
 
 {% block body %}
     {% include '/layouts/navbar.html.twig' %}
-    {% set invoiceForPage = 8 %}
-    {% set currentPage = app.request.query.get('page', 1) %}
-    {% set totallInvoices = invoices|length %}
-    {% set totalPages = (totallInvoices / invoiceForPage)|round(0, 'ceil') %}
-    {% set startIndex = (currentPage - 1) * invoiceForPage %}
-    {% set endIndex = (startIndex + invoiceForPage - 1) %}
-    {% set invoices = invoices|slice(startIndex, invoiceForPage) %}
 
     <div class="container mt-5">
         <h2 class="text-center mb-4">Mis facturas</h2>
@@ -71,19 +64,32 @@
                 {% endfor %}
             </div>
             <div class="d-flex justify-content-center p-absolute mt-5" style="bottom: 0">
-                {% for page in 1..totalPages %}
+                {% if previous >= 0 %}
                     <a
-                            style="text-decoration: none; border-radius: 5px"
-                            {% if not status is defined %}
-                                href="{{ path(route, {'page': page }) }}"
+                            style="text-decoration: none"
+                            class="btn btn-primary me-2"
+                            {% if status is defined %}
+                                href="{{ path(route, { offset: previous, status: status }) }}"
                             {% else %}
-                                href="{{ path(route, {'page': page, 'status' : status}) }}"
+                                href="{{ path(route, { offset: previous }) }}"
                             {% endif %}
-                            class="{{ page == currentPage ? 'btn-primary' : 'btn-outline-primary' }} btn p-1 m-1"
                     >
-                        {{ page }}
+                        Anterior
                     </a>
-                {% endfor %}
+                {% endif %}
+                {% if invoices|length >= cantMaxima %}
+                    <a
+                            style="text-decoration: none"
+                            class="btn btn-primary me-2"
+                            {% if status is defined %}
+                                href="{{ path(route, { offset: previous, status: status }) }}"
+                            {% else %}
+                                href="{{ path(route, { offset: next }) }}"
+                            {% endif %}
+                    >
+                        Siguiente
+                    </a>
+                {% endif %}
             </div>
         {% endif %}
     </div>

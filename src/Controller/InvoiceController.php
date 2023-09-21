@@ -216,15 +216,19 @@ class InvoiceController extends AbstractController
 
     #[IsGranted('ROLE_ADMIN')]
     #[Route('/list', name: 'invoices_list')]
-    public function findAllInvoices(): RedirectResponse|Response
+    public function findAllInvoices(Request $request): RedirectResponse|Response
     {
+        $offset = max(0, $request->query->getInt('offset'));
         $user = $this->security->getUser();
         $user = $this->userRepository->findByEmail($user->getUserIdentifier());
-        $invoices = $this->invoicesRepository->findAllByUser($user);
+        $invoices = $this->invoicesRepository->findAllByUser($user, $offset);
 
         return $this->render('InvoiceTemplates/invoiceList.html.twig', [
             'invoices' => $invoices,
-            'route' => 'invoices_list'
+            'route' => 'invoices_list',
+            'previous' => $offset - InvoicesRepository::CANT_MAX_INVOICE,
+            'next' =>  $offset + InvoicesRepository::CANT_MAX_INVOICE,
+            'cantMaxima' => InvoicesRepository::CANT_MAX_INVOICE
         ]);
     }
 
@@ -258,16 +262,20 @@ class InvoiceController extends AbstractController
 
     #[IsGranted('ROLE_ADMIN')]
     #[Route('/list/{status}', name: 'invoices_list_status')]
-    public function findAllInvoicesForStatus(string $status): RedirectResponse|Response
+    public function findAllInvoicesForStatus(string $status, Request $request): RedirectResponse|Response
     {
+        $offset = max(0, $request->query->getInt('offset'));
         $user = $this->security->getUser();
         $user = $this->userRepository->findByEmail($user->getUserIdentifier());
-        $invoices = $this->invoicesRepository->findAllForStatus($user, $status);
+        $invoices = $this->invoicesRepository->findAllForStatus($user, $status, $offset);
 
         return $this->render('InvoiceTemplates/invoiceList.html.twig', [
             'invoices' => $invoices,
             'route' => 'invoices_list_status',
-            'status' => $status
+            'status' => $status,
+            'previous' => $offset - InvoicesRepository::CANT_MAX_INVOICE,
+            'next' =>  $offset + InvoicesRepository::CANT_MAX_INVOICE,
+            'cantMaxima' => InvoicesRepository::CANT_MAX_INVOICE
         ]);
     }
 
