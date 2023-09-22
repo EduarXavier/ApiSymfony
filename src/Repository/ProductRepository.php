@@ -18,7 +18,15 @@ class ProductRepository extends ServiceDocumentRepository
 
     public function findAllPaginator(int $offset = 0): array
     {
-        return $this->findBy(['amount' => ['$gt' => 0], 'status' => Product::AVAILABLE], ['name' => 1], self::CANT_MAX_PRODUCTS, $offset);
+        return $this->findBy(
+            [
+                'amount' => ['$gt' => 0],
+                'status' => Product::AVAILABLE
+            ],
+            ['name' => 1],
+            self::CANT_MAX_PRODUCTS,
+            $offset
+        );
     }
 
     public function findByCode(string $code): ?Product
@@ -28,7 +36,15 @@ class ProductRepository extends ServiceDocumentRepository
 
     public function findExpiredProducts(int $offset = 0): array
     {
-        return $this->findBy(['$or' => [['status' => Product::EXPIRED], ['amount' => 0]]], ['name' => 1],self::CANT_MAX_PRODUCTS, $offset) ;
+        return $this->findBy(
+            ['$or' => [
+                ['status' => Product::EXPIRED],
+                ['amount' => 0]
+            ]],
+            ['name' => 1],
+            self::CANT_MAX_PRODUCTS,
+            $offset
+        );
     }
 
     public function countExpiredProducts(): int

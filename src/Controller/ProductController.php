@@ -15,7 +15,6 @@ use App\Managers\ProductManager;
 use Doctrine\ODM\MongoDB\DocumentManager;
 use Doctrine\ODM\MongoDB\LockException;
 use Doctrine\ODM\MongoDB\MongoDBException;
-use phpDocumentor\Reflection\Types\Integer;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\RedirectResponse;
@@ -89,7 +88,7 @@ class ProductController extends AbstractController
 
     #[IsGranted('ROLE_USER')]
     #[Route('/list-view/user', name: 'product_list_view_user', methods: ['GET'])]
-    public function productListTemplateWithUser(Request $request): Response
+    public function productListTemplateForUser(Request $request): Response
     {
         $page = max(0, $request->query->getInt('page'));
         $cantPages = ceil(count($this->productRepository->findAll()) / ProductRepository::CANT_MAX_PRODUCTS);

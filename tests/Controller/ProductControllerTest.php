@@ -24,6 +24,7 @@ class ProductControllerTest extends WebTestCase
         $response = $this->client->getResponse();
 
         self::assertInstanceOf(Response::class, $response);
+        self::assertNotNull(json_decode($response->getContent()));
         self::assertIsArray(json_decode($response->getContent()));
     }
 
@@ -39,6 +40,35 @@ class ProductControllerTest extends WebTestCase
         self::assertEquals(Response::HTTP_OK, $response->getStatusCode());
         self::assertSelectorExists('nav');
         self::assertPageTitleSame('Lista de productos');
+    }
+
+    public function testProductListTemplateForUser()
+    {
+        $this->client->request(
+            'GET',
+            self::BASE_URL.'/logout'
+        );
+        $this->client->request(
+            'GET',
+            self::BASE_URL.'/login-view',
+            [
+                '_username' => '',
+                '_password' => ''
+            ]
+        );
+        $this->client->submitForm('login', [
+            '_username' => 'viewProducts@gmail.com',
+            '_password' => 'claveSegura',
+        ]);
+        $this->client->request(
+            'GET',
+            self::BASE_URL.'/product/api/list',
+        );
+        $response = $this->client->getResponse();
+
+        self::assertInstanceOf(Response::class, $response);
+        self::assertNotNull(json_decode($response->getContent()));
+        self::assertIsArray(json_decode($response->getContent()));
     }
 
     public function testProductExpiredListTemplate(): void
@@ -203,6 +233,20 @@ class ProductControllerTest extends WebTestCase
                 'address' => 'calle falsa',
                 'phone' => '3000',
                 'email' => 'viewProducts@gmail.com',
+                'password' => 'claveSegura'
+            ]
+        );
+
+        $this->client->request(
+            'POST',
+            self::BASE_URL.'/user/api/add',
+            [
+                'name' => 'Persona viewProducts',
+                'document' => '100253469',
+                'rol' => 'ROLE_ADMIN',
+                'address' => 'calle falsa',
+                'phone' => '3000',
+                'email' => 'viewProductsUser@gmail.com',
                 'password' => 'claveSegura'
             ]
         );

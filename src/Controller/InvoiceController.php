@@ -188,7 +188,12 @@ class InvoiceController extends AbstractController
         $form->handleRequest($request);
 
         if (!$form->isSubmitted() || !$form->isValid()) {
-            return new JsonResponse(['error' => 'Ha ocurrido un error con los datos enviados'], Response::HTTP_BAD_REQUEST);
+            return new JsonResponse(
+                [
+                    'error' => 'Ha ocurrido un error con los datos enviados'
+                ],
+                Response::HTTP_BAD_REQUEST
+            );
         }
 
         $invoice = $this->invoicesRepository->findByCode($invoice->getCode());
