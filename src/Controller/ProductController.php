@@ -15,6 +15,7 @@ use App\Managers\ProductManager;
 use Doctrine\ODM\MongoDB\DocumentManager;
 use Doctrine\ODM\MongoDB\LockException;
 use Doctrine\ODM\MongoDB\MongoDBException;
+use phpDocumentor\Reflection\Types\Integer;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\RedirectResponse;
@@ -72,14 +73,17 @@ class ProductController extends AbstractController
     #[Route('/list-view', name: 'product_list_view', methods: ['GET'])]
     public function productListTemplate(Request $request): Response
     {
-        $offset = max(0, $request->query->getInt('offset'));
+        $page = max(0, $request->query->getInt('page'));
+        $cantPages = ceil(count($this->productRepository->findAll()) / ProductRepository::CANT_MAX_PRODUCTS);
+        $offset = $page * ProductRepository::CANT_MAX_PRODUCTS;
         $products = $this->productRepository->findAllPaginator($offset);
 
         return $this->render('ProductTemplates/productList.html.twig', [
             'products' => $products,
-            'previous' => $offset - ProductRepository::CANT_MAX_PRODUCTS,
-            'next' =>  $offset + ProductRepository::CANT_MAX_PRODUCTS,
-            'cantMaxima' => ProductRepository::CANT_MAX_PRODUCTS
+            'previous' => $page - 1,
+            'next' =>  $page + 1,
+            'cantMaxima' => ProductRepository::CANT_MAX_PRODUCTS,
+            'cantPages' => $cantPages
         ]);
     }
 
@@ -87,14 +91,18 @@ class ProductController extends AbstractController
     #[Route('/expired/list-view', name: 'product_expired_list_view', methods: ['GET'])]
     public function productExpiredListTemplate(Request $request): Response
     {
-        $offset = max(0, $request->query->getInt('offset'));
+        $page = max(0, $request->query->getInt('page'));
+        $cantPages = ceil($this->productRepository->countExpiredProducts() / ProductRepository::CANT_MAX_PRODUCTS);
+        $offset = $page * ProductRepository::CANT_MAX_PRODUCTS;
         $products = $this->productRepository->findExpiredProducts($offset);
 
         return $this->render('ProductTemplates/productList.html.twig', [
             'products' => $products,
-            'previous' => $offset - ProductRepository::CANT_MAX_PRODUCTS,
-            'next' =>  $offset + ProductRepository::CANT_MAX_PRODUCTS,
-            'cantMaxima' => ProductRepository::CANT_MAX_PRODUCTS
+            'previous' => $page - 1,
+            'next' =>  $page + 1,
+            'cantMaxima' => ProductRepository::CANT_MAX_PRODUCTS,
+            'cantPages' => $cantPages,
+            'expired' => true
         ]);
     }
 

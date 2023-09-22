@@ -408,13 +408,13 @@ class InvoiceControllerTest extends WebTestCase
             self::BASE_URL.'/invoices/list',
         );
         $response = $this->client->getResponse();
-        $alert = $crawler->filter('div.alert.alert-info');
+        $alert = $crawler->filter('div.alert');
 
         self::assertEquals(Response::HTTP_OK, $response->getStatusCode());
         self::assertSelectorExists('nav');
         self::assertPageTitleSame('Lista de pedidos');
         self::assertEquals(1, $alert->count());
-        self::assertEquals('No hay pedidos disponibles en este momento.', trim($alert->text()));
+        self::assertEquals('No se han encontrado pedidos.', trim($alert->text()));
     }
 
     public function testResume(): void
@@ -474,13 +474,13 @@ class InvoiceControllerTest extends WebTestCase
             self::BASE_URL.'/invoices/list/invoice',
         );
         $response = $this->client->getResponse();
-        $alert = $crawler->filter('div.alert.alert-info');
+        $alert = $crawler->filter('div.alert');
 
         self::assertEquals(Response::HTTP_OK, $response->getStatusCode());
         self::assertSelectorExists('nav');
         self::assertPageTitleSame('Lista de pedidos');
         self::assertEquals(1, $alert->count());
-        self::assertEquals('No hay pedidos disponibles en este momento.', trim($alert->text()));
+        self::assertEquals('No se han encontrado pedidos.', trim($alert->text()));
     }
 
     public function testShoppingCartList(): void

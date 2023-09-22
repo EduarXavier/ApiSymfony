@@ -14,7 +14,7 @@ class InvoicesRepository extends ServiceDocumentRepository
 {
     public const CANT_MAX_INVOICE = 8;
 
-    public function findAllByUser(User $user, int $offset): array
+    public function findAllByUser(User $user, int $offset = 0): array
     {
         return $this->findBy(['user.id' => $user->getId()], ['date' => 'DESC'], self::CANT_MAX_INVOICE, $offset);
     }
@@ -24,9 +24,14 @@ class InvoicesRepository extends ServiceDocumentRepository
         return $this->findBy(['user.id' => $user->getId(), 'status' => ['$ne' => Invoice::CANCEL]], ['date' => 'DESC']);
     }
 
-    public function findAllForStatus(User $user, string $status, int $offset): array
+    public function findAllForStatus(User $user, string $status, int $offset = 0): array
     {
         return $this->findBy(['user.id' => $user->getId(), 'status' => $status], ['date' => 'DESC'], self::CANT_MAX_INVOICE, $offset);
+    }
+
+    public function CountAllForStatus(User $user, string $status): int
+    {
+        return count($this->findBy(['user.id' => $user->getId(), 'status' => $status], ['date' => 'DESC']));
     }
 
     public function findByIdAndStatus(string $id, string $status): ?Invoice

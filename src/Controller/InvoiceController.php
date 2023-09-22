@@ -218,17 +218,19 @@ class InvoiceController extends AbstractController
     #[Route('/list', name: 'invoices_list')]
     public function findAllInvoices(Request $request): RedirectResponse|Response
     {
-        $offset = max(0, $request->query->getInt('offset'));
         $user = $this->security->getUser();
         $user = $this->userRepository->findByEmail($user->getUserIdentifier());
+        $page = max(0, $request->query->getInt('page'));
+        $cantPages = ceil(count($this->invoicesRepository->findAll()) / InvoicesRepository::CANT_MAX_INVOICE);
+        $offset = $page * InvoicesRepository::CANT_MAX_INVOICE;
         $invoices = $this->invoicesRepository->findAllByUser($user, $offset);
 
         return $this->render('InvoiceTemplates/invoiceList.html.twig', [
             'invoices' => $invoices,
-            'route' => 'invoices_list',
-            'previous' => $offset - InvoicesRepository::CANT_MAX_INVOICE,
-            'next' =>  $offset + InvoicesRepository::CANT_MAX_INVOICE,
-            'cantMaxima' => InvoicesRepository::CANT_MAX_INVOICE
+            'previous' => $page - 1,
+            'next' =>  $page + 1,
+            'cantMaxima' => InvoicesRepository::CANT_MAX_INVOICE,
+            'cantPages' => $cantPages
         ]);
     }
 
@@ -264,18 +266,20 @@ class InvoiceController extends AbstractController
     #[Route('/list/{status}', name: 'invoices_list_status')]
     public function findAllInvoicesForStatus(string $status, Request $request): RedirectResponse|Response
     {
-        $offset = max(0, $request->query->getInt('offset'));
         $user = $this->security->getUser();
         $user = $this->userRepository->findByEmail($user->getUserIdentifier());
+        $page = max(0, $request->query->getInt('page'));
+        $cantPages = ceil($this->invoicesRepository->CountAllForStatus($user, $status) / InvoicesRepository::CANT_MAX_INVOICE);
+        $offset = $page * InvoicesRepository::CANT_MAX_INVOICE;
         $invoices = $this->invoicesRepository->findAllForStatus($user, $status, $offset);
 
         return $this->render('InvoiceTemplates/invoiceList.html.twig', [
             'invoices' => $invoices,
-            'route' => 'invoices_list_status',
             'status' => $status,
-            'previous' => $offset - InvoicesRepository::CANT_MAX_INVOICE,
-            'next' =>  $offset + InvoicesRepository::CANT_MAX_INVOICE,
-            'cantMaxima' => InvoicesRepository::CANT_MAX_INVOICE
+            'previous' => $page - 1,
+            'next' =>  $page + 1,
+            'cantMaxima' => InvoicesRepository::CANT_MAX_INVOICE,
+            'cantPages' => $cantPages
         ]);
     }
 

@@ -21,9 +21,27 @@
             </div>
         </div>
         {% if invoices is empty%}
-            <div class="alert alert-info" role="alert">
-                No hay pedidos disponibles en este momento.
+            <div class="alert alert-primary" role="alert">
+                No se han encontrado pedidos.
             </div>
+            {% if not cantPages == 0 %}
+                <div class="row mt-5" style="bottom: 0">
+                    <div class="col-12 d-flex" style="justify-content: center">
+                        {% for numberPages in 1..cantPages %}
+                            <a
+                                    {% if status is defined %}
+                                        href="{{ path('invoices_list_status', { page: numberPages-1, status: status}) }}"
+                                    {% else %}
+                                        href="{{ path('invoices_list', { page: numberPages-1 }) }}"
+                                    {% endif %}
+                                    class="m-1 p-1 btn {{ numberPages == next ? 'btn-primary' : 'btn-outline-primary' }}"
+                            >
+                                {{ numberPages }}
+                            </a>
+                        {% endfor %}
+                    </div>
+                </div>
+            {% endif %}
         {% else %}
             <div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-4">
                 {% for invoice in invoices %}
@@ -63,33 +81,67 @@
                     </a>
                 {% endfor %}
             </div>
-            <div class="d-flex justify-content-center p-absolute mt-5" style="bottom: 0">
-                {% if previous >= 0 %}
-                    <a
-                            style="text-decoration: none"
-                            class="btn btn-primary me-2"
-                            {% if status is defined %}
-                                href="{{ path(route, { offset: previous, status: status }) }}"
-                            {% else %}
-                                href="{{ path(route, { offset: previous }) }}"
-                            {% endif %}
-                    >
-                        Anterior
-                    </a>
-                {% endif %}
-                {% if invoices|length >= cantMaxima %}
-                    <a
-                            style="text-decoration: none"
-                            class="btn btn-primary me-2"
-                            {% if status is defined %}
-                                href="{{ path(route, { offset: previous, status: status }) }}"
-                            {% else %}
-                                href="{{ path(route, { offset: next }) }}"
-                            {% endif %}
-                    >
-                        Siguiente
-                    </a>
-                {% endif %}
+            <div class="row mt-5" style="bottom: 0">
+                <div class="col-3">
+                    {% if previous >= 0 %}
+                        <a
+                                style="text-decoration: none"
+                                class="btn btn-primary me-2"
+                                {% if status is defined %}
+                                    href="{{ path('invoices_list_status', { page: previous, status: status }) }}"
+                                {% else %}
+                                    href="{{ path('invoices_list', { page: previous }) }}"
+                                {% endif %}
+                        >
+                            Anterior
+                        </a>
+                    {% else %}
+                        <button
+                                style="text-decoration: none"
+                                class="btn btn-primary me-2"
+                                disabled
+                        >
+                            Anterior
+                        </button>
+                    {% endif %}
+                </div>
+                <div class="col-6 d-flex" style="justify-content: center">
+                    {% for numberPages in 1..cantPages %}
+                        <a
+                                {% if status is defined %}
+                                    href="{{ path('invoices_list_status', { page: numberPages-1, status: status}) }}"
+                                {% else %}
+                                    href="{{ path('invoices_list', { page: numberPages-1 }) }}"
+                                {% endif %}
+                                class="m-1 p-1 btn {{ numberPages == next ? 'btn-primary' : 'btn-outline-primary' }}"
+                        >
+                            {{ numberPages }}
+                        </a>
+                    {% endfor %}
+                </div>
+                <div class="col-3 d-flex" style="justify-content: right">
+                    {% if invoices|length >= cantMaxima %}
+                        <a
+                                style="text-decoration: none"
+                                class="btn btn-primary me-2"
+                                {% if status is defined %}
+                                    href="{{ path('invoices_list_status', { page: next, status: status }) }}"
+                                {% else %}
+                                    href="{{ path('invoices_list', { page: next }) }}"
+                                {% endif %}
+                        >
+                            Siguiente
+                        </a>
+                    {% else %}
+                        <button
+                                style="text-decoration: none"
+                                class="btn btn-primary me-2"
+                                disabled
+                        >
+                            Siguiente
+                        </button>
+                    {% endif %}
+                </div>
             </div>
         {% endif %}
     </div>

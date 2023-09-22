@@ -5,6 +5,7 @@
 
 {% block body %}
     {% include '/layouts/navbar.html.twig' %}
+    {% set totalSum = 0 %}
     <div class="container mt-5">
         {% for flash_message in app.flashes('exito') %}
             <div class="alert alert-success w-100" role="alert">
@@ -59,9 +60,15 @@
                                             </th>
                                             <td>{{ product.amount }}</td>
                                             <td>{{ product.price }}</td>
-                                            <td>{{ product.amount * product.price }}</td>
+                                            {% set productTotal = product.amount * product.price %}
+                                            <td>{{ productTotal }}</td>
+                                            {% set totalSum = totalSum + productTotal %}
                                         </tr>
                                     {% endfor %}
+                                    <tr>
+                                        <th colspan="3">Total</th>
+                                        <th scope="col">{{ totalSum }}</th>
+                                    </tr>
                                     </tbody>
                                 </table>
                             </div>
