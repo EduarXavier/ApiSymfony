@@ -464,7 +464,7 @@ class InvoiceControllerTest extends WebTestCase
         self::assertSelectorExists('nav');
         self::assertPageTitleSame('User test - resume');
         self::assertEquals(1, $table->count());
-        self::assertEquals(2, $rows->count());
+        self::assertEquals(3, $rows->count());
     }
 
     public function testFindAllInvoicesForStatus(): void
