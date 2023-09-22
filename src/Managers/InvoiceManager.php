@@ -100,7 +100,7 @@ class InvoiceManager
                 break;
             case 'amount' : usort($products, fn($a, $b) => $b->getAmount() - $a->getAmount());
                 break;
-            case 'total' : usort($products, fn($a, $b) => $b->getAmount() - $a->getAmount());
+            case 'total' : usort($products, fn($a, $b) => ($b->getAmount() * $b->getPrice()) -  ($a->getAmount()) * $a->getPrice());
                 break;
             default : usort($products, fn($a, $b) => strcmp($a->getName(), $b->getName()));
         }
