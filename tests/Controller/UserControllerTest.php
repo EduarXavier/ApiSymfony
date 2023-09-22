@@ -12,7 +12,7 @@ class UserControllerTest extends WebTestCase
 {
     private static bool $create = false;
     private static array $header;
-    private static object $user;
+    private static string $user;
     private ?KernelBrowser $client;
     private static ?object $documentManager;
     private const BASE_URL = 'http://gasolapp';
@@ -37,8 +37,7 @@ class UserControllerTest extends WebTestCase
 
         self::assertInstanceOf(Response::class, $response);
         self::assertEquals(Response::HTTP_OK, $response->getStatusCode());
-        self::assertEquals('Persona falsa AddUser', $user->name);
-        self::assertNotEquals('claveSegura', $user->password);
+        self::assertNotNull($user);
     }
 
     public function testAddUserWithIncompleteData(): void
@@ -108,11 +107,36 @@ class UserControllerTest extends WebTestCase
         self::assertNotNull($contentRequest->error);
     }
 
+    public function testAddUserView()
+    {
+        $this->client->request(
+            'POST',
+            self::BASE_URL.'/user/add'
+        );
+        $this->client->submitForm(
+            'Agregar usuario',
+            [
+                'name' => 'Persona menos falsa',
+                'document' => '5452115',
+                'rol' => '1',
+                'address' => 'calle falsa',
+                'phone' => '3001',
+                'email' => 'persona@gmail.com',
+                'password' => 'claveSegura'
+            ],
+        );
+        $response = $this->client->getResponse();
+
+        self::assertInstanceOf(Response::class, $response);
+        self::assertEquals(Response::HTTP_OK, $response->getStatusCode());
+        self::assertEquals(self::BASE_URL.'/login-view', $this->client->getCrawler()->getUri());
+    }
+
     public function testUpdateUser(): void
     {
         $this->client->request(
             'POST',
-            self::BASE_URL.'/user/api/update/'.self::$user->id,
+            self::BASE_URL.'/user/api/update/'.self::$user,
             [
                 'address' => 'Calle falsa 2',
                 'phone' => '4000',
@@ -171,7 +195,7 @@ class UserControllerTest extends WebTestCase
     {
         $this->client->request(
             'POST',
-            self::BASE_URL.'/user/api/update/password/'.self::$user->id,
+            self::BASE_URL.'/user/api/update/password/'.self::$user,
             [
                 'password' => 'Clave segura 2'
             ],

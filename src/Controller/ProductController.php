@@ -87,6 +87,24 @@ class ProductController extends AbstractController
         ]);
     }
 
+    #[IsGranted('ROLE_USER')]
+    #[Route('/list-view/user', name: 'product_list_view_user', methods: ['GET'])]
+    public function productListTemplateWithUser(Request $request): Response
+    {
+        $page = max(0, $request->query->getInt('page'));
+        $cantPages = ceil(count($this->productRepository->findAll()) / ProductRepository::CANT_MAX_PRODUCTS);
+        $offset = $page * ProductRepository::CANT_MAX_PRODUCTS;
+        $products = $this->productRepository->findAllPaginator($offset);
+
+        return $this->render('ProductTemplates/productListUser.html.twig', [
+            'products' => $products,
+            'previous' => $page - 1,
+            'next' =>  $page + 1,
+            'cantMaxima' => ProductRepository::CANT_MAX_PRODUCTS,
+            'cantPages' => $cantPages
+        ]);
+    }
+
     #[IsGranted('ROLE_ADMIN')]
     #[Route('/expired/list-view', name: 'product_expired_list_view', methods: ['GET'])]
     public function productExpiredListTemplate(Request $request): Response

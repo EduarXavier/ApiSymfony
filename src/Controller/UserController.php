@@ -8,6 +8,7 @@ use App\Document\User;
 use App\Form\PasswordUpdateType;
 use App\Form\UserType;
 use App\Form\UserUpdateType;
+use App\Form\UserViewType;
 use App\Managers\UserManager;
 use App\Repository\UserRepository;
 use App\Services\EmailService;
@@ -98,7 +99,7 @@ class UserController extends AbstractController
 
         return $this->json([
             'message' => 'Usuario agregado correctamente',
-            'user' => $user
+            'user' => $user->getId()
         ], Response::HTTP_OK);
     }
 
@@ -156,5 +157,46 @@ class UserController extends AbstractController
         $this->documentManager->flush();
 
         return $this->json(['message' => 'Contraseña actualizada correctamente'], Response::HTTP_OK);
+    }
+
+    /**
+     * @throws MongoDBException
+     * @throws TransportExceptionInterface
+     */
+    #[Route('/add', name: 'addUserView')]
+    public function addUserView(Request $request): Response
+    {
+        $user = new User();
+        $form = $this->createForm(UserViewType::class, $user);
+        $form->handleRequest($request);
+
+        if (!$form->isSubmitted() || !$form->isValid()) {
+            return $this->render('UserTemplate/userForms.html.twig', [
+                'form' => $form,
+            ]);
+        }
+        if ($this->userRepository->findByDocument($user->getDocument())) {
+            $this->addFlash('error', 'Ya hay un usuario con este documento');
+            return $this->render('UserTemplate/userForms.html.twig', [
+                'form' => $form,
+            ]);
+        } else if ($this->userRepository->findByEmail($user->getEmail())) {
+            $this->addFlash('error', 'Ya hay un usuario con este correo');
+            return $this->render('UserTemplate/userForms.html.twig', [
+                'form' => $form,
+            ]);
+        }
+
+        $user->setName(ucfirst($user->getName()));
+        $hashedPassword = $this->passwordHasher->hashPassword(
+            $user,
+            $user->getPassword()
+        );
+        $user->setPassword($hashedPassword);
+        $this->userManager->addUser($user);
+        $this->emailService->sendEmail($user, 'registro');
+        $this->documentManager->flush();
+
+        return $this->redirectToRoute('login_template');
     }
 }

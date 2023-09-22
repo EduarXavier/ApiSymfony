@@ -1,0 +1,20 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Añadir usuario{% endblock %}
+
+{% block body %}
+    <div class="d-flex w-100 align-items-center align-middle justify-content-center">
+        <div class="w-25">
+            {% for flash_message in app.flashes('error') %}
+                <div class="alert alert-danger w-100" role="alert">
+                    {{ flash_message }}
+                </div>
+            {% endfor %}
+            <h1>Añadir usuario</h1>
+            {{ form_start(form, {"action" : "", "method" : "POST"}) }}
+            {{ form_widget(form) }}
+            <button type="submit" id="btnSubmit" class="btn btn-primary">Agregar usuario</button>
+            {{ form_end(form) }}
+        </div>
+    </div>
+{% endblock %}
