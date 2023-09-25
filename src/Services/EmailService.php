@@ -38,7 +38,7 @@ class EmailService
 
         $user->setName($user->getName());
         $email = (new TemplatedEmail())
-            ->from(new Address('est_ex_avendano@fesc.edu.co'))
+            ->from(new Address('Admin@api.com.co'))
             ->to($user->getEmail())
             ->subject($subject)
             ->text($text)

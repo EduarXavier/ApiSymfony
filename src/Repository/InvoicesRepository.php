@@ -12,19 +12,26 @@ use Doctrine\Bundle\MongoDBBundle\Repository\ServiceDocumentRepository;
 
 class InvoicesRepository extends ServiceDocumentRepository
 {
-    public function findAllByUser(User $user): array
+    public const CANT_MAX_INVOICE = 8;
+
+    public function findAllByUser(User $user, int $offset = 0): array
     {
-        return $this->findBy(['user.id' => $user->getId()], ['date' => 'DESC'], limit: 20);
+        return $this->findBy(['user.id' => $user->getId()], ['date' => 'DESC'], self::CANT_MAX_INVOICE, $offset);
     }
 
     public function findNotCancelByUser(User $user): array
     {
-        return $this->findBy(['user.id' => $user->getId(), 'status' => ['$ne' => Invoice::CANCEL]], ['date' => 'DESC'], limit: 20);
+        return $this->findBy(['user.id' => $user->getId(), 'status' => ['$ne' => Invoice::CANCEL]], ['date' => 'DESC']);
     }
 
-    public function findAllForStatus(User $user, string $status): array
+    public function findAllForStatus(User $user, string $status, int $offset = 0): array
     {
-        return $this->findBy(['user.id' => $user->getId(), 'status' => $status], ['date' => 'DESC'], limit: 20);
+        return $this->findBy(['user.id' => $user->getId(), 'status' => $status], ['date' => 'DESC'], self::CANT_MAX_INVOICE, $offset);
+    }
+
+    public function CountAllForStatus(User $user, string $status): int
+    {
+        return count($this->findBy(['user.id' => $user->getId(), 'status' => $status], ['date' => 'DESC']));
     }
 
     public function findByIdAndStatus(string $id, string $status): ?Invoice
@@ -49,6 +56,6 @@ class InvoicesRepository extends ServiceDocumentRepository
 
     public function findByProduct(ProductInvoice $product): array
     {
-        return $this->findBy(['products.code' => $product->getCode()], ['date' => 'DESC'], limit: 20);
+        return $this->findBy(['products.code' => $product->getCode()], ['date' => 'DESC']);
     }
 }

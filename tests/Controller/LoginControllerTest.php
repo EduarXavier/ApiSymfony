@@ -12,16 +12,18 @@ class LoginControllerTest extends WebTestCase
 {
     private ?KernelBrowser $client;
     private static ?object $documentManager;
+    private static bool $create = false;
+    private const BASE_URL = 'http://gasolapp';
 
     public function testLoginApi(): void
     {
         $jsonData = json_encode([
-            "username" => "personaFalsa@gmail.com",
-            "password" => "claveSegura"
+            'username' => 'personaFalsa@gmail.com',
+            'password' => 'claveSegura'
         ]);
         $this->client->request(
             'POST',
-            'http://gasolapp/api/login',
+            self::BASE_URL.'/api/login',
             [],
             [],
             ['CONTENT_TYPE' => 'application/json'],
@@ -38,12 +40,12 @@ class LoginControllerTest extends WebTestCase
     public function testLoginApiWithBadCredentials(): void
     {
         $jsonData = json_encode([
-            "username" => "personaNoFalsa@gmail.com",
-            "password" => "claveSegura"
+            'username' => 'personaNoFalsa@gmail.com',
+            'password' => 'claveSegura'
         ]);
         $this->client->request(
             'POST',
-            'http://gasolapp/api/login',
+            self::BASE_URL.'/api/login',
             [],
             [],
             ['CONTENT_TYPE' => 'application/json'],
@@ -61,7 +63,7 @@ class LoginControllerTest extends WebTestCase
     {
         $this->client->request(
             'GET',
-            'http://gasolapp/login-view',
+            self::BASE_URL.'/login-view',
             [
                 '_username' => '',
                 '_password' => ''
@@ -69,7 +71,7 @@ class LoginControllerTest extends WebTestCase
         );
 
         self::assertSelectorTextContains('h2', 'Login');
-        self::assertEquals('http://gasolapp/login-view', $this->client->getCrawler()->getUri());
+        self::assertEquals(self::BASE_URL.'/login-view', $this->client->getCrawler()->getUri());
         self::assertEquals(Response::HTTP_OK, $this->client->getResponse()->getStatusCode());
         self::assertFalse($this->client->getContainer()->get('security.authorization_checker')->isGranted('ROLE_ADMIN'));
     }
@@ -78,7 +80,7 @@ class LoginControllerTest extends WebTestCase
     {
         $this->client->request(
             'GET',
-            'http://gasolapp/login-view',
+            self::BASE_URL.'/login-view',
             [
                 '_username' => '',
                 '_password' => ''
@@ -89,16 +91,16 @@ class LoginControllerTest extends WebTestCase
             '_password' => 'claveSegura',
         ]);
 
-        self::assertEquals('http://gasolapp/', $crawler->getUri());
+        self::assertEquals(self::BASE_URL.'/', $crawler->getUri());
         self::assertEquals(Response::HTTP_OK, $this->client->getResponse()->getStatusCode());
         self::assertTrue($this->client->getContainer()->get('security.authorization_checker')->isGranted('ROLE_ADMIN'));
     }
 
     public function testLogout(): void
     {
-        $this->client->request('GET', 'http://gasolapp/logout');
+        $this->client->request('GET', self::BASE_URL.'/logout');
 
-        self::assertEquals('http://gasolapp/login-view', $this->client->getCrawler()->getUri());
+        self::assertEquals(self::BASE_URL.'/login-view', $this->client->getCrawler()->getUri());
         self::assertEquals(Response::HTTP_OK, $this->client->getResponse()->getStatusCode());
         self::assertFalse($this->client->getContainer()->get('security.authorization_checker')->isGranted('ROLE_ADMIN'));
     }
@@ -107,7 +109,7 @@ class LoginControllerTest extends WebTestCase
     {
         $this->client->request(
             'GET',
-            'http://gasolapp/login-view',
+            self::BASE_URL.'/login-view',
             [
                 '_username' => '',
                 '_password' => ''
@@ -118,9 +120,17 @@ class LoginControllerTest extends WebTestCase
             '_password' => 'claveNoSegura',
         ]);
 
-        self::assertEquals('http://gasolapp/login-view', $crawler->getUri());
+        self::assertEquals(self::BASE_URL.'/login-view', $crawler->getUri());
         self::assertEquals(Response::HTTP_OK, $this->client->getResponse()->getStatusCode());
         self::assertFalse($this->client->getContainer()->get('security.authorization_checker')->isGranted('ROLE_ADMIN'));
+    }
+
+    /**
+     * @throws Exception
+     */
+    public static function tearDownAfterClass(): void
+    {
+        self::$documentManager->getSchemaManager()->dropDatabases();
     }
 
     /**
@@ -131,12 +141,20 @@ class LoginControllerTest extends WebTestCase
         $this->client = static::createClient();
         self::$documentManager = $this->client->getContainer()->get(DocumentManager::class);
         $this->client->followRedirects();
+        if (!self::$create) {
+            $this->createUser();
+            self::$create = true;
+        }
+    }
+
+    private function createUser(): void
+    {
         $this->client->request(
             'POST',
-            'http://gasolapp/user/api/add',
+            self::BASE_URL.'/user/api/add',
             [
-                'name' => 'Persona falsa',
-                'document' => '100090',
+                'name' => 'Persona viewProducts',
+                'document' => '1004523',
                 'rol' => 'ROLE_ADMIN',
                 'address' => 'calle falsa',
                 'phone' => '3000',
@@ -144,13 +162,5 @@ class LoginControllerTest extends WebTestCase
                 'password' => 'claveSegura'
             ]
         );
-    }
-
-    /**
-     * @throws Exception
-     */
-    public static function tearDownAfterClass(): void
-    {
-        self::$documentManager->getSchemaManager()->dropDatabases();
     }
 }

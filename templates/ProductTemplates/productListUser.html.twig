@@ -3,7 +3,18 @@
 {% block title %}Lista de productos{% endblock %}
 
 {% block body %}
-    {% include '/layouts/navbar.html.twig' %}
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <a class="navbar-brand" href="#">Gopenux</a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNavDropdown">
+            <div class="navbar-nav w-100 d-flex me-2" style="justify-content: right">
+                <a class="nav-link" href="{{ path('logout') }}">Cerrar sesión</a>
+            </div>
+        </div>
+    </nav>
+
     <div class="container mt-5">
         {% if products is empty %}
             <div class="alert alert-primary" role="alert">
@@ -13,16 +24,12 @@
                 <div class="row mt-5" style="bottom: 0">
                     <div class="col-12 d-flex" style="justify-content: center">
                         {% for numberPages in 1..cantPages %}
-                                <a
-                                    {% if expired is defined %}
-                                        href="{{ path('product_expired_list_view', { page: numberPages-1 }) }}"
-                                    {% else %}
-                                        href="{{ path('product_list_view', { page: numberPages-1 }) }}"
-                                    {% endif %}
-                                        class="m-1 p-1 btn {{ numberPages == next ? 'btn-primary' : 'btn-outline-primary' }}"
-                                >
-                                    {{ numberPages }}
-                                </a>
+                            <a
+                                    href="{{ path('product_list_view_user', { page: numberPages-1 }) }}"
+                                    class="m-1 p-1 btn {{ numberPages == next ? 'btn-primary' : 'btn-outline-primary' }}"
+                            >
+                                {{ numberPages }}
+                            </a>
                         {% endfor %}
                     </div>
                 </div>
@@ -30,23 +37,21 @@
         {% else %}
             <div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-4">
                 {% for product in products %}
-                    <a href="{{ path('product_details', {'code': product.code}) }}" class="text-decoration-none">
-                        <div class="col text-dark">
-                            <div class="card shadow-lg rounded">
-                                <div class="card-header bg-info text-white">
-                                    {{ product.name }}
-                                </div>
-                                <div class="card-body">
-                                    <p>
-                                        <strong>Precio:</strong> {{ product.price }}
-                                    </p>
-                                    <p>
-                                        <strong>Cantidad:</strong> {{ product.amount }}
-                                    </p>
-                                </div>
+                    <div class="col text-dark">
+                        <div class="card shadow-lg rounded">
+                            <div class="card-header bg-info text-white">
+                                {{ product.name }}
+                            </div>
+                            <div class="card-body">
+                                <p>
+                                    <strong>Precio:</strong> {{ product.price }}
+                                </p>
+                                <p>
+                                    <strong>Cantidad:</strong> {{ product.amount }}
+                                </p>
                             </div>
                         </div>
-                    </a>
+                    </div>
                 {% endfor %}
             </div>
             <div class="row mt-5" style="bottom: 0">
@@ -55,11 +60,7 @@
                         <a
                                 style="text-decoration: none"
                                 class="btn btn-primary me-2"
-                                {% if expired is defined %}
-                                    href="{{ path('product_expired_list_view', { page: previous }) }}"
-                                {% else %}
-                                    href="{{ path('product_list_view', { page: previous }) }}"
-                                {% endif %}
+                                href="{{ path('product_list_view_user', { page: previous }) }}"
                         >
                             Anterior
                         </a>
@@ -76,11 +77,7 @@
                 <div class="col-6 d-flex" style="justify-content: center">
                     {% for numberPages in 1..cantPages %}
                         <a
-                                {% if expired is defined %}
-                                    href="{{ path('product_expired_list_view', { page: numberPages-1 }) }}"
-                                {% else %}
-                                    href="{{ path('product_list_view', { page: numberPages-1 }) }}"
-                                {% endif %}
+                                href="{{ path('product_list_view_user', { page: numberPages-1 }) }}"
                                 class="m-1 p-1 btn {{ numberPages == next ? 'btn-primary' : 'btn-outline-primary' }}"
                         >
                             {{ numberPages }}
@@ -92,11 +89,7 @@
                         <a
                                 style="text-decoration: none"
                                 class="btn btn-primary me-2"
-                                {% if expired is defined %}
-                                    href="{{ path('product_expired_list_view', { page: next }) }}"
-                                {% else %}
-                                    href="{{ path('product_list_view', { page: next }) }}"
-                                {% endif %}
+                                href="{{ path('product_list_view_user', { page: next }) }}"
                         >
                             Siguiente
                         </a>

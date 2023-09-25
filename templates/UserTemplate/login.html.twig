@@ -27,6 +27,7 @@
                 <input type="hidden" name="_csrf_token" value="{{ csrf_token('authenticate') }}">
 
                 <button type="submit" id="login" class="btn btn-primary">Iniciar sesión</button>
+                <a href="{{ path('addUserView') }}" class="btn btn-info">Registrarse</a>
             </form>
         </div>
     </div>

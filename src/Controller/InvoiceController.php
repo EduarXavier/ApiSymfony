@@ -135,7 +135,7 @@ class InvoiceController extends AbstractController
             return new JsonResponse(['error' => 'Usuario no encontrado'], Response::HTTP_BAD_REQUEST);
         }
 
-        $invoice = $this->invoicesRepository->findByUserAndStatus($user, Invoice::SHOPPINGCART);
+        $invoice = $this->invoicesRepository->findByUserAndStatus($user, invoice::SHOPPING_CART);
 
         if (!$invoice) {
             return new JsonResponse(['error' => 'No se ha encontrado el carrito'], Response::HTTP_BAD_REQUEST);
@@ -188,7 +188,12 @@ class InvoiceController extends AbstractController
         $form->handleRequest($request);
 
         if (!$form->isSubmitted() || !$form->isValid()) {
-            return new JsonResponse(['error' => 'Ha ocurrido un error con los datos enviados'], Response::HTTP_BAD_REQUEST);
+            return new JsonResponse(
+                [
+                    'error' => 'Ha ocurrido un error con los datos enviados'
+                ],
+                Response::HTTP_BAD_REQUEST
+            );
         }
 
         $invoice = $this->invoicesRepository->findByCode($invoice->getCode());
@@ -216,14 +221,21 @@ class InvoiceController extends AbstractController
 
     #[IsGranted('ROLE_ADMIN')]
     #[Route('/list', name: 'invoices_list')]
-    public function findAllInvoices(): RedirectResponse|Response
+    public function findAllInvoices(Request $request): RedirectResponse|Response
     {
         $user = $this->security->getUser();
         $user = $this->userRepository->findByEmail($user->getUserIdentifier());
-        $invoices = $this->invoicesRepository->findAllByUser($user);
+        $page = max(0, $request->query->getInt('page'));
+        $cantPages = ceil(count($this->invoicesRepository->findAll()) / InvoicesRepository::CANT_MAX_INVOICE);
+        $offset = $page * InvoicesRepository::CANT_MAX_INVOICE;
+        $invoices = $this->invoicesRepository->findAllByUser($user, $offset);
 
         return $this->render('InvoiceTemplates/invoiceList.html.twig', [
-            'invoices' => $invoices
+            'invoices' => $invoices,
+            'previous' => $page - 1,
+            'next' =>  $page + 1,
+            'cantMaxima' => InvoicesRepository::CANT_MAX_INVOICE,
+            'cantPages' => $cantPages
         ]);
     }
 
@@ -257,14 +269,22 @@ class InvoiceController extends AbstractController
 
     #[IsGranted('ROLE_ADMIN')]
     #[Route('/list/{status}', name: 'invoices_list_status')]
-    public function findAllInvoicesForStatus(string $status): RedirectResponse|Response
+    public function findAllInvoicesForStatus(string $status, Request $request): RedirectResponse|Response
     {
         $user = $this->security->getUser();
         $user = $this->userRepository->findByEmail($user->getUserIdentifier());
-        $invoices = $this->invoicesRepository->findAllForStatus($user, $status);
+        $page = max(0, $request->query->getInt('page'));
+        $cantPages = ceil($this->invoicesRepository->CountAllForStatus($user, $status) / InvoicesRepository::CANT_MAX_INVOICE);
+        $offset = $page * InvoicesRepository::CANT_MAX_INVOICE;
+        $invoices = $this->invoicesRepository->findAllForStatus($user, $status, $offset);
 
         return $this->render('InvoiceTemplates/invoiceList.html.twig', [
-            'invoices' => $invoices
+            'invoices' => $invoices,
+            'status' => $status,
+            'previous' => $page - 1,
+            'next' =>  $page + 1,
+            'cantMaxima' => InvoicesRepository::CANT_MAX_INVOICE,
+            'cantPages' => $cantPages
         ]);
     }
 
@@ -276,7 +296,7 @@ class InvoiceController extends AbstractController
         $user = $this->userRepository->findByEmail($user->getUserIdentifier());
         $shoppingCart = $this->invoicesRepository->findByUserAndStatus(
             $user,
-            Invoice::SHOPPINGCART
+            invoice::SHOPPING_CART
         );
         $formCreateInvoice = $this->createForm(FactureType::class, $shoppingCart);
 
@@ -415,7 +435,7 @@ class InvoiceController extends AbstractController
         $user = $this->userRepository->findByDocument($document);
         $shoppingCart = $this->invoicesRepository->findByUserAndStatus(
             $user,
-            Invoice::SHOPPINGCART
+            invoice::SHOPPING_CART
         );
 
         if (!$this->invoiceManager->deleteShoppingCart($shoppingCart)) {

@@ -70,23 +70,56 @@ class ProductController extends AbstractController
     //VIEW
     #[IsGranted('ROLE_ADMIN')]
     #[Route('/list-view', name: 'product_list_view', methods: ['GET'])]
-    public function productListTemplate(): Response
+    public function productListTemplate(Request $request): Response
     {
-        $products = $this->productRepository->findAll();
+        $page = max(0, $request->query->getInt('page'));
+        $cantPages = ceil(count($this->productRepository->findAll()) / ProductRepository::CANT_MAX_PRODUCTS);
+        $offset = $page * ProductRepository::CANT_MAX_PRODUCTS;
+        $products = $this->productRepository->findAllPaginator($offset);
 
         return $this->render('ProductTemplates/productList.html.twig', [
             'products' => $products,
+            'previous' => $page - 1,
+            'next' =>  $page + 1,
+            'cantMaxima' => ProductRepository::CANT_MAX_PRODUCTS,
+            'cantPages' => $cantPages
+        ]);
+    }
+
+    #[IsGranted('ROLE_USER')]
+    #[Route('/list-view/user', name: 'product_list_view_user', methods: ['GET'])]
+    public function productListTemplateForUser(Request $request): Response
+    {
+        $page = max(0, $request->query->getInt('page'));
+        $cantPages = ceil(count($this->productRepository->findAll()) / ProductRepository::CANT_MAX_PRODUCTS);
+        $offset = $page * ProductRepository::CANT_MAX_PRODUCTS;
+        $products = $this->productRepository->findAllPaginator($offset);
+
+        return $this->render('ProductTemplates/productListUser.html.twig', [
+            'products' => $products,
+            'previous' => $page - 1,
+            'next' =>  $page + 1,
+            'cantMaxima' => ProductRepository::CANT_MAX_PRODUCTS,
+            'cantPages' => $cantPages
         ]);
     }
 
     #[IsGranted('ROLE_ADMIN')]
     #[Route('/expired/list-view', name: 'product_expired_list_view', methods: ['GET'])]
-    public function productExpiredListTemplate(): Response
+    public function productExpiredListTemplate(Request $request): Response
     {
-        $products = $this->productRepository->findExpiredProducts();
+        $page = max(0, $request->query->getInt('page'));
+        $cantPages = ceil($this->productRepository->countExpiredProducts() / ProductRepository::CANT_MAX_PRODUCTS);
+        $offset = $page * ProductRepository::CANT_MAX_PRODUCTS;
+        $products = $this->productRepository->findExpiredProducts($offset);
 
         return $this->render('ProductTemplates/productList.html.twig', [
             'products' => $products,
+            'previous' => $page - 1,
+            'next' =>  $page + 1,
+            'cantMaxima' => ProductRepository::CANT_MAX_PRODUCTS,
+            'cantPages' => $cantPages,
+            'expired' => true
         ]);
     }
 
