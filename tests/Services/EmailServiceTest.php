@@ -3,7 +3,9 @@
 namespace App\Tests\Services;
 
 use App\Document\User;
+use App\Message\NotificationMessage;
 use App\Services\EmailService;
+use App\Tests\Message\NotificationMessageTest;
 use PHPUnit\Framework\MockObject\Exception;
 use Symfony\Bridge\Twig\Mime\TemplatedEmail;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
@@ -34,7 +36,8 @@ class EmailServiceTest extends KernelTestCase
                     && $email->getContext() === ['user' => $user];
             }));
 
-        $this->emailService->sendEmail($user, 'registro');
+        $message = new NotificationMessage($user, 'registro');
+        $this->emailService->__invoke($message);
     }
 
     /**
@@ -56,7 +59,8 @@ class EmailServiceTest extends KernelTestCase
                     && $email->getContext() === ['user' => $user];
             }));
 
-        $this->emailService->sendEmail($user, 'firstShop');
+        $message = new NotificationMessage($user, 'first-shop');
+        $this->emailService->__invoke($message);
     }
 
     /**

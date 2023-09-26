@@ -4,13 +4,15 @@ declare(strict_types=1);
 
 namespace App\Services;
 
-use App\Document\User;
+use App\Message\NotificationMessage;
 use Symfony\Bridge\Twig\Mime\TemplatedEmail;
 use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
 use Symfony\Component\Mailer\MailerInterface;
+use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 use Symfony\Component\Mime\Address;
 use Symfony\Contracts\Service\Attribute\Required;
 
+#[AsMessageHandler(fromTransport: 'async')]
 class EmailService
 {
     private MailerInterface $mailer;
@@ -24,9 +26,9 @@ class EmailService
     /**
      * @throws TransportExceptionInterface
      */
-    public function sendEmail(User $user, string $mode): void
+    public function __invoke(NotificationMessage $message): void
     {
-        if ($mode == 'registro') {
+        if ($message->getType() == 'registro') {
             $subject = 'Gracias por registrarse';
             $text = 'Estamos felices por tu registro en nuestra plataforma, muchas gracias';
             $html = 'EmailTemplates/registry.html.twig';
@@ -36,15 +38,14 @@ class EmailService
             $html = 'EmailTemplates/firstShop.html.twig';
         }
 
-        $user->setName($user->getName());
         $email = (new TemplatedEmail())
             ->from(new Address('Admin@api.com.co'))
-            ->to($user->getEmail())
+            ->to($message->getUser()->getEmail())
             ->subject($subject)
             ->text($text)
             ->htmlTemplate($html)
-            ->context(['user' => $user])
-            ;
+            ->context(['user' => $message->getUser()])
+        ;
 
         $this->mailer->send($email);
     }
