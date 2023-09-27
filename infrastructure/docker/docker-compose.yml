@@ -1,0 +1,64 @@
+version: '3.8'
+services:
+    mongo:
+      container_name: gasolapp_mongo
+      image: mongo:6.0
+      hostname: gasolapp_mongo
+      working_dir: /data
+      ports:
+          - "27017:27017"
+      restart: always
+      volumes:
+          - ../persistent-data/mongo/db:/data/db
+          - ../persistent-data/mongo/configdb:/data/configdb
+      networks:
+          - net
+
+    php-fpm:
+        container_name: gasolapp_php-fpm
+        image: gasolapp_php-fpm:latest
+        build:
+            context: ../../
+            dockerfile: ./infrastructure/docker/Dockerfile
+        hostname: gasolapp_php-fpm
+        working_dir: /var/www
+        ports:
+            - "80:80"
+            - "22123:22"
+        depends_on:
+            - mongo
+        restart: always
+        volumes:
+            - ../../code:/var/www
+        networks:
+            - net
+    mailhog:
+        image: mailhog/mailhog
+        restart: always
+        hostname: mail
+        domainname: docker
+        container_name: gasolapp_mailhog
+        networks:
+            - net
+        expose:
+            - 1025
+        ports:
+            - "0.0.0.0:8025:8025"
+        logging:
+          driver: 'none'
+          options:
+            tag: "docker[mailhog]"
+    rabbitmq:
+        image: "rabbitmq:3-management"
+        container_name: gasolapp_rabbitmq
+        hostname: rabbit
+        restart: always
+        expose:
+            - 5672
+        ports:
+          - "0.0.0.0:15672:15672"
+        networks:
+            - net
+networks:
+    net:
+        name: gasolapp_net
