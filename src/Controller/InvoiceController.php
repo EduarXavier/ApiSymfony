@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Controller;
 
 use App\Document\Invoice;
+use App\Document\MessageQueue;
 use App\Document\ProductInvoice;
 use App\Form\FactureType;
 use App\Form\ProductShoppingCartType;
@@ -12,7 +13,6 @@ use App\Form\ShoppingCartType;
 use App\Managers\InvoiceManager;
 use App\Repository\InvoicesRepository;
 use App\Repository\UserRepository;
-use App\Services\EmailService;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ODM\MongoDB\DocumentManager;
 use Doctrine\ODM\MongoDB\MongoDBException;
@@ -25,6 +25,7 @@ use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
+use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Contracts\Service\Attribute\Required;
@@ -34,10 +35,10 @@ class InvoiceController extends AbstractController
 {
     private UserRepository $userRepository;
     private InvoicesRepository $invoicesRepository;
-    private EmailService $emailService;
     private InvoiceManager $invoiceManager;
     private DocumentManager $documentManager;
     private Security $security;
+    private MessageBusInterface $messageBus;
 
     #[Required]
     public function setUserRepository(UserRepository $userRepository): void
@@ -49,12 +50,6 @@ class InvoiceController extends AbstractController
     public function setInvoiceRepository(InvoicesRepository $invoicesRepository): void
     {
         $this->invoicesRepository = $invoicesRepository;
-    }
-
-    #[Required]
-    public function setEmailService(EmailService $emailService): void
-    {
-        $this->emailService = $emailService;
     }
 
     #[Required]
@@ -73,6 +68,12 @@ class InvoiceController extends AbstractController
     public function setSecurity(Security $security): void
     {
         $this->security = $security;
+    }
+
+    #[Required]
+    public function setMessageBusInterface(MessageBusInterface $messageBus): void
+    {
+        $this->messageBus = $messageBus;
     }
 
     // Endpoints API
@@ -208,7 +209,11 @@ class InvoiceController extends AbstractController
         );
 
         if ($invoiceEmail == null) {
-            $this->emailService->sendEmail($invoice->getUser(), 'first-shop');
+            $message = new MessageQueue();
+            $message->setUser($invoice->getUser());
+            $message->setType('first-shop');
+            $message->setProcessed(false);
+            $this->messageBus->dispatch($message);
         }
 
         $this->invoiceManager->payInvoice($invoice);
@@ -395,7 +400,11 @@ class InvoiceController extends AbstractController
             $user = $this->userRepository->findByDocument(
                 $invoice->getUser()->getDocument()
             );
-            $this->emailService->sendEmail($user, 'first-shop');
+            $message = new MessageQueue();
+            $message->setUser($user);
+            $message->setType('first-shop');
+            $message->setProcessed(false);
+            $this->messageBus->dispatch($message);
         }
 
         $this->invoiceManager->payInvoice($invoice);

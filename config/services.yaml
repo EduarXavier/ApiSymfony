@@ -40,5 +40,10 @@ services:
         arguments:
             $registry: '@doctrine_mongodb'
             $documentClass: 'App\Document\Invoice'
+
+    App\Transport\MongoDbTransportFactory:
+        arguments:
+            - '@doctrine_mongodb.odm.document_manager'
+            - 'App\Document\MessageQueue'
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones

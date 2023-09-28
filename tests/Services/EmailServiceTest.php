@@ -2,6 +2,7 @@
 
 namespace App\Tests\Services;
 
+use App\Document\MessageQueue;
 use App\Document\User;
 use App\Services\EmailService;
 use PHPUnit\Framework\MockObject\Exception;
@@ -34,7 +35,12 @@ class EmailServiceTest extends KernelTestCase
                     && $email->getContext() === ['user' => $user];
             }));
 
-        $this->emailService->sendEmail($user, 'registro');
+        $message = new MessageQueue();
+        $message->setUser($user);
+        $message->setType('registro');
+        $message->setProcessed(false);
+
+        $this->emailService->sendEmail($message);
     }
 
     /**
@@ -56,7 +62,12 @@ class EmailServiceTest extends KernelTestCase
                     && $email->getContext() === ['user' => $user];
             }));
 
-        $this->emailService->sendEmail($user, 'firstShop');
+        $message = new MessageQueue();
+        $message->setUser($user);
+        $message->setType('firstShop');
+        $message->setProcessed(false);
+
+        $this->emailService->sendEmail($message);
     }
 
     /**

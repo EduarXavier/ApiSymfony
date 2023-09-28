@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\Document\MessageQueue;
 use App\Document\User;
 use App\Form\PasswordUpdateType;
 use App\Form\UserType;
@@ -11,7 +12,6 @@ use App\Form\UserUpdateType;
 use App\Form\UserViewType;
 use App\Managers\UserManager;
 use App\Repository\UserRepository;
-use App\Services\EmailService;
 use Doctrine\ODM\MongoDB\DocumentManager;
 use Doctrine\ODM\MongoDB\Mapping\MappingException;
 use Doctrine\ODM\MongoDB\MongoDBException;
@@ -19,7 +19,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
+use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Contracts\Service\Attribute\Required;
@@ -29,9 +29,9 @@ class UserController extends AbstractController
 {
     private UserRepository $userRepository;
     private UserManager $userManager;
-    private EmailService $emailService;
     private DocumentManager $documentManager;
     private UserPasswordHasherInterface $passwordHasher;
+    private MessageBusInterface $messageBus;
 
     #[Required]
     public function setUserRepository(UserRepository $userRepository): void
@@ -46,12 +46,6 @@ class UserController extends AbstractController
     }
 
     #[Required]
-    public function setEmailService(EmailService $emailService): void
-    {
-        $this->emailService = $emailService;
-    }
-
-    #[Required]
     public function setDocumentManager(DocumentManager $documentManager): void
     {
         $this->documentManager = $documentManager;
@@ -63,9 +57,14 @@ class UserController extends AbstractController
         $this->passwordHasher = $passwordHasher;
     }
 
+    #[Required]
+    public function setMessageBusInterface(MessageBusInterface $messageBus): void
+    {
+        $this->messageBus = $messageBus;
+    }
+
     /**
      * @throws MongoDBException
-     * @throws TransportExceptionInterface
      */
     #[Route('/api/add', name: 'addUser', methods: ['POST'])]
     public function addUser(Request $request): ?JsonResponse
@@ -94,7 +93,11 @@ class UserController extends AbstractController
         }
 
         $this->userManager->addUser($user);
-        $this->emailService->sendEmail($user, 'registro');
+        $message = new MessageQueue();
+        $message->setUser($user);
+        $message->setType('registro');
+        $message->setProcessed(false);
+        $this->messageBus->dispatch($message);
         $this->documentManager->flush();
 
         return $this->json([
@@ -161,7 +164,6 @@ class UserController extends AbstractController
 
     /**
      * @throws MongoDBException
-     * @throws TransportExceptionInterface
      */
     #[Route('/add', name: 'addUserView')]
     public function addUserView(Request $request): Response
@@ -194,7 +196,11 @@ class UserController extends AbstractController
         );
         $user->setPassword($hashedPassword);
         $this->userManager->addUser($user);
-        $this->emailService->sendEmail($user, 'registro');
+        $message = new MessageQueue();
+        $message->setUser($user);
+        $message->setType('registro');
+        $message->setProcessed(false);
+        $this->messageBus->dispatch($message);
         $this->documentManager->flush();
 
         return $this->redirectToRoute('login_template');
