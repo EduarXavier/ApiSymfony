@@ -5,12 +5,12 @@ declare(strict_types=1);
 namespace App\Tests\Form;
 
 use App\Document\Invoice;
-use App\Form\FactureType;
+use App\Form\InvoiceType;
 use Exception;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 use Symfony\Component\Form\FormFactoryInterface;
 
-class FactureTypeTest extends KernelTestCase
+class InvoiceTypeTest extends KernelTestCase
 {
     private array $formData;
     private Invoice $invoice;
@@ -18,7 +18,7 @@ class FactureTypeTest extends KernelTestCase
 
     public function testSubmitValidData(): void
     {
-        $form = $this->formFactory->create(FactureType::class, $this->invoice);
+        $form = $this->formFactory->create(InvoiceType::class, $this->invoice);
         $form->submit($this->formData);
 
         self::assertTrue($form->isSynchronized());

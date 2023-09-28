@@ -13,15 +13,12 @@ use Doctrine\ODM\MongoDB\Mapping\Annotations as MongoDB;
 class Invoice
 {
     public const SHOPPING_CART = 'shopping-cart';
-
     public const INVOICE = 'invoice';
-
     public const CANCEL = 'cancel';
-
     public const PAY = 'pay';
 
     #[MongoDb\Id(strategy: 'auto')]
-    protected ?string $id;
+    protected string $id;
 
     #[MongoDb\Field(type:'string')]
     private string $code;
@@ -43,7 +40,7 @@ class Invoice
         $this->products = new ArrayCollection();
     }
 
-    public function getId(): ?string
+    public function getId(): string
     {
         return $this->id;
     }

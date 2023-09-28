@@ -10,31 +10,31 @@ use Doctrine\ODM\MongoDB\Mapping\Annotations as MongoDB;
 class MessageQueue
 {
     #[MongoDB\Id]
-    protected ?string $id;
+    protected string $id;
 
     #[MongoDB\Field(type: 'bool')]
-    private ?bool $processed;
+    private bool $processed;
 
     #[MongoDB\Field(type: 'bool')]
     private ?bool $rejected;
 
     #[MongoDb\ReferenceOne(targetDocument : User::class, cascade: 'persist')]
-    private ?User $user;
+    private User $user;
 
     #[MongoDB\Field(type: 'string')]
-    private ?string $type;
+    private string $type;
 
-    public function getId(): ?string
+    public function getId(): string
     {
         return $this->id;
     }
 
-    public function getProcessed(): ?bool
+    public function getProcessed(): bool
     {
         return $this->processed;
     }
 
-    public function setProcessed(?bool $processed): static
+    public function setProcessed(bool $processed): static
     {
         $this->processed = $processed;
         
@@ -53,24 +53,24 @@ class MessageQueue
         return $this;
     }
 
-    public function getUser(): ?User
+    public function getUser(): User
     {
         return $this->user;
     }
 
-    public function setUser(?User $user): static
+    public function setUser(User $user): static
     {
         $this->user = $user;
 
         return $this;
     }
 
-    public function getType(): ?string
+    public function getType(): string
     {
         return $this->type;
     }
 
-    public function setType(?string $type): static
+    public function setType(string $type): static
     {
         $this->type = $type;
 

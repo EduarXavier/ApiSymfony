@@ -7,7 +7,7 @@ namespace App\Controller;
 use App\Document\Invoice;
 use App\Document\MessageQueue;
 use App\Document\ProductInvoice;
-use App\Form\FactureType;
+use App\Form\InvoiceType;
 use App\Form\ProductShoppingCartType;
 use App\Form\ShoppingCartType;
 use App\Managers\InvoiceManager;
@@ -158,7 +158,7 @@ class InvoiceController extends AbstractController
     public function createInvoices(Request $request): ?JsonResponse
     {
         $invoice = new Invoice();
-        $form = $this->createForm(FactureType::class, $invoice);
+        $form = $this->createForm(InvoiceType::class, $invoice);
         $form->handleRequest($request);
 
         if (!$form->isSubmitted() || !$form->isValid()) {
@@ -185,7 +185,7 @@ class InvoiceController extends AbstractController
     public function payInvoice(Request $request): ?JsonResponse
     {
         $invoice = new Invoice();
-        $form = $this->createForm(FactureType::class, $invoice);
+        $form = $this->createForm(InvoiceType::class, $invoice);
         $form->handleRequest($request);
 
         if (!$form->isSubmitted() || !$form->isValid()) {
@@ -303,7 +303,7 @@ class InvoiceController extends AbstractController
             $user,
             invoice::SHOPPING_CART
         );
-        $formCreateInvoice = $this->createForm(FactureType::class, $shoppingCart);
+        $formCreateInvoice = $this->createForm(InvoiceType::class, $shoppingCart);
 
         return $this->render('InvoiceTemplates/shoppingCartDetails.html.twig', [
             'shoppingCart' => $shoppingCart,
@@ -317,7 +317,7 @@ class InvoiceController extends AbstractController
     public function invoiceDetails(string $id): RedirectResponse|Response
     {
         $invoice = $this->invoicesRepository->findById($id);
-        $formCreateInvoice = $this->createForm(FactureType::class, $invoice);
+        $formCreateInvoice = $this->createForm(InvoiceType::class, $invoice);
 
         return $this->render('InvoiceTemplates/invoiceDetails.html.twig', [
             'invoice' => $invoice,
@@ -363,7 +363,7 @@ class InvoiceController extends AbstractController
     public function createInvoiceView(Request $request): RedirectResponse
     {
         $invoice = new Invoice();
-        $form = $this->createForm(FactureType::class, $invoice);
+        $form = $this->createForm(InvoiceType::class, $invoice);
         $form->handleRequest($request);
 
         if (!$form->isSubmitted() || !$form->isValid()) {

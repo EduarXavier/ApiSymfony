@@ -10,34 +10,33 @@ use Doctrine\ODM\MongoDB\Mapping\Annotations as MongoDB;
 class Product
 {
     public const AVAILABLE = 'available';
-
     public const EXPIRED = 'expired';
 
     #[MongoDB\Id]
-    protected ?string $id;
+    protected string $id;
 
     #[MongoDB\Field(type: 'string')]
     #[MongoDB\UniqueIndex(background: true)]
-    private ?string $code;
+    private string $code;
 
     #[MongoDB\Field(type: 'string')]
-    private ?string $name;
+    private string $name;
 
     #[MongoDB\Field(type:'int')]
-    private ?int $price;
+    private int $price;
 
     #[MongoDB\Field(type:'int')]
-    private ?int $amount;
+    private int $amount;
 
     #[MongoDB\Field(type:'string')]
-    private ?string $status;
+    private string $status;
 
-    public function getId(): ?string
+    public function getId(): string
     {
         return $this->id;
     }
 
-    public function getCode(): ?string
+    public function getCode(): string
     {
         return $this->code;
     }
@@ -49,7 +48,7 @@ class Product
         return $this;
     }
 
-    public function getName(): ?string
+    public function getName(): string
     {
         return $this->name;
     }
@@ -61,7 +60,7 @@ class Product
         return $this;
     }
 
-    public function getPrice(): ?int
+    public function getPrice(): int
     {
         return $this->price;
     }
@@ -73,7 +72,7 @@ class Product
         return $this;
     }
 
-    public function getAmount(): ?int
+    public function getAmount(): int
     {
         return $this->amount;
     }
@@ -85,12 +84,12 @@ class Product
         return $this;
     }
 
-    public function getStatus(): ?string
+    public function getStatus(): string
     {
         return $this->status;
     }
 
-    public function setStatus(?string $status): static
+    public function setStatus(string $status): static
     {
         $this->status = $status;
 

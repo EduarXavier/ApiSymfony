@@ -15,6 +15,7 @@ use Symfony\Component\Messenger\Envelope;
 
 class MongoDbTransportTest extends KernelTestCase
 {
+    private DocumentManager $documentManager;
     private MongoDbTransport $mongoDbTransport;
     private MessageQueue $messageQueue;
 
@@ -67,25 +68,31 @@ class MongoDbTransportTest extends KernelTestCase
      */
     protected function setUp(): void
     {
-        $documentManager = $this->getContainer()->get(DocumentManager::class);
-        $this->mongoDbTransport = new MongoDbTransport($documentManager);
+        $this->documentManager = $this->getContainer()->get(DocumentManager::class);
+        $this->mongoDbTransport = new MongoDbTransport($this->documentManager);
         $user = (new User())->setName('User test');
-        $documentManager->persist($user);
-        $documentManager->flush();
+        $this->documentManager->persist($user);
+        $this->documentManager->flush();
         $this->messageQueue = (new MessageQueue())
             ->setProcessed(false)
             ->setRejected(false)
             ->setType('first-shop')
             ->setUser($user);
-        $documentManager->persist($this->messageQueue);
-        $documentManager->flush();
+        $this->documentManager->persist($this->messageQueue);
+        $this->documentManager->flush();
     }
 
+    /**
+     * @throws Exception
+     */
     protected function tearDown(): void
     {
+        $this->documentManager = $this->getContainer()->get(DocumentManager::class);
+        $this->documentManager->getSchemaManager()->dropDatabases();
         unset(
             $this->mongoDbTransport,
-            $this->messageQueue
+            $this->messageQueue,
+            $this->documentManager
         );
     }
 }

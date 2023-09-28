@@ -14,6 +14,7 @@ use Symfony\Component\Messenger\Transport\TransportInterface;
 class MongoDbTransportFactoryTest extends KernelTestCase
 {
     private MongoDbTransportFactory $mongoDbTransportFactory;
+    private DocumentManager $documentManager;
     private string $dsn;
 
     public function testCreateTransport()
@@ -42,13 +43,21 @@ class MongoDbTransportFactoryTest extends KernelTestCase
      */
     protected function setUp(): void
     {
-        $documentManager = $this->getContainer()->get(DocumentManager::class);
-        $this->mongoDbTransportFactory = new MongoDbTransportFactory($documentManager);
+        $this->documentManager = $this->getContainer()->get(DocumentManager::class);
+        $this->mongoDbTransportFactory = new MongoDbTransportFactory($this->documentManager);
         $this->dsn = 'mongodb://';
     }
 
+    /**
+     * @throws Exception
+     */
     protected function tearDown(): void
     {
-        unset($this->mongoDbTransportFactory);
+        $this->documentManager->getSchemaManager()->dropDatabases();
+        unset(
+            $this->mongoDbTransportFactory,
+            $this->documentManager,
+            $this->dsn
+        );
     }
 }
